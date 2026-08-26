@@ -12,14 +12,14 @@
 
 ## 文件结构
 
-- 创建：`.superpowers/brainstorm/20260826-worlds/content/pixel-globe-3d.html`——3D 像素地球的完整视觉预览、GeoJSON 纹理生成、球面投影和交互。
+- 创建：`.superpowers/brainstorm/20260826-pixel-globe-3d/content/pixel-globe-3d.html`——3D 像素地球的完整视觉预览、GeoJSON 纹理生成、球面投影和交互。
 - 修改：无。现有 `flat-pixel-world-map-v2.html` 保留作为已确认的 2D 参考底稿。
 - 创建：无自动化测试文件；使用浏览器 DOM、截图和交互检查作为本 visual companion 的验证层。
 
 ### 任务 1：建立 3D 预览外壳
 
 **文件：**
-- 创建：`.superpowers/brainstorm/20260826-worlds/content/pixel-globe-3d.html`
+- 创建：`.superpowers/brainstorm/20260826-pixel-globe-3d/content/pixel-globe-3d.html`
 
 - [ ] **步骤 1：创建页面结构和设计变量**
 
@@ -43,7 +43,7 @@
 ### 任务 2：从真实陆地生成硬像素纹理
 
 **文件：**
-- 修改：`.superpowers/brainstorm/20260826-worlds/content/pixel-globe-3d.html`
+- 修改：`.superpowers/brainstorm/20260826-pixel-globe-3d/content/pixel-globe-3d.html`
 
 - [ ] **步骤 1：定义与 2D 底稿一致的纹理常量和投影函数**
 
@@ -89,7 +89,7 @@ function hardenLand(ctx, width, height) {
 ### 任务 3：实现低分辨率球面投影
 
 **文件：**
-- 修改：`.superpowers/brainstorm/20260826-worlds/content/pixel-globe-3d.html`
+- 修改：`.superpowers/brainstorm/20260826-pixel-globe-3d/content/pixel-globe-3d.html`
 
 - [ ] **步骤 1：定义球面状态和初始太平洋朝向**
 
@@ -125,7 +125,7 @@ function sampleTexture(texture, u, v) {
 ### 任务 4：加入旋转、缩放和移动端手势
 
 **文件：**
-- 修改：`.superpowers/brainstorm/20260826-worlds/content/pixel-globe-3d.html`
+- 修改：`.superpowers/brainstorm/20260826-pixel-globe-3d/content/pixel-globe-3d.html`
 
 - [ ] **步骤 1：实现鼠标拖动旋转和滚轮缩放**
 
@@ -150,7 +150,7 @@ canvas.addEventListener('wheel', (event) => {
 ### 任务 5：完成无标点界面和加载容错
 
 **文件：**
-- 修改：`.superpowers/brainstorm/20260826-worlds/content/pixel-globe-3d.html`
+- 修改：`.superpowers/brainstorm/20260826-pixel-globe-3d/content/pixel-globe-3d.html`
 
 - [ ] **步骤 1：实现中文/EN 开关的视觉状态**
 
@@ -167,7 +167,7 @@ GeoJSON 成功解析后隐藏 `#globeLoading` 并首次渲染；请求失败时�
 ### 任务 6：浏览器验收与提交
 
 **文件：**
-- 修改：`.superpowers/brainstorm/20260826-worlds/content/pixel-globe-3d.html`
+- 修改：`.superpowers/brainstorm/20260826-pixel-globe-3d/content/pixel-globe-3d.html`
 
 - [ ] **步骤 1：执行 DOM 与控制台检查**
 
