@@ -255,7 +255,7 @@ await tab.dev.logs({levels:['error','warn'],limit:20});       // []
 
 拖动超过 `6px` 后截图应改变朝向，松手等待 `350ms` 后画面稳定；滚轮、双指和 `− / ＋` 继续改变尺寸；点击地点不改变 yaw/pitch/zoom。移动端 `390×844` 视口下，三个按钮、名牌和图钉不横向溢出；键盘聚焦地点按钮并按 Enter 能显示名称。
 
-- [ ] **步骤 5：提交实现**
+- [x] **步骤 5：提交实现**
 
 ```powershell
 git add -- .superpowers/brainstorm/20260826-pixel-globe-3d/content/pixel-globe-3d.html
