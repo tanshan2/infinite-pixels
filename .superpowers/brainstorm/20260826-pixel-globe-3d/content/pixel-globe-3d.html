@@ -156,6 +156,23 @@
     const p=(y*TEX_W+x)*4;return [textureData[p],textureData[p+1],textureData[p+2],textureData[p+3]];
   }
   function shadeColor(color,brightness){return [Math.max(0,Math.min(255,Math.round(color[0]*brightness))),Math.max(0,Math.min(255,Math.round(color[1]*brightness))),Math.max(0,Math.min(255,Math.round(color[2]*brightness)))];}
+  function drawLocationMarker(item){
+    const unit=Math.max(1,Math.round(state.zoom)),px=Math.round(item.x),py=Math.round(item.y),selected=item.location.id===state.selectedLocationId;
+    const blink=selected?(0.68+0.32*(0.5+0.5*Math.sin(performance.now()/1200*Math.PI*2))):1;
+    canvasCtx.save();canvasCtx.globalAlpha=blink;
+    canvasCtx.fillStyle='#d7654f';
+    canvasCtx.fillRect(px-2*unit,py-2*unit,4*unit,3*unit);
+    canvasCtx.fillRect(px-unit,py+unit,2*unit,2*unit);
+    canvasCtx.fillStyle='#f0ebd0';canvasCtx.fillRect(px-unit,py-unit,2*unit,2*unit);
+    if(selected){
+      canvasCtx.fillStyle='#d5d7a2';
+      canvasCtx.fillRect(px-3*unit,py-3*unit,6*unit,unit);
+      canvasCtx.fillRect(px-3*unit,py+2*unit,6*unit,unit);
+      canvasCtx.fillRect(px-3*unit,py-2*unit,unit,4*unit);
+      canvasCtx.fillRect(px+2*unit,py-2*unit,unit,4*unit);
+    }
+    canvasCtx.restore();
+  }
   function render(){
     if(!textureData)return;
     const image=canvasCtx.createImageData(RENDER_SIZE,RENDER_SIZE),pixels=image.data;
@@ -172,9 +189,18 @@
       }
     }
     canvasCtx.putImageData(image,0,0);
+    visibleLocations().forEach(drawLocationMarker);
   }
   function setZoom(nextZoom){state.zoom=Math.max(0.78,Math.min(1.55,nextZoom));render();}
   function resetView(){state.yaw=DEFAULT_VIEW.yaw;state.pitch=DEFAULT_VIEW.pitch;state.zoom=DEFAULT_VIEW.zoom;render();}
+  function tickBlink(){
+    blinkFrame=0;
+    if(!state.selectedLocationId)return;
+    render();blinkFrame=requestAnimationFrame(tickBlink);
+  }
+  function ensureBlink(){
+    if(state.selectedLocationId&&!blinkFrame)blinkFrame=requestAnimationFrame(tickBlink);
+  }
   function setLanguage(){
     const english=state.language==='en';langToggle.textContent=english?'EN · 中文':'中文 · EN';langToggle.setAttribute('aria-pressed',String(english));hint.textContent=english?'Drag to rotate · Wheel / pinch to zoom':'拖动旋转 · 滚轮缩放 · 双指缩放';
   }
