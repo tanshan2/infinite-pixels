@@ -175,6 +175,7 @@
   }
   function render(){
     if(!textureData)return;
+    syncSelectionVisibility();
     const image=canvasCtx.createImageData(RENDER_SIZE,RENDER_SIZE),pixels=image.data;
     const center=RENDER_SIZE/2,radius=RENDER_SIZE*0.43*state.zoom;
     for(let y=0;y<RENDER_SIZE;y++){
@@ -192,7 +193,7 @@
     visibleLocations().forEach(drawLocationMarker);
   }
   function setZoom(nextZoom){state.zoom=Math.max(0.78,Math.min(1.55,nextZoom));render();}
-  function resetView(){state.yaw=DEFAULT_VIEW.yaw;state.pitch=DEFAULT_VIEW.pitch;state.zoom=DEFAULT_VIEW.zoom;render();}
+  function resetView(){state.yaw=DEFAULT_VIEW.yaw;state.pitch=DEFAULT_VIEW.pitch;state.zoom=DEFAULT_VIEW.zoom;clearLocationSelection();}
   function tickBlink(){
     blinkFrame=0;
     if(!state.selectedLocationId)return;
@@ -201,8 +202,45 @@
   function ensureBlink(){
     if(state.selectedLocationId&&!blinkFrame)blinkFrame=requestAnimationFrame(tickBlink);
   }
+  function stopBlink(){
+    if(blinkFrame)cancelAnimationFrame(blinkFrame);
+    blinkFrame=0;
+  }
+  function selectedLocation(){return LOCATIONS.find(location=>location.id===state.selectedLocationId)||null;}
+  function syncLocationLabel(){
+    const location=selectedLocation(),english=state.language==='en';
+    locationLabel.hidden=!location;
+    locationName.textContent=location?location.name[state.language]:'';
+    locationNav.setAttribute('aria-label',english?'Location selection':'地点选择');
+    locationButtons.forEach(button=>{
+      const item=LOCATIONS.find(location=>location.id===button.dataset.locationId);
+      if(!item)return;
+      button.textContent=item.name[state.language];
+      button.setAttribute('aria-label',`${english?'Select ':'选择'}${item.name[state.language]}`);
+      button.setAttribute('aria-pressed',String(item.id===state.selectedLocationId));
+    });
+  }
+  function updateHint(){
+    const location=LOCATIONS.find(item=>item.id===state.hoverLocationId),english=state.language==='en';
+    hint.textContent=location?location.name[state.language]:(english?'Drag to rotate · Wheel / pinch to zoom':'拖动旋转 · 滚轮缩放 · 双指缩放');
+  }
+  function syncSelectionVisibility(){
+    if(!state.selectedLocationId)return;
+    const location=selectedLocation();
+    if(!location){
+      state.selectedLocationId=null;state.hoverLocationId=null;stopBlink();syncLocationLabel();updateHint();
+    }
+  }
+  function clearLocationSelection(){
+    state.selectedLocationId=null;state.hoverLocationId=null;stopBlink();syncLocationLabel();updateHint();render();
+  }
+  function selectLocation(location){
+    if(!location)return;
+    state.selectedLocationId=location.id;state.hoverLocationId=location.id;syncLocationLabel();updateHint();render();ensureBlink();
+  }
+  function selectLocationById(id){selectLocation(LOCATIONS.find(location=>location.id===id)||null);}
   function setLanguage(){
-    const english=state.language==='en';langToggle.textContent=english?'EN · 中文':'中文 · EN';langToggle.setAttribute('aria-pressed',String(english));hint.textContent=english?'Drag to rotate · Wheel / pinch to zoom':'拖动旋转 · 滚轮缩放 · 双指缩放';
+    const english=state.language==='en';langToggle.textContent=english?'EN · 中文':'中文 · EN';langToggle.setAttribute('aria-pressed',String(english));syncLocationLabel();updateHint();
   }
   function distanceBetween(){
     const values=[...pointers.values()];if(values.length<2)return 0;return Math.hypot(values[0].x-values[1].x,values[0].y-values[1].y);
@@ -213,22 +251,43 @@
   }
   canvas.addEventListener('pointerdown',(event)=>{
     event.preventDefault();canvas.setPointerCapture(event.pointerId);pointers.set(event.pointerId,{x:event.clientX,y:event.clientY});
-    if(pointers.size===1){drag.id=event.pointerId;drag.x=event.clientX;drag.y=event.clientY;stage.classList.add('dragging');}
-    if(pointers.size===2){pinch.distance=distanceBetween();pinch.zoom=state.zoom;drag.id=null;}
+    if(pointers.size===1){
+      const location=hitLocation(event);
+      drag.id=event.pointerId;drag.x=event.clientX;drag.y=event.clientY;drag.startX=event.clientX;drag.startY=event.clientY;drag.moved=false;drag.locationId=location?.id||null;stage.classList.add('dragging');
+    }
+    if(pointers.size===2){pinch.distance=distanceBetween();pinch.zoom=state.zoom;drag.id=null;drag.locationId=null;drag.moved=true;}
   });
   canvas.addEventListener('pointermove',(event)=>{
     if(!pointers.has(event.pointerId))return;event.preventDefault();pointers.set(event.pointerId,{x:event.clientX,y:event.clientY});
-    if(pointers.size>=2){const current=distanceBetween();if(pinch.distance>0){state.zoom=Math.max(0.78,Math.min(1.55,pinch.zoom*current/pinch.distance));render();}}
-    else if(drag.id===event.pointerId){updateDrag(event);}
+    if(pointers.size>=2){const current=distanceBetween();if(pinch.distance>0)setZoom(pinch.zoom*current/pinch.distance);}
+    else if(drag.id===event.pointerId){
+      const distance=Math.hypot(event.clientX-drag.startX,event.clientY-drag.startY);
+      if(distance>6)drag.moved=true;
+      if(drag.moved)updateDrag(event);
+      else{const location=hitLocation(event);state.hoverLocationId=location?.id||null;updateHint();}
+    }
   });
-  function endPointer(event){pointers.delete(event.pointerId);if(drag.id===event.pointerId)drag.id=null;if(pointers.size===1){const [id,value]=pointers.entries().next().value;drag.id=id;drag.x=value.x;drag.y=value.y;}if(pointers.size<2)pinch.distance=0;if(pointers.size===0)stage.classList.remove('dragging');}
-  canvas.addEventListener('pointerup',endPointer);canvas.addEventListener('pointercancel',endPointer);canvas.addEventListener('pointerleave',(event)=>{if(event.buttons===0)endPointer(event);});
+  function endPointer(event,allowClick){
+    const wasSingle=pointers.size===1&&drag.id===event.pointerId,wasTap=allowClick&&wasSingle&&!drag.moved,locationId=drag.locationId;
+    pointers.delete(event.pointerId);
+    if(wasTap){if(locationId)selectLocationById(locationId);else clearLocationSelection();}
+    if(drag.id===event.pointerId)drag.id=null;
+    if(pointers.size===1){
+      const [id,value]=pointers.entries().next().value;drag.id=id;drag.x=value.x;drag.y=value.y;drag.startX=value.x;drag.startY=value.y;drag.moved=true;drag.locationId=null;
+    }
+    if(pointers.size<2)pinch.distance=0;
+    if(pointers.size===0){stage.classList.remove('dragging');drag.locationId=null;drag.moved=false;if(!state.selectedLocationId){state.hoverLocationId=null;updateHint();}}
+  }
+  canvas.addEventListener('pointerup',event=>endPointer(event,true));
+  canvas.addEventListener('pointercancel',event=>endPointer(event,false));
+  canvas.addEventListener('pointerleave',()=>{state.hoverLocationId=null;updateHint();});
   canvas.addEventListener('wheel',(event)=>{event.preventDefault();setZoom(state.zoom-event.deltaY*0.001);},{passive:false});
   canvas.addEventListener('contextmenu',(event)=>event.preventDefault());
   langToggle.addEventListener('click',()=>{state.language=state.language==='zh'?'en':'zh';setLanguage();});
   zoomOut.addEventListener('click',()=>setZoom(state.zoom-0.1));
   resetButton.addEventListener('click',resetView);
   zoomIn.addEventListener('click',()=>setZoom(state.zoom+0.1));
+  locationButtons.forEach(button=>button.addEventListener('click',()=>selectLocationById(button.dataset.locationId)));
 
   fetch(DATA_URL).then(response=>{if(!response.ok)throw new Error('Map data request failed');return response.json();}).then(geo=>{buildTexture(geo);loading.style.display='none';render();}).catch(()=>{loading.textContent='REAL COASTLINE DATA UNAVAILABLE · 请检查网络后刷新';loading.classList.add('error');});
   setLanguage();

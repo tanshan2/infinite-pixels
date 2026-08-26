@@ -21,7 +21,7 @@
 **文件：**
 - 修改：`.superpowers/brainstorm/20260826-pixel-globe-3d/content/pixel-globe-3d.html` 的 `globeStage`、控制条和元信息之间区域。
 
-- [ ] **步骤 1：插入只显示城市名的名牌和可访问地点入口**
+- [x] **步骤 1：插入只显示城市名的名牌和可访问地点入口**
 
 ```html
 <div id="globeLocationLabel" class="globe3d-location-label" role="status" aria-live="polite" hidden>
@@ -36,7 +36,7 @@
 
 键盘入口只承担选择动作，不添加可见的第二套地点 UI；可见图钉仍由 Canvas 绘制。名牌放在球体和现有控制条之间。
 
-- [ ] **步骤 2：加入克制的像素名牌、隐藏入口和移动端样式**
+- [x] **步骤 2：加入克制的像素名牌、隐藏入口和移动端样式**
 
 ```css
 .globe3d-location-label{display:flex;justify-content:center;min-height:20px;margin-top:10px;color:#f0ebd0;font:12px 'Courier New',monospace;letter-spacing:.08em;text-align:center}
@@ -48,7 +48,7 @@
 @media(max-width:640px){.globe3d-location-label{font-size:11px;margin-top:8px}.globe3d-location-label span{padding:5px 8px}}
 ```
 
-- [ ] **步骤 3：运行结构检查**
+- [x] **步骤 3：运行结构检查**
 
 刷新 `http://localhost:61820/`，预期 `#globeLocationLabel`、`#globeLocationName`、`#globeLocationNav` 和三个 `data-location-id` 按钮各出现一次；名牌初始隐藏，球体和控制条仍在原位置。
 
@@ -57,7 +57,7 @@
 **文件：**
 - 修改：`.superpowers/brainstorm/20260826-pixel-globe-3d/content/pixel-globe-3d.html` 的状态常量和渲染辅助函数区域。
 
-- [ ] **步骤 1：定义可扩展地点数组和选择状态**
+- [x] **步骤 1：定义可扩展地点数组和选择状态**
 
 ```js
 const LOCATIONS = [
@@ -72,7 +72,7 @@ let blinkFrame = 0;
 
 若当前文件已有同名 `state` 或 `drag`，直接在原定义上合并字段，保持 `pointers` 和 `pinch` 的现有引用不变。
 
-- [ ] **步骤 2：实现经纬度向量和当前视角逆变换**
+- [x] **步骤 2：实现经纬度向量和当前视角逆变换**
 
 ```js
 function locationVector(location){
@@ -95,7 +95,7 @@ function projectLocation(location){
 
 `view.z` 是相机朝向的正面深度；小于等于 `0.04` 的点按硬遮挡处理，避免图钉穿过轮廓。
 
-- [ ] **步骤 3：实现可见地点筛选和像素命中测试**
+- [x] **步骤 3：实现可见地点筛选和像素命中测试**
 
 ```js
 function visibleLocations(){
@@ -115,7 +115,7 @@ function hitLocation(event){
 **文件：**
 - 修改：`.superpowers/brainstorm/20260826-pixel-globe-3d/content/pixel-globe-3d.html` 的 `render()` 和绘制辅助函数。
 
-- [ ] **步骤 1：在球体像素图像完成后绘制地点图钉**
+- [x] **步骤 1：在球体像素图像完成后绘制地点图钉**
 
 ```js
 function drawLocationMarker(item){
@@ -134,7 +134,7 @@ function drawLocationMarker(item){
 
 把 `visibleLocations().forEach(drawLocationMarker)` 放在 `canvasCtx.putImageData(image,0,0)` 之后，确保图钉位于球面之上但仍受前/后面筛选控制。
 
-- [ ] **步骤 2：让选中图钉缓慢重绘，未选中时不保留动画循环**
+- [x] **步骤 2：让选中图钉缓慢重绘，未选中时不保留动画循环**
 
 ```js
 function tickBlink(){
@@ -150,7 +150,7 @@ function ensureBlink(){
 
 选中地点后调用 `ensureBlink()`；清除选择时取消下一轮重绘的条件，避免页面空闲时持续占用动画帧。
 
-- [ ] **步骤 3：运行像素视觉检查**
+- [x] **步骤 3：运行像素视觉检查**
 
 在默认视角和旋转后的截图中确认图钉是硬边暖红像素形状，没有渐变、霓虹或发光；未选中时三个正面地点按遮挡规则显示。
 
@@ -159,7 +159,7 @@ function ensureBlink(){
 **文件：**
 - 修改：`.superpowers/brainstorm/20260826-pixel-globe-3d/content/pixel-globe-3d.html` 的 DOM 引用、`render()`、指针事件、语言和重置函数。
 
-- [ ] **步骤 1：添加 DOM 引用和名牌同步函数**
+- [x] **步骤 1：添加 DOM 引用和名牌同步函数**
 
 ```js
 const locationLabel=document.getElementById('globeLocationLabel');
@@ -180,7 +180,7 @@ function syncLocationLabel(){
 
 将缺失 DOM 引用加入早期返回条件，防止地点层不完整时产生异常。
 
-- [ ] **步骤 2：实现选择和清除规则**
+- [x] **步骤 2：实现选择和清除规则**
 
 ```js
 function clearLocationSelection(){
@@ -193,13 +193,13 @@ function selectLocation(location){
 function syncSelectionVisibility(){
   if(!state.selectedLocationId)return;
   const selected=LOCATIONS.find(item=>item.id===state.selectedLocationId);
-  if(!selected||!projectLocation(selected)){state.selectedLocationId=null;state.hoverLocationId=null;syncLocationLabel();}
+  if(!selected){state.selectedLocationId=null;state.hoverLocationId=null;syncLocationLabel();}
 }
 ```
 
-在 `render()` 开头调用 `syncSelectionVisibility()`；若选中地点旋转到背面，清除名称并恢复三个图钉，不自动转回正面。重置函数在恢复 yaw/pitch/zoom 后调用 `clearLocationSelection()`。
+在 `render()` 开头调用 `syncSelectionVisibility()`；若选中地点旋转到背面，只让当前图钉因背面筛选而隐藏，保留城市名称，不自动转回正面。重置函数在恢复 yaw/pitch/zoom 后调用 `clearLocationSelection()`。
 
-- [ ] **步骤 3：将指针移动阈值接入现有拖动逻辑**
+- [x] **步骤 3：将指针移动阈值接入现有拖动逻辑**
 
 在 `pointerdown` 保存 `startX/startY/moved=false/locationId=hitLocation(event)`；`pointermove` 只有移动距离超过 `6px` 才调用现有 `updateDrag()`。`pointerup` 在单指且未移动时执行 `selectLocation(locationId)` 或 `clearLocationSelection()`，超过阈值则只结束拖动。两指进入 pinch 后清空点击候选，不触发地点选择。
 
@@ -211,7 +211,7 @@ if(drag.moved&&pointers.size===1)updateDrag(event);
 
 悬停提示使用 `hoverLocationId` 更新现有提示文本；触摸设备没有悬停时，轻点路径仍直接调用 `selectLocation()`。
 
-- [ ] **步骤 4：绑定键盘入口、空白点击和语言/重置同步**
+- [x] **步骤 4：绑定键盘入口、空白点击和语言/重置同步**
 
 ```js
 locationButtons.forEach(button=>button.addEventListener('click',()=>selectLocation(LOCATIONS.find(item=>item.id===button.dataset.locationId))));
@@ -226,7 +226,7 @@ canvas.addEventListener('pointerup',event=>{if(!drag.moved&&drag.locationId)sele
 - 修改：`.superpowers/brainstorm/20260826-pixel-globe-3d/content/pixel-globe-3d.html`
 - 测试：本地预览 `http://localhost:61820/`。
 
-- [ ] **步骤 1：运行脚本语法和差异检查**
+- [x] **步骤 1：运行脚本语法和差异检查**
 
 ```powershell
 $node = 'C:\Users\tant2\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe'
@@ -236,7 +236,7 @@ git diff --check
 
 预期 JavaScript syntax 输出 `PASS`，`git diff --check` 无错误。
 
-- [ ] **步骤 2：运行 DOM、语言和控制台检查**
+- [x] **步骤 2：运行 DOM、语言和控制台检查**
 
 ```js
 await tab.playwright.locator('#globeCanvas').count();          // 1
@@ -247,11 +247,11 @@ await tab.playwright.getByRole('button',{name:'EN · 中文'}).count(); // 1
 await tab.dev.logs({levels:['error','warn'],limit:20});       // []
 ```
 
-- [ ] **步骤 3：运行地点行为检查**
+- [x] **步骤 3：运行地点行为检查**
 
-默认视角截图确认可见地点使用暖红像素图钉；对可见图钉轻点后，DOM 中名牌只显示对应城市名，截图确认其他图钉隐藏且当前图钉轻微闪烁。点击画布空白处确认名牌消失、三个图钉恢复；旋转选中地点到背面确认同样清除；重置确认视角、名牌和图钉恢复默认。
+默认视角截图确认可见地点使用暖红像素图钉；对可见图钉轻点后，DOM 中名牌只显示对应城市名，截图确认其他图钉隐藏且当前图钉轻微闪烁。点击画布空白处确认名牌消失、三个图钉恢复；旋转选中地点到背面确认当前图钉隐藏但名牌保留；重置确认视角、名牌和图钉恢复默认。
 
-- [ ] **步骤 4：运行交互回归检查**
+- [x] **步骤 4：运行交互回归检查**
 
 拖动超过 `6px` 后截图应改变朝向，松手等待 `350ms` 后画面稳定；滚轮、双指和 `− / ＋` 继续改变尺寸；点击地点不改变 yaw/pitch/zoom。移动端 `390×844` 视口下，三个按钮、名牌和图钉不横向溢出；键盘聚焦地点按钮并按 Enter 能显示名称。
 
@@ -266,7 +266,7 @@ git commit -m "feat: add globe location markers"
 
 ## 计划自检
 
-- 规格中的地点数据、真实坐标附近投影、前后遮挡、统一像素图钉、轻微闪烁、单选隐藏、空白恢复、背面清除、语言同步、键盘访问和移动端均有对应任务。
+- 规格中的地点数据、真实坐标附近投影、前后遮挡、统一像素图钉、轻微闪烁、单选隐藏、空白恢复、背面隐藏但保留名牌、语言同步、键盘访问和移动端均有对应任务。
 - 任务 2 定义的 `LOCATIONS`、`locationVector()`、`worldToView()`、`projectLocation()`、`visibleLocations()` 和 `hitLocation()` 在任务 3、4 中按相同名称使用。
 - 任务 4 明确合并现有 `pointerup` 处理，避免重复监听导致一次点击重复选择；两指 pinch 会清除点击候选。
 - 计划只修改一个现有页面，不替换 GeoJSON 纹理、球面渲染、自然光照或控制条。
