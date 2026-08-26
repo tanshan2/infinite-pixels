@@ -1,5 +1,5 @@
 <style>
-  .globe3d-wrap{min-height:720px;border:1px solid #3f5048;border-radius:14px;background:#111716;color:#e9eadb;position:relative;overflow:hidden;padding:20px}.globe3d-topline{position:relative;z-index:2;display:flex;align-items:center;justify-content:space-between;font:10px 'Courier New',monospace;letter-spacing:.11em;color:#b9c8b4}.globe3d-lang{border:1px solid #69776c;border-radius:2px;background:#15201d;color:#ede8ce;padding:5px 8px;font:10px 'Courier New',monospace;letter-spacing:.04em;cursor:pointer}.globe3d-lang:focus-visible{outline:2px solid #d5d7a2;outline-offset:2px}.globe3d-stage{position:relative;width:min(86vw,520px);aspect-ratio:1;margin:32px auto 0;touch-action:none;cursor:grab;display:grid;place-items:center}.globe3d-stage.dragging{cursor:grabbing}.globe3d-canvas{display:block;width:100%;height:100%;image-rendering:pixelated;image-rendering:crisp-edges}.globe3d-loading{position:absolute;inset:0;display:grid;place-items:center;background:#111716;color:#b9c8b4;font:10px 'Courier New',monospace;text-align:center}.globe3d-loading.error{color:#e3a17f}.globe3d-meta{display:flex;justify-content:center;gap:18px;margin-top:18px;color:#9caf9f;font:9px 'Courier New',monospace;letter-spacing:.06em;text-align:center}.globe3d-note{position:relative;z-index:1;margin:22px auto 0;max-width:700px;color:#aebbb2;font-size:12px;line-height:1.55;text-align:center}.globe3d-note strong{color:#f0ebd0}@media(max-width:640px){.globe3d-wrap{padding:13px;min-height:650px}.globe3d-stage{margin-top:26px}.globe3d-meta{gap:10px;font-size:8px;flex-wrap:wrap}.globe3d-note{font-size:11px}}
+  .globe3d-wrap{min-height:720px;border:1px solid #3f5048;border-radius:14px;background:#111716;color:#e9eadb;position:relative;overflow:hidden;padding:20px}.globe3d-topline{position:relative;z-index:2;display:flex;align-items:center;justify-content:space-between;font:10px 'Courier New',monospace;letter-spacing:.11em;color:#b9c8b4}.globe3d-lang{border:1px solid #69776c;border-radius:2px;background:#15201d;color:#ede8ce;padding:5px 8px;font:10px 'Courier New',monospace;letter-spacing:.04em;cursor:pointer}.globe3d-lang:focus-visible{outline:2px solid #d5d7a2;outline-offset:2px}.globe3d-stage{position:relative;width:min(86vw,520px);aspect-ratio:1;margin:32px auto 0;touch-action:none;cursor:grab;display:grid;place-items:center}.globe3d-stage.dragging{cursor:grabbing}.globe3d-canvas{display:block;width:100%;height:100%;image-rendering:pixelated;image-rendering:crisp-edges}.globe3d-loading{position:absolute;inset:0;display:grid;place-items:center;background:#111716;color:#b9c8b4;font:10px 'Courier New',monospace;text-align:center}.globe3d-loading.error{color:#e3a17f}.globe3d-controls{display:flex;justify-content:center;gap:6px;margin-top:14px}.globe3d-controls button{min-width:40px;height:36px;border:1px solid #627268;border-radius:2px;background:#172622;color:#ede8ce;font:12px 'Courier New',monospace;cursor:pointer;image-rendering:pixelated}.globe3d-controls button:hover{background:#253b31;border-color:#aebd86}.globe3d-controls button:focus-visible{outline:2px solid #d5d7a2;outline-offset:2px}.globe3d-controls button:active{transform:translateY(1px)}.globe3d-meta{display:flex;justify-content:center;gap:18px;margin-top:18px;color:#9caf9f;font:9px 'Courier New',monospace;letter-spacing:.06em;text-align:center}.globe3d-note{position:relative;z-index:1;margin:22px auto 0;max-width:700px;color:#aebbb2;font-size:12px;line-height:1.55;text-align:center}.globe3d-note strong{color:#f0ebd0}@media(max-width:640px){.globe3d-wrap{padding:13px;min-height:650px}.globe3d-stage{margin-top:26px}.globe3d-controls{gap:6px}.globe3d-controls button{min-width:40px;height:36px}.globe3d-meta{gap:10px;font-size:8px;flex-wrap:wrap}.globe3d-note{font-size:11px}}
 </style>
 
 <h2>3D 像素地球</h2>
@@ -11,6 +11,7 @@
     <canvas id="globeCanvas" class="globe3d-canvas" width="160" height="160" aria-label="可旋转的像素地球"></canvas>
     <div id="globeLoading" class="globe3d-loading">LOADING REAL COASTLINES · 正在加载真实海岸线…</div>
   </div>
+  <div id="globeControls" class="globe3d-controls" role="group" aria-label="地球视图控制"><button id="zoomOut" type="button" aria-label="缩小">−</button><button id="resetView" type="button" aria-label="重置地球视角">重置</button><button id="zoomIn" type="button" aria-label="放大">＋</button></div>
   <div class="globe3d-meta"><span id="interactionHint">拖动旋转 · 滚轮缩放 · 双指缩放</span><span>PIXEL SOURCE 128×64</span></div>
   <p class="globe3d-note"><strong>3D 版本说明：</strong>球面逐像素读取当前平面地图纹理，不重新绘制大陆；拖动和缩放只改变观察角度与尺寸。</p>
 </div>
@@ -22,11 +23,15 @@
   const loading = document.getElementById('globeLoading');
   const langToggle = document.getElementById('langToggle');
   const hint = document.getElementById('interactionHint');
-  if (!canvas || !stage || !loading || !langToggle || !hint) return;
+  const zoomOut = document.getElementById('zoomOut');
+  const resetButton = document.getElementById('resetView');
+  const zoomIn = document.getElementById('zoomIn');
+  if (!canvas || !stage || !loading || !langToggle || !hint || !zoomOut || !resetButton || !zoomIn) return;
 
   const DATA_URL = 'https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson';
   const TEX_W = 128, TEX_H = 64, RENDER_SIZE = 160, TAU = Math.PI * 2;
-  const state = {yaw:Math.PI, pitch:-0.14, zoom:1, language:'zh'};
+  const DEFAULT_VIEW = {yaw:Math.PI, pitch:-0.14, zoom:1};
+  const state = {...DEFAULT_VIEW, language:'zh'};
   const pointers = new Map();
   const drag = {id:null,x:0,y:0};
   const pinch = {distance:0,zoom:1};
@@ -128,6 +133,8 @@
     }
     canvasCtx.putImageData(image,0,0);
   }
+  function setZoom(nextZoom){state.zoom=Math.max(0.78,Math.min(1.55,nextZoom));render();}
+  function resetView(){state.yaw=DEFAULT_VIEW.yaw;state.pitch=DEFAULT_VIEW.pitch;state.zoom=DEFAULT_VIEW.zoom;render();}
   function setLanguage(){
     const english=state.language==='en';langToggle.textContent=english?'EN · 中文':'中文 · EN';langToggle.setAttribute('aria-pressed',String(english));hint.textContent=english?'Drag to rotate · Wheel / pinch to zoom':'拖动旋转 · 滚轮缩放 · 双指缩放';
   }
@@ -150,9 +157,12 @@
   });
   function endPointer(event){pointers.delete(event.pointerId);if(drag.id===event.pointerId)drag.id=null;if(pointers.size===1){const [id,value]=pointers.entries().next().value;drag.id=id;drag.x=value.x;drag.y=value.y;}if(pointers.size<2)pinch.distance=0;if(pointers.size===0)stage.classList.remove('dragging');}
   canvas.addEventListener('pointerup',endPointer);canvas.addEventListener('pointercancel',endPointer);canvas.addEventListener('pointerleave',(event)=>{if(event.buttons===0)endPointer(event);});
-  canvas.addEventListener('wheel',(event)=>{event.preventDefault();state.zoom=Math.max(0.78,Math.min(1.55,state.zoom-event.deltaY*0.001));render();},{passive:false});
+  canvas.addEventListener('wheel',(event)=>{event.preventDefault();setZoom(state.zoom-event.deltaY*0.001);},{passive:false});
   canvas.addEventListener('contextmenu',(event)=>event.preventDefault());
   langToggle.addEventListener('click',()=>{state.language=state.language==='zh'?'en':'zh';setLanguage();});
+  zoomOut.addEventListener('click',()=>setZoom(state.zoom-0.1));
+  resetButton.addEventListener('click',resetView);
+  zoomIn.addEventListener('click',()=>setZoom(state.zoom+0.1));
 
   fetch(DATA_URL).then(response=>{if(!response.ok)throw new Error('Map data request failed');return response.json();}).then(geo=>{buildTexture(geo);loading.style.display='none';render();}).catch(()=>{loading.textContent='REAL COASTLINE DATA UNAVAILABLE · 请检查网络后刷新';loading.classList.add('error');});
   setLanguage();
