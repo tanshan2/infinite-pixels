@@ -1,0 +1,160 @@
+<style>
+  .globe3d-wrap{min-height:720px;border:1px solid #3f5048;border-radius:14px;background:#111716;color:#e9eadb;position:relative;overflow:hidden;padding:20px}.globe3d-topline{position:relative;z-index:2;display:flex;align-items:center;justify-content:space-between;font:10px 'Courier New',monospace;letter-spacing:.11em;color:#b9c8b4}.globe3d-lang{border:1px solid #69776c;border-radius:2px;background:#15201d;color:#ede8ce;padding:5px 8px;font:10px 'Courier New',monospace;letter-spacing:.04em;cursor:pointer}.globe3d-lang:focus-visible{outline:2px solid #d5d7a2;outline-offset:2px}.globe3d-stage{position:relative;width:min(86vw,520px);aspect-ratio:1;margin:32px auto 0;touch-action:none;cursor:grab;display:grid;place-items:center}.globe3d-stage.dragging{cursor:grabbing}.globe3d-canvas{display:block;width:100%;height:100%;image-rendering:pixelated;image-rendering:crisp-edges}.globe3d-loading{position:absolute;inset:0;display:grid;place-items:center;background:#111716;color:#b9c8b4;font:10px 'Courier New',monospace;text-align:center}.globe3d-loading.error{color:#e3a17f}.globe3d-meta{display:flex;justify-content:center;gap:18px;margin-top:18px;color:#9caf9f;font:9px 'Courier New',monospace;letter-spacing:.06em;text-align:center}.globe3d-note{position:relative;z-index:1;margin:22px auto 0;max-width:700px;color:#aebbb2;font-size:12px;line-height:1.55;text-align:center}.globe3d-note strong{color:#f0ebd0}@media(max-width:640px){.globe3d-wrap{padding:13px;min-height:650px}.globe3d-stage{margin-top:26px}.globe3d-meta{gap:10px;font-size:8px;flex-wrap:wrap}.globe3d-note{font-size:11px}}
+</style>
+
+<h2>3D 像素地球</h2>
+<p class="subtitle">同一张真实陆地平面图的球面投影：硬像素、自然光照、可自由观察。</p>
+
+<div class="globe3d-wrap">
+  <div class="globe3d-topline"><strong>PERSONAL ATLAS / 3D GLOBE</strong><button id="langToggle" class="globe3d-lang" type="button" aria-pressed="false">中文 · EN</button></div>
+  <div id="globeStage" class="globe3d-stage">
+    <canvas id="globeCanvas" class="globe3d-canvas" width="160" height="160" aria-label="可旋转的像素地球"></canvas>
+    <div id="globeLoading" class="globe3d-loading">LOADING REAL COASTLINES · 正在加载真实海岸线…</div>
+  </div>
+  <div class="globe3d-meta"><span id="interactionHint">拖动旋转 · 滚轮缩放 · 双指缩放</span><span>PIXEL SOURCE 128×64</span></div>
+  <p class="globe3d-note"><strong>3D 版本说明：</strong>球面逐像素读取当前平面地图纹理，不重新绘制大陆；拖动和缩放只改变观察角度与尺寸。</p>
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('globeCanvas');
+  const stage = document.getElementById('globeStage');
+  const loading = document.getElementById('globeLoading');
+  const langToggle = document.getElementById('langToggle');
+  const hint = document.getElementById('interactionHint');
+  if (!canvas || !stage || !loading || !langToggle || !hint) return;
+
+  const DATA_URL = 'https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson';
+  const TEX_W = 128, TEX_H = 64, RENDER_SIZE = 160, TAU = Math.PI * 2;
+  const state = {yaw:Math.PI, pitch:-0.14, zoom:1, language:'zh'};
+  const pointers = new Map();
+  const drag = {id:null,x:0,y:0};
+  const pinch = {distance:0,zoom:1};
+  let textureData = null;
+
+  const canvasCtx = canvas.getContext('2d', {alpha:true, willReadFrequently:true});
+  const textureCanvas = document.createElement('canvas');
+  textureCanvas.width = TEX_W; textureCanvas.height = TEX_H;
+  const textureCtx = textureCanvas.getContext('2d', {alpha:true, willReadFrequently:true});
+  canvasCtx.imageSmoothingEnabled = false;
+  textureCtx.imageSmoothingEnabled = false;
+
+  function normalize(v){
+    const length = Math.hypot(v.x,v.y,v.z) || 1;
+    return {x:v.x/length,y:v.y/length,z:v.z/length};
+  }
+  const light = normalize({x:-0.45,y:-0.62,z:-0.64});
+  function lonLatToTexture(lon,lat){return {x:(lon+180)/360*TEX_W,y:(90-lat)/180*TEX_H};}
+  function pathRing(target,ring){
+    if(!ring || !ring.length)return;
+    const first=lonLatToTexture(ring[0][0],ring[0][1]);target.moveTo(Math.round(first.x),Math.round(first.y));
+    for(let i=1;i<ring.length;i++){const q=lonLatToTexture(ring[i][0],ring[i][1]);target.lineTo(Math.round(q.x),Math.round(q.y));}
+    target.closePath();
+  }
+  function fillGeometry(target,geometry){
+    if(!geometry)return;
+    if(geometry.type==='Polygon'){
+      target.beginPath();geometry.coordinates.forEach(ring=>pathRing(target,ring));target.fill('evenodd');
+    }else if(geometry.type==='MultiPolygon'){
+      geometry.coordinates.forEach(poly=>{target.beginPath();poly.forEach(ring=>pathRing(target,ring));target.fill('evenodd');});
+    }
+  }
+  function hardenLand(){
+    const image=textureCtx.getImageData(0,0,TEX_W,TEX_H), pixels=image.data, mask=new Uint8Array(TEX_W*TEX_H);
+    for(let i=0;i<mask.length;i++){
+      const p=i*4;
+      if(pixels[p+3]>=32){mask[i]=1;pixels[p]=115;pixels[p+1]=155;pixels[p+2]=96;pixels[p+3]=255;}
+      else{pixels[p+3]=0;}
+    }
+    textureCtx.putImageData(image,0,0);
+    return mask;
+  }
+  function addTerrainPixels(){
+    const palette=['#6f9b62','#789f5f','#8dad63','#9bae70','#5f8b5e','#b3ba7b','#4e7959'];
+    textureCtx.save();textureCtx.globalCompositeOperation='source-atop';
+    for(let y=0;y<TEX_H;y+=2){
+      for(let x=0;x<TEX_W;x+=2){
+        const n=(x*13+y*29+x*y)%41;
+        if(n<6){textureCtx.fillStyle=palette[(x*3+y+n)%palette.length];textureCtx.fillRect(x,y,1+(n%2),1+(n%3===0?1:0));}
+      }
+    }
+    textureCtx.fillStyle='#d5d7a2';[[18,12],[21,13],[55,9],[58,10],[70,15],[72,16],[10,18],[12,19],[80,31],[83,30]].forEach(([x,y])=>textureCtx.fillRect(x,y,2,2));
+    textureCtx.restore();
+  }
+  function addPixelCoast(mask){
+    const image=textureCtx.getImageData(0,0,TEX_W,TEX_H), pixels=image.data;
+    for(let y=0;y<TEX_H;y++){
+      for(let x=0;x<TEX_W;x++){
+        const i=y*TEX_W+x;if(!mask[i])continue;
+        const edge=x===0||y===0||x===TEX_W-1||y===TEX_H-1||!mask[i-1]||!mask[i+1]||!mask[i-TEX_W]||!mask[i+TEX_W];
+        if(edge){const p=i*4;pixels[p]=38;pixels[p+1]=84;pixels[p+2]=73;pixels[p+3]=255;}
+      }
+    }
+    textureCtx.putImageData(image,0,0);
+  }
+  function buildTexture(geo){
+    textureCtx.clearRect(0,0,TEX_W,TEX_H);textureCtx.fillStyle='#739b60';
+    geo.features.forEach(feature=>fillGeometry(textureCtx,feature.geometry));
+    const mask=hardenLand();addTerrainPixels();addPixelCoast(mask);
+    textureData=textureCtx.getImageData(0,0,TEX_W,TEX_H).data;
+  }
+  function rotateToWorld(v){
+    const cosPitch=Math.cos(state.pitch),sinPitch=Math.sin(state.pitch);
+    const y1=v.y*cosPitch-v.z*sinPitch,z1=v.y*sinPitch+v.z*cosPitch;
+    const cosYaw=Math.cos(state.yaw),sinYaw=Math.sin(state.yaw);
+    return {x:v.x*cosYaw+z1*sinYaw,y:y1,z:-v.x*sinYaw+z1*cosYaw};
+  }
+  function sampleTexture(lon,lat){
+    let u=lon/TAU+0.5;u=u-Math.floor(u);
+    const v=Math.max(0,Math.min(0.999999,0.5-lat/Math.PI));
+    const x=Math.max(0,Math.min(TEX_W-1,Math.floor(u*TEX_W))),y=Math.max(0,Math.min(TEX_H-1,Math.floor(v*TEX_H)));
+    const p=(y*TEX_W+x)*4;return [textureData[p],textureData[p+1],textureData[p+2],textureData[p+3]];
+  }
+  function shadeColor(color,brightness){return [Math.max(0,Math.min(255,Math.round(color[0]*brightness))),Math.max(0,Math.min(255,Math.round(color[1]*brightness))),Math.max(0,Math.min(255,Math.round(color[2]*brightness)))];}
+  function render(){
+    if(!textureData)return;
+    const image=canvasCtx.createImageData(RENDER_SIZE,RENDER_SIZE),pixels=image.data;
+    const center=RENDER_SIZE/2,radius=RENDER_SIZE*0.43*state.zoom;
+    for(let y=0;y<RENDER_SIZE;y++){
+      for(let x=0;x<RENDER_SIZE;x++){
+        const sx=(x+0.5-center)/radius,sy=(y+0.5-center)/radius,r2=sx*sx+sy*sy,index=(y*RENDER_SIZE+x)*4;
+        if(r2>1){pixels[index+3]=0;continue;}
+        const local={x:sx,y:-sy,z:Math.sqrt(1-r2)},world=rotateToWorld(local);
+        const lon=Math.atan2(world.x,world.z),lat=Math.asin(Math.max(-1,Math.min(1,world.y)));
+        const tex=sampleTexture(lon,lat),diff=Math.max(0,world.x*light.x+world.y*light.y+world.z*light.z),brightness=0.38+diff*0.62;
+        const base=tex[3]>0?shadeColor(tex,brightness):shadeColor([18,69,76],0.52+diff*0.48);
+        const rim=r2>0.91?0.86:1;pixels[index]=Math.round(base[0]*rim);pixels[index+1]=Math.round(base[1]*rim);pixels[index+2]=Math.round(base[2]*rim);pixels[index+3]=255;
+      }
+    }
+    canvasCtx.putImageData(image,0,0);
+  }
+  function setLanguage(){
+    const english=state.language==='en';langToggle.textContent=english?'EN · 中文':'中文 · EN';langToggle.setAttribute('aria-pressed',String(english));hint.textContent=english?'Drag to rotate · Wheel / pinch to zoom':'拖动旋转 · 滚轮缩放 · 双指缩放';
+  }
+  function distanceBetween(){
+    const values=[...pointers.values()];if(values.length<2)return 0;return Math.hypot(values[0].x-values[1].x,values[0].y-values[1].y);
+  }
+  function updateDrag(event){
+    const rect=canvas.getBoundingClientRect();
+    state.yaw+=(event.clientX-drag.x)/rect.width*Math.PI*1.35;state.pitch+=(event.clientY-drag.y)/rect.height*Math.PI*0.9;state.pitch=Math.max(-1.25,Math.min(1.25,state.pitch));drag.x=event.clientX;drag.y=event.clientY;render();
+  }
+  canvas.addEventListener('pointerdown',(event)=>{
+    event.preventDefault();canvas.setPointerCapture(event.pointerId);pointers.set(event.pointerId,{x:event.clientX,y:event.clientY});
+    if(pointers.size===1){drag.id=event.pointerId;drag.x=event.clientX;drag.y=event.clientY;stage.classList.add('dragging');}
+    if(pointers.size===2){pinch.distance=distanceBetween();pinch.zoom=state.zoom;drag.id=null;}
+  });
+  canvas.addEventListener('pointermove',(event)=>{
+    if(!pointers.has(event.pointerId))return;event.preventDefault();pointers.set(event.pointerId,{x:event.clientX,y:event.clientY});
+    if(pointers.size>=2){const current=distanceBetween();if(pinch.distance>0){state.zoom=Math.max(0.78,Math.min(1.55,pinch.zoom*current/pinch.distance));render();}}
+    else if(drag.id===event.pointerId){updateDrag(event);}
+  });
+  function endPointer(event){pointers.delete(event.pointerId);if(drag.id===event.pointerId)drag.id=null;if(pointers.size===1){const [id,value]=pointers.entries().next().value;drag.id=id;drag.x=value.x;drag.y=value.y;}if(pointers.size<2)pinch.distance=0;if(pointers.size===0)stage.classList.remove('dragging');}
+  canvas.addEventListener('pointerup',endPointer);canvas.addEventListener('pointercancel',endPointer);canvas.addEventListener('pointerleave',(event)=>{if(event.buttons===0)endPointer(event);});
+  canvas.addEventListener('wheel',(event)=>{event.preventDefault();state.zoom=Math.max(0.78,Math.min(1.55,state.zoom-event.deltaY*0.001));render();},{passive:false});
+  canvas.addEventListener('contextmenu',(event)=>event.preventDefault());
+  langToggle.addEventListener('click',()=>{state.language=state.language==='zh'?'en':'zh';setLanguage();});
+
+  fetch(DATA_URL).then(response=>{if(!response.ok)throw new Error('Map data request failed');return response.json();}).then(geo=>{buildTexture(geo);loading.style.display='none';render();}).catch(()=>{loading.textContent='REAL COASTLINE DATA UNAVAILABLE · 请检查网络后刷新';loading.classList.add('error');});
+  setLanguage();
+})();
+</script>
