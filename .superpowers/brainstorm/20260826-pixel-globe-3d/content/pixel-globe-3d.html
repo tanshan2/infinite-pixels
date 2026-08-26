@@ -29,19 +29,29 @@
   const loading = document.getElementById('globeLoading');
   const langToggle = document.getElementById('langToggle');
   const hint = document.getElementById('interactionHint');
+  const locationLabel = document.getElementById('globeLocationLabel');
+  const locationName = document.getElementById('globeLocationName');
+  const locationNav = document.getElementById('globeLocationNav');
+  const locationButtons = [...document.querySelectorAll('#globeLocationNav [data-location-id]')];
   const zoomOut = document.getElementById('zoomOut');
   const resetButton = document.getElementById('resetView');
   const zoomIn = document.getElementById('zoomIn');
-  if (!canvas || !stage || !loading || !langToggle || !hint || !zoomOut || !resetButton || !zoomIn) return;
+  if (!canvas || !stage || !loading || !langToggle || !hint || !locationLabel || !locationName || !locationNav || locationButtons.length !== 3 || !zoomOut || !resetButton || !zoomIn) return;
 
   const DATA_URL = 'https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson';
   const TEX_W = 128, TEX_H = 64, RENDER_SIZE = 160, TAU = Math.PI * 2;
   const DEFAULT_VIEW = {yaw:Math.PI, pitch:-0.14, zoom:1};
-  const state = {...DEFAULT_VIEW, language:'zh'};
+  const LOCATIONS = [
+    {id:'guangzhou', name:{zh:'广州', en:'Guangzhou'}, lat:23.129, lon:113.264},
+    {id:'indianapolis', name:{zh:'印第安纳波利斯', en:'Indianapolis'}, lat:39.768, lon:-86.158},
+    {id:'toronto', name:{zh:'多伦多', en:'Toronto'}, lat:43.653, lon:-79.383}
+  ];
+  const state = {...DEFAULT_VIEW, language:'zh', selectedLocationId:null, hoverLocationId:null};
   const pointers = new Map();
-  const drag = {id:null,x:0,y:0};
+  const drag = {id:null,x:0,y:0,startX:0,startY:0,moved:false,locationId:null};
   const pinch = {distance:0,zoom:1};
   let textureData = null;
+  let blinkFrame = 0;
 
   const canvasCtx = canvas.getContext('2d', {alpha:true, willReadFrequently:true});
   const textureCanvas = document.createElement('canvas');
@@ -114,6 +124,30 @@
     const y1=v.y*cosPitch-v.z*sinPitch,z1=v.y*sinPitch+v.z*cosPitch;
     const cosYaw=Math.cos(state.yaw),sinYaw=Math.sin(state.yaw);
     return {x:v.x*cosYaw+z1*sinYaw,y:y1,z:-v.x*sinYaw+z1*cosYaw};
+  }
+  function locationVector(location){
+    const lat=location.lat*Math.PI/180,lon=location.lon*Math.PI/180,cosLat=Math.cos(lat);
+    return {x:cosLat*Math.sin(lon),y:Math.sin(lat),z:cosLat*Math.cos(lon)};
+  }
+  function worldToView(v){
+    const cosYaw=Math.cos(state.yaw),sinYaw=Math.sin(state.yaw);
+    const x1=v.x*cosYaw-v.z*sinYaw,z1=v.x*sinYaw+v.z*cosYaw;
+    const cosPitch=Math.cos(state.pitch),sinPitch=Math.sin(state.pitch);
+    return {x:x1,y:v.y*cosPitch+z1*sinPitch,z:-v.y*sinPitch+z1*cosPitch};
+  }
+  function projectLocation(location){
+    const view=worldToView(locationVector(location));
+    if(view.z<=0.04)return null;
+    const center=RENDER_SIZE/2,radius=RENDER_SIZE*0.43*state.zoom;
+    return {location,view,x:center+view.x*radius,y:center-view.y*radius,depth:view.z};
+  }
+  function visibleLocations(){
+    return LOCATIONS.map(projectLocation).filter(Boolean).filter(item=>!state.selectedLocationId||item.location.id===state.selectedLocationId);
+  }
+  function hitLocation(event){
+    const rect=canvas.getBoundingClientRect(),scale=RENDER_SIZE/rect.width;
+    const px=(event.clientX-rect.left)*scale,py=(event.clientY-rect.top)*scale;
+    return visibleLocations().sort((a,b)=>b.depth-a.depth).find(item=>Math.hypot(item.x-px,item.y-py)<=Math.max(4,Math.round(5/state.zoom)))?.location||null;
   }
   function sampleTexture(lon,lat){
     let u=lon/TAU+0.5;u=u-Math.floor(u);
