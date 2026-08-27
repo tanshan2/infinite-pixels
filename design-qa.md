@@ -20,6 +20,8 @@ The source and implementation screenshots were opened together. Both show the sa
 
 The implementation's desktop stage is min(60vw, 64vh, 560px) and its narrow-screen rule is min(88vw, 64vh, 560px); both use a 50% viewport anchor with a -50% transform. scrollHeight and clientHeight both resolve to 720 in the local desktop capture, and the measured stage center matches the viewport center with 0px error.
 
+The zoom boundary is now tied to the fixed 160 × 160 render canvas: MAX_ZOOM is 1.1, producing a 75.68px sphere radius inside the 80px canvas half-size and leaving a 4.32px internal margin. This keeps the globe circular at the largest supported zoom instead of exposing the square canvas edge.
+
 ## Required fidelity surfaces
 
 - Fonts / typography: existing Courier-style pixel UI font is retained; button labels, metadata, letter spacing, and compact line-height match the reference's monospaced treatment.
@@ -37,7 +39,7 @@ No separate crop was needed: the reference's only focused UI regions (top-right 
 - Map loading: #globeLoading becomes display: none; Canvas remains 160 × 160.
 - Locations: guangzhou, indianapolis, and toronto buttons remain present.
 - Nameplate: hidden initially; clicking the visible Guangzhou marker reveals 广州; language toggle changes it to Guangzhou; clicking empty globe space clears it.
-- Controls: zoom in/out changes the render; reset restores the view; drag and wheel/pinch paths change the render; no automatic rotation or inertia was added.
+- Controls: zoom in/out changes the render and clamps at the shared 1.1 maximum; reset restores the view; drag and wheel/pinch paths change the render; no automatic rotation or inertia was added.
 - Console: dev.logs() returned [].
 
 ## Comparison history
@@ -64,6 +66,12 @@ No separate crop was needed: the reference's only focused UI regions (top-right 
 - Fix: changed the desktop stage, controls, metadata, and conditional nameplate anchors to 50% with centered transforms; narrow-screen behavior remains centered.
 - Post-fix evidence: local center assertion passed with 0px error, controls/meta centers equal 640px in a 1280px viewport, and the public page reports the same centered rectangles with no console errors.
 
+### Iteration 3 — safe zoom boundary follow-up
+
+- Earlier finding: repeated zoom-in clicks allowed state.zoom to reach 1.55, which made the rendered sphere radius 106.64px on a 160px canvas; the sphere touched all four canvas edges and appeared as a square crop.
+- Fix: added shared MIN_ZOOM/MAX_ZOOM constants, capped MAX_ZOOM at 1.1, and reused one globeRadius() calculation for the render and location projection.
+- Post-fix evidence: screenshot pixel scans at default, minimum, and maximum zoom reported no stage-edge contact. The maximum-zoom scan measured a 10px left/right and 12px top/bottom stage margin in the 1280 × 720 capture; scroll stayed locked at 1280 × 720.
+
 ## Findings
 
 No actionable P0, P1, or P2 visual findings remain in the local implementation. The different screenshot widths are intentional evidence of responsive behavior, not a layout defect.
@@ -74,6 +82,7 @@ No actionable P0, P1, or P2 visual findings remain in the local implementation. 
 - [x] Only screenshot-approved visible UI remains.
 - [x] Real pixel globe and three location interactions preserved.
 - [x] Centered desktop/narrow-screen placement rules verified.
+- [x] Safe maximum zoom prevents square canvas clipping at default/minimum/maximum states.
 - [x] Local interaction and console checks pass.
 - [x] Public GitHub Pages screenshot and SEO endpoints verified.
 

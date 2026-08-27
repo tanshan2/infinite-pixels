@@ -225,7 +225,7 @@ git push origin HEAD:main
 - 修改：\`docs/superpowers/specs/2026-08-26-infinite-pixels-fullscreen-globe.md\` — 记录缩放边界和无裁切验收标准。
 - 测试：本地浏览器 Canvas alpha 边界检查。
 
-- [ ] **步骤 1：编写失败的边界测试**
+- [x] **步骤 1：编写失败的边界测试**
 
 在本地页加载真实纹理后连续点击 \`#zoomIn\`，读取 160×160 Canvas 的 alpha 边界：
 
@@ -244,19 +244,19 @@ for (let y = 0; y < canvas.height; y++) for (let x = 0; x < canvas.width; x++) {
 
 预期（修复前）：\`touchesEdge: true\`，证明旧的 \`1.55×\` 上限会把地球裁到方形 Canvas 边界。
 
-- [ ] **步骤 2：实现最小安全修复**
+- [x] **步骤 2：实现最小安全修复**
 
-在 \`index.html\` 中定义 \`MIN_ZOOM = 0.78\`、\`MAX_ZOOM = 1.1\`，让 \`render()\`、\`projectLocation()\` 和 \`drawLocationMarker()\` 共用同一个半径计算；\`setZoom()\` 统一使用 \`Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, nextZoom))\`。不改变 Canvas 尺寸、地图数据或其他交互。
+在 \`index.html\` 中定义 \`MIN_ZOOM = 0.78\`、\`MAX_ZOOM = 1.1\`，让 \`render()\` 与 \`projectLocation()\` 共用同一个 \`globeRadius()\` 半径计算，标记继续消费投影后的坐标；\`setZoom()\` 统一使用 \`Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, nextZoom))\`。不改变 Canvas 尺寸、地图数据或其他交互。
 
-- [ ] **步骤 3：验证边界测试通过**
+- [x] **步骤 3：验证边界测试通过**
 
 重复步骤 1，并额外验证默认缩放、最小缩放和最大缩放；预期三个状态均满足 \`touchesEdge: false\`，且所有缩放入口的最终值不超过 \`1.1\`。
 
-- [ ] **步骤 4：回归交互**
+- [x] **步骤 4：回归交互**
 
 验证滚轮、\`＋\`、\`−\`、双指缩放仍能改变视图，\`重置\` 回到 \`zoom: 1\`，城市标记和语言切换不受影响；\`dev.logs()\` 为空数组。
 
-- [ ] **步骤 5：更新视觉 QA 并提交**
+- [x] **步骤 5：更新视觉 QA 并提交**
 
 在 \`design-qa.md\` 记录放大前后的截图与 alpha 边界结果，执行 \`git diff --check\`，提交：
 
