@@ -137,7 +137,7 @@ body { min-width: 320px; min-height: 100%; background: #111716; }
 - 修改：\`index.html\`（仅在布局改动需要时调整现有交互节点）
 - 测试：本地浏览器交互与控制台日志
 
-- [ ] **步骤 1：等待真实地图纹理完成**
+- [x] **步骤 1：等待真实地图纹理完成**
 
 在本地页等待 \`#globeLoading\` 的 \`display\` 变为 \`none\`，并执行：
 
@@ -151,7 +151,7 @@ body { min-width: 320px; min-height: 100%; background: #111716; }
 
 预期：\`loading: 'none'\`、canvas 内部尺寸仍为 \`[160,160]\`、地点 ID 为 \`guangzhou\`、\`indianapolis\`、\`toronto\`。
 
-- [ ] **步骤 2：验证名牌默认隐藏与点击显示**
+- [x] **步骤 2：验证名牌默认隐藏与点击显示**
 
 执行：
 
@@ -168,7 +168,7 @@ document.querySelector('[data-location-id="guangzhou"]').click();
 
 预期：初始 \`hiddenInitially: true\`；点击后 \`hiddenAfterClick: false\` 且 label 为 \`广州\`（切换英文后为 \`Guangzhou\`）。
 
-- [ ] **步骤 3：验证旋转、缩放、重置与语言切换**
+- [x] **步骤 3：验证旋转、缩放、重置与语言切换**
 
 记录 canvas 截图长度或像素数据摘要，分别调用 \`#zoomIn\`、\`#zoomOut\`、\`#resetView\`，并点击 \`#langToggle\`。预期：缩放改变 globe state/截图，重置恢复初始视角，语言按钮切换提示文案；\`dev.logs()\` 为空数组。
 
