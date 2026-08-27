@@ -211,7 +211,15 @@ git commit -m "feat: add Pages deployment and SEO"
 
 - [ ] **步骤 1：启动静态 HTTP 服务并检查响应**
 
-使用当前环境可用的本地静态服务器从仓库根目录提供 `index.html`，访问 `http://localhost:4173/`，确认主页返回 200；使用 HTTP 而不是 `file://`，使 `data/world.geojson` 可以被 fetch。
+在仓库根目录执行下面的 bundled Node 命令，使用 Node 内置 `http`/`fs` 提供静态文件；它不增加项目依赖，也能让 `data/world.geojson` 通过相对路径 fetch：
+
+```powershell
+$node = 'C:\Users\tant2\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe'
+$server = Start-Process -FilePath $node -WorkingDirectory (Get-Location) -ArgumentList '-e', 'const http=require("http"),fs=require("fs"),path=require("path");const root=process.cwd(),mime={".html":"text/html",".js":"application/javascript",".css":"text/css",".json":"application/json",".txt":"text/plain",".xml":"application/xml"};http.createServer((req,res)=>{const clean=decodeURIComponent(req.url.split("?")[0]);const rel=clean==="/"?"index.html":clean.replace(/^\\//,"");const file=path.resolve(root,rel);if(!file.startsWith(root+path.sep)){res.writeHead(403);return res.end();}fs.readFile(file,(err,data)=>{if(err){res.writeHead(404);return res.end("Not found");}res.writeHead(200,{"Content-Type":mime[path.extname(file)]||"application/octet-stream"});res.end(data);});}).listen(4173,"127.0.0.1",()=>console.log("static server http://localhost:4173/"));' -PassThru
+Invoke-WebRequest http://localhost:4173/ -UseBasicParsing | Select-Object StatusCode,Headers
+```
+
+预期 Node 输出 `static server http://localhost:4173/`，HTTP 响应 `StatusCode : 200`。
 
 - [ ] **步骤 2：运行 JavaScript 语法和差异检查**
 
