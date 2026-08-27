@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://tanshan2.github.io/infinite-pixels/sitemap.xml
