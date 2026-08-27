@@ -52,6 +52,7 @@
 </style>
 <style>
   html,body{width:100%;height:100%;overflow:hidden}
+  .globe3d-canvas{transform-origin:50% 50%}
   body{min-width:320px;min-height:100%;background:#111716}
   .site-shell,.site-stage{width:100%;height:100%;margin:0;padding:0}
   .site-header,.site-footer,.globe3d-note{display:none}
@@ -105,7 +106,7 @@
 
   const DATA_URL = 'data/world.geojson';
   const TEX_W = 128, TEX_H = 64, RENDER_SIZE = 160, TAU = Math.PI * 2;
-  const MIN_ZOOM = 0.78, MAX_ZOOM = 1.1;
+  const MIN_ZOOM = 0.78, MAX_ZOOM = 1.3, MAX_RENDER_ZOOM = 1.1;
   const DEFAULT_VIEW = {yaw:Math.PI, pitch:-0.14, zoom:1};
   const LOCATIONS = [
     {id:'guangzhou', name:{zh:'广州', en:'Guangzhou'}, lat:23.129, lon:113.264},
@@ -207,7 +208,9 @@
     const center=RENDER_SIZE/2,radius=globeRadius();
     return {location,view,x:center+view.x*radius,y:center-view.y*radius,depth:view.z};
   }
-  function globeRadius(){return RENDER_SIZE*0.43*state.zoom;}
+  function renderZoom(){return Math.min(state.zoom,MAX_RENDER_ZOOM);}
+  function globeRadius(){return RENDER_SIZE*0.43*renderZoom();}
+  function syncCanvasScale(){const scale=state.zoom/renderZoom();canvas.style.transform=`scale(${scale})`;}
   function visibleLocations(){
     return LOCATIONS.map(projectLocation).filter(Boolean).filter(item=>!state.selectedLocationId||item.location.id===state.selectedLocationId);
   }
@@ -242,6 +245,7 @@
   }
   function render(){
     if(!textureData)return;
+    syncCanvasScale();
     syncSelectionVisibility();
     const image=canvasCtx.createImageData(RENDER_SIZE,RENDER_SIZE),pixels=image.data;
     const center=RENDER_SIZE/2,radius=globeRadius();

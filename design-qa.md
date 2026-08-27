@@ -20,7 +20,7 @@ The source and implementation screenshots were opened together. Both show the sa
 
 The implementation's desktop stage is min(60vw, 64vh, 560px) and its narrow-screen rule is min(88vw, 64vh, 560px); both use a 50% viewport anchor with a -50% transform. scrollHeight and clientHeight both resolve to 720 in the local desktop capture, and the measured stage center matches the viewport center with 0px error.
 
-The zoom boundary is now tied to the fixed 160 × 160 render canvas: MAX_ZOOM is 1.1, producing a 75.68px sphere radius inside the 80px canvas half-size and leaving a 4.32px internal margin. This keeps the globe circular at the largest supported zoom instead of exposing the square canvas edge.
+The zoom boundary is split between interaction and rendering: MAX_ZOOM is 1.3 while MAX_RENDER_ZOOM remains 1.1. The fixed 160 × 160 render canvas therefore keeps a 75.68px sphere radius inside the 80px canvas half-size and leaves a 4.32px internal margin; the transparent Canvas transform supplies the remaining visible scale without exposing a square edge.
 
 ## Required fidelity surfaces
 
@@ -39,7 +39,7 @@ No separate crop was needed: the reference's only focused UI regions (top-right 
 - Map loading: #globeLoading becomes display: none; Canvas remains 160 × 160.
 - Locations: guangzhou, indianapolis, and toronto buttons remain present.
 - Nameplate: hidden initially; clicking the visible Guangzhou marker reveals 广州; language toggle changes it to Guangzhou; clicking empty globe space clears it.
-- Controls: zoom in/out changes the render and clamps at the shared 1.1 maximum; reset restores the view; drag and wheel/pinch paths change the render; no automatic rotation or inertia was added.
+- Controls: zoom in/out changes the render and clamps at the 1.3 interactive maximum while the internal render cap remains 1.1; reset restores the view; drag and wheel/pinch paths change the render; no automatic rotation or inertia was added.
 - Console: dev.logs() returned [].
 
 ## Comparison history
@@ -73,6 +73,12 @@ No separate crop was needed: the reference's only focused UI regions (top-right 
 - Fix: added shared MIN_ZOOM/MAX_ZOOM constants, capped MAX_ZOOM at 1.1, and reused one globeRadius() calculation for the render and location projection.
 - Post-fix evidence: screenshot pixel scans at default, minimum, and maximum zoom reported no stage-edge contact. The maximum-zoom scan measured a 10px left/right and 12px top/bottom stage margin in the 1280 × 720 capture; scroll stayed locked at 1280 × 720.
 
+### Iteration 4 — 1.3× visible zoom follow-up
+
+- Earlier finding: the 1.1× safety cap prevented clipping but did not provide the requested 1.3× visible zoom.
+- Fix: separated `MAX_ZOOM = 1.3` from `MAX_RENDER_ZOOM = 1.1`; the render remains inside the 160 × 160 buffer while the transparent Canvas scales by `1.3 / 1.1 ≈ 1.1818` only above the internal cap.
+- Post-fix evidence: local computed transform at the maximum is `matrix(1.18182, 0, 0, 1.18182, 0, 0)`; the transformed Canvas is 544.58px while the stage remains 460.80px, and the screenshot shows the globe as a circle with no square overlay. Reset returns the transform to identity and scroll remains locked at 1280 × 720.
+
 ## Findings
 
 No actionable P0, P1, or P2 visual findings remain in the local implementation. The different screenshot widths are intentional evidence of responsive behavior, not a layout defect.
@@ -83,7 +89,7 @@ No actionable P0, P1, or P2 visual findings remain in the local implementation. 
 - [x] Only screenshot-approved visible UI remains.
 - [x] Real pixel globe and three location interactions preserved.
 - [x] Centered desktop/narrow-screen placement rules verified.
-- [x] Safe maximum zoom prevents square canvas clipping at default/minimum/maximum states.
+- [x] Safe internal render cap prevents square canvas clipping while interactive zoom reaches 1.3×.
 - [x] Local interaction and console checks pass.
 - [x] Public GitHub Pages screenshot and SEO endpoints verified.
 
