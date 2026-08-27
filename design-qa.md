@@ -54,11 +54,11 @@ No separate crop was needed: the reference's only focused UI regions (top-right 
 
 - Public URL: https://tanshan2.github.io/infinite-pixels/
 - Browser-rendered screenshot: public implementation capture (1280 × 720)
-- GitHub Actions run #5 for commit 0b8cc29 completed with conclusion success.
+- GitHub Actions run #5 for the centered layout and run #9 for commit 409ef81 (1.3× zoom) completed with conclusion success.
 - Public DOM reports loading display:none, scrollWidth/scrollHeight 1280/720, no wrap border, the three location IDs, and the expected − / 重置 / ＋ controls.
 - Public center assertion reports stage center 640px, viewport center 640px, centerDelta 0px, controls center 640px, and metadata center 640px.
 - Public interaction smoke test passed: nameplate hidden initially, visible Guangzhou marker reveals 广州, language toggle changes it to Guangzhou, and dev.logs() returned [].
-- Public zoom-boundary smoke test passed on run #7: after 20 zoom-in clicks, the 160 × 160 render remained inside the 461 × 461 stage with 10px left/right and 12px top/bottom margins; `touchesStageEdge: false` and scroll stayed locked at 1280 × 720.
+- Public zoom-boundary smoke test passed on run #9: after 20 zoom-in clicks, computed Canvas transform was `matrix(1.18182, 0, 0, 1.18182, 0, 0)`, the transformed Canvas measured 544.58px, internal globe pixels did not touch the transformed Canvas edge, and scroll stayed locked at 1280 × 720.
 - Public robots.txt and sitemap.xml both returned HTTP 200 via the bundled runtime fetch.
 
 ### Iteration 2 — centered globe follow-up
@@ -78,6 +78,7 @@ No separate crop was needed: the reference's only focused UI regions (top-right 
 - Earlier finding: the 1.1× safety cap prevented clipping but did not provide the requested 1.3× visible zoom.
 - Fix: separated `MAX_ZOOM = 1.3` from `MAX_RENDER_ZOOM = 1.1`; the render remains inside the 160 × 160 buffer while the transparent Canvas scales by `1.3 / 1.1 ≈ 1.1818` only above the internal cap.
 - Post-fix evidence: local computed transform at the maximum is `matrix(1.18182, 0, 0, 1.18182, 0, 0)`; the transformed Canvas is 544.58px while the stage remains 460.80px, and the screenshot shows the globe as a circle with no square overlay. Reset returns the transform to identity and scroll remains locked at 1280 × 720.
+- Public post-fix evidence matches the local result at the clean URL: centered stage at 640px, identity transform by default, 1.18182 transform at the 1.3× cap, no transformed-Canvas edge contact, and no scroll.
 
 ## Findings
 
