@@ -265,11 +265,11 @@ git commit -m "test: verify static homepage interactions"
 - 本地 Git：新增 `origin`，创建并推送 `main` 分支
 - 测试：GitHub Actions 状态和公开 URL
 
-- [ ] **步骤 1：通过 GitHub 登录会话创建公开空仓库**
+- [x] **步骤 1：通过 GitHub 登录会话创建公开空仓库**
 
 创建 `infinite-pixels` 公开仓库，不自动添加 README、`.gitignore` 或 license，避免与本地历史产生无关合并；保持用户已授权的 GitHub 账号 `tanshan2`。
 
-- [ ] **步骤 2：推送 main 发布分支**
+- [x] **步骤 2：推送 main 发布分支**
 
 保留当前 `codex/pixel-globe-3d` 分支，在当前提交创建 `main` 分支并推送：
 
@@ -279,7 +279,7 @@ git branch main HEAD
 git push -u origin main
 ```
 
-- [ ] **步骤 3：检查 Actions 和公开页面**
+- [x] **步骤 3：检查 Actions 和公开页面**
 
 确认 `Deploy to GitHub Pages` workflow 在 `main` 上成功运行；访问：
 
@@ -287,7 +287,7 @@ git push -u origin main
 
 确认主页返回 200、标题为 `Infinite Pixels — 3D Pixel Globe Portfolio`、GeoJSON 成功加载、浏览器控制台无 error/warn。
 
-- [ ] **步骤 4：记录 Search Console 下一步**
+- [x] **步骤 4：记录 Search Console 下一步**
 
 向用户提供 Search Console 操作：添加 `https://tanshan2.github.io/infinite-pixels/`，提交 `https://tanshan2.github.io/infinite-pixels/sitemap.xml`。不代替用户进行 Google 账号验证。
 
