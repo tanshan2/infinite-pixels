@@ -264,3 +264,62 @@ for (let y = 0; y < canvas.height; y++) for (let x = 0; x < canvas.width; x++) {
 git add index.html docs/superpowers/specs/2026-08-26-infinite-pixels-fullscreen-globe.md docs/superpowers/plans/2026-08-26-infinite-pixels-fullscreen-globe.md design-qa.md
 git commit -m "fix: cap pixel globe zoom before canvas clipping"
 ~~~
+
+### 任务 6：允许 1.3× 可见放大而不裁切
+
+**文件：**
+- 修改：\`index.html:105-107,207-213,246-263\` — 分离交互缩放上限与内部安全渲染缩放，并同步透明 Canvas 的视觉变换。
+- 修改：\`docs/superpowers/specs/2026-08-26-infinite-pixels-fullscreen-globe.md\` — 记录 1.3× 交互上限和 1.1× 内部渲染上限。
+- 测试：本地和公开页面的最大缩放截图像素边界检查。
+
+- [ ] **步骤 1：编写失败的需求测试**
+
+在未修改的源码上执行以下检查，要求交互上限为 1.3、内部上限为 1.1，并要求存在透明 Canvas 变换入口：
+
+~~~powershell
+$source = Get-Content -Raw index.html
+$hasInteractiveMax = $source -match 'MAX_ZOOM\\s*=\\s*1\\.3'
+$hasRenderMax = $source -match 'MAX_RENDER_ZOOM\\s*=\\s*1\\.1'
+$hasCanvasScale = $source -match 'canvas\\.style\\.transform'
+if(-not ($hasInteractiveMax -and $hasRenderMax -and $hasCanvasScale)){
+  Write-Output 'FAIL: 1.3x interactive zoom requires a separate 1.1x render cap and canvas scaling'
+  exit 1
+}
+~~~
+
+预期（修复前）：失败，因为当前源码只有 `MAX_ZOOM = 1.1`，没有交互/渲染上限分离。
+
+- [ ] **步骤 2：实现最小混合缩放逻辑**
+
+将缩放常量和半径逻辑改为：
+
+~~~js
+const MIN_ZOOM = 0.78, MAX_ZOOM = 1.3, MAX_RENDER_ZOOM = 1.1;
+function renderZoom(){return Math.min(state.zoom,MAX_RENDER_ZOOM);}
+function globeRadius(){return RENDER_SIZE*0.43*renderZoom();}
+function syncCanvasScale(){
+  const scale=state.zoom/renderZoom();
+  canvas.style.transform=`scale(${scale})`;
+}
+function setZoom(nextZoom){state.zoom=Math.max(MIN_ZOOM,Math.min(MAX_ZOOM,nextZoom));render();}
+~~~
+
+在 `render()` 写入像素前调用 `syncCanvasScale()`；`projectLocation()` 继续使用 `globeRadius()`，这样 marker 会随透明 Canvas 一起缩放。默认、最小缩放的 Canvas scale 保持 `1`，只有超过 `1.1×` 时才放大透明 Canvas 内容。
+
+- [ ] **步骤 3：验证 1.3× 最大缩放**
+
+本地页面加载完成后连续点击 `#zoomIn` 20 次，读取 `canvas` 的 computed transform 和截图像素边界；预期交互状态不超过 `1.3`、transform scale 约为 `1.1818`、Canvas 内部球体仍不接触四边，且页面不出现滚动。
+
+- [ ] **步骤 4：回归既有交互**
+
+验证 `#zoomOut`、滚轮、双指缩放、`#resetView`、拖动旋转、城市标记和中英文切换；默认地球大小与 1.1× 修复前一致，重置回到 `zoom: 1`，控制台无错误。
+
+- [ ] **步骤 5：更新 QA、提交并发布**
+
+在 `design-qa.md` 记录 1.3× 线上截图、内部边距和 transform 结果；执行 `git diff --check`，提交并推送：
+
+~~~
+git add index.html design-qa.md docs/superpowers/specs/2026-08-26-infinite-pixels-fullscreen-globe.md docs/superpowers/plans/2026-08-26-infinite-pixels-fullscreen-globe.md
+git commit -m "feat: allow safe 1.3x pixel globe zoom"
+git push origin HEAD:main
+~~~
