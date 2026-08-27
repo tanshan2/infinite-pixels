@@ -92,7 +92,7 @@
   const zoomIn = document.getElementById('zoomIn');
   if (!canvas || !stage || !loading || !langToggle || !hint || !locationLabel || !locationName || !locationNav || locationButtons.length !== 3 || !zoomOut || !resetButton || !zoomIn) return;
 
-  const DATA_URL = 'https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson';
+  const DATA_URL = 'data/world.geojson';
   const TEX_W = 128, TEX_H = 64, RENDER_SIZE = 160, TAU = Math.PI * 2;
   const DEFAULT_VIEW = {yaw:Math.PI, pitch:-0.14, zoom:1};
   const LOCATIONS = [
@@ -355,5 +355,4 @@
   </main>
 </body>
 </html>
-
 
