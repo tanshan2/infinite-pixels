@@ -179,7 +179,7 @@ document.querySelector('[data-location-id="guangzhou"]').click();
 - 修改：\`index.html\`
 - 测试：本地 HTTP、GitHub Actions、公开 Pages URL
 
-- [ ] **步骤 1：运行静态与本地检查**
+- [x] **步骤 1：运行静态与本地检查**
 
 执行：
 
@@ -191,18 +191,18 @@ Select-String -Path index.html -Pattern '100dvh|globe3d-stage|langToggle|world.g
 
 预期：Node 可用、本地 HTTP 状态 \`200\`，并能找到全屏规则、语言按钮和真实数据 URL。
 
-- [ ] **步骤 2：生成 \`design-qa.md\` 并记录结果**
+- [x] **步骤 2：生成 \`design-qa.md\` 并记录结果**
 
 记录参考截图的布局测量、本地桌面/窄屏截图检查、公开页截图检查；最终写明 \`final result: passed\`，并列出未发现 P0/P1/P2 视觉问题。
 
-- [ ] **步骤 3：提交主页改动**
+- [x] **步骤 3：提交主页改动**
 
 ~~~
 git add index.html design-qa.md docs/superpowers/plans/2026-08-26-infinite-pixels-fullscreen-globe.md
 git commit -m "feat: make pixel globe homepage fullscreen"
 ~~~
 
-- [ ] **步骤 4：同步 \`main\` 并发布 Pages**
+- [x] **步骤 4：同步 \`main\` 并发布 Pages**
 
 将已验证提交快进到本地 \`main\` 后推送：
 
@@ -214,6 +214,6 @@ git push origin HEAD:main
 
 预期：远端 \`main\` 指向本次主页提交，GitHub Pages workflow 为绿色。
 
-- [ ] **步骤 5：验证公开页面**
+- [x] **步骤 5：验证公开页面**
 
 打开 \`https://tanshan2.github.io/infinite-pixels/\`，重复任务 2、任务 3 的 DOM/截图检查，并确认 \`robots.txt\`、\`sitemap.xml\` 仍返回 HTTP 200。只有本地与公开页面都满足验收标准后才报告完成。
