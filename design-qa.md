@@ -2,14 +2,14 @@
 
 ## Source visual truth
 
-- Source screenshot: C:/Users/tant2/AppData/Local/Temp/codex-clipboard-22895eda-5d6a-416f-aa5f-d04076562d81.png
+- Source screenshot: user-provided reference image (737 × 678)
 - Source pixels / CSS viewport: 737 × 678 / reference capture (device density not reported)
 - Intended state: 初始中文状态、真实地图已加载、无地点名牌、无滚动
 
 ## Rendered implementation evidence
 
 - Local URL: http://localhost:4173/
-- Browser-rendered screenshot: implementation-fullscreen-1280x720.png
+- Browser-rendered screenshot: local implementation capture (1280 × 720)
 - Implementation pixels / CSS viewport: 1280 × 720 / 1280 × 720
 - Device density: browser capture at 1 CSS pixel per screenshot pixel
 - Normalization: source and implementation were reviewed together at original resolution; viewport widths differ, so comparison uses proportional placement and responsive rules rather than raw pixel distances.
@@ -51,7 +51,7 @@ No separate crop was needed: the reference's only focused UI regions (top-right 
 ### Public verification
 
 - Public URL: https://tanshan2.github.io/infinite-pixels/
-- Browser-rendered screenshot: implementation-public-fullscreen-1280x720.png
+- Browser-rendered screenshot: public implementation capture (1280 × 720)
 - GitHub Actions run #3 for commit f59e08a completed with conclusion success.
 - Public DOM reports loading display:none, scrollWidth/scrollHeight 1280/720, no wrap border, the three location IDs, and the expected − / 重置 / ＋ controls.
 - Public interaction smoke test passed: nameplate hidden initially, visible Guangzhou marker reveals 广州, language toggle changes it to Guangzhou, and dev.logs() returned [].
