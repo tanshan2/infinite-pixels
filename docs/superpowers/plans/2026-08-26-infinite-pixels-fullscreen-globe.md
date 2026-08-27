@@ -104,10 +104,10 @@ body { min-width: 320px; min-height: 100%; background: #111716; }
 .globe3d-wrap { position: relative; width: 100%; height: 100%; min-height: 0; padding: 0; border: 0; border-radius: 0; background: #111716; }
 .globe3d-topline { position: absolute; top: 8px; right: 10px; z-index: 4; }
 .globe3d-topline strong { display: none; }
-.globe3d-stage { position: absolute; left: 0; top: 50%; width: min(60vw, 64vh, 560px); margin: 0; transform: translateY(-50%); }
-.globe3d-controls { position: absolute; left: min(30vw, 32vh, 280px); bottom: clamp(45px, 7vh, 68px); margin: 0; transform: translateX(-50%); }
-.globe3d-meta { position: absolute; left: min(30vw, 32vh, 280px); bottom: clamp(9px, 2vh, 16px); margin: 0; transform: translateX(-50%); white-space: nowrap; }
-.globe3d-location-label { position: absolute; left: min(30vw, 32vh, 280px); top: calc(50% + min(30vw, 32vh, 280px) + 8px); margin: 0; transform: translateX(-50%); }
+.globe3d-stage { position: absolute; left: 50%; top: 50%; width: min(60vw, 64vh, 560px); margin: 0; transform: translate(-50%, -50%); }
+.globe3d-controls { position: absolute; left: 50%; bottom: clamp(45px, 7vh, 68px); margin: 0; transform: translateX(-50%); }
+.globe3d-meta { position: absolute; left: 50%; bottom: clamp(9px, 2vh, 16px); margin: 0; transform: translateX(-50%); white-space: nowrap; }
+.globe3d-location-label { position: absolute; left: 50%; top: calc(50% + min(30vw, 32vh, 280px) + 8px); margin: 0; transform: translateX(-50%); }
 .site-noscript { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); }
 @media (max-width: 760px) {
   .globe3d-stage { left: 50%; width: min(88vw, 64vh, 560px); transform: translate(-50%, -50%); }
@@ -129,7 +129,7 @@ body { min-width: 320px; min-height: 100%; background: #111716; }
 })
 ~~~
 
-预期：页面尺寸不超过视口、\`shellBorder: 'none'\`；桌面 stage 左侧贴近 0，窄屏 stage 水平居中；可见文字只包含 \`中文 · EN\`、\`−\`、\`重置\`、\`＋\`、操作提示和 \`PIXEL SOURCE 128×64\`（加载完成后不含加载文字）。
+预期：页面尺寸不超过视口、\`shellBorder: 'none'\`；桌面和窄屏 stage 均水平居中；可见文字只包含 \`中文 · EN\`、\`−\`、\`重置\`、\`＋\`、操作提示和 \`PIXEL SOURCE 128×64\`（加载完成后不含加载文字）。
 
 ### 任务 3：回归地图与地点名牌交互
 
