@@ -58,6 +58,7 @@ No separate crop was needed: the reference's only focused UI regions (top-right 
 - Public DOM reports loading display:none, scrollWidth/scrollHeight 1280/720, no wrap border, the three location IDs, and the expected − / 重置 / ＋ controls.
 - Public center assertion reports stage center 640px, viewport center 640px, centerDelta 0px, controls center 640px, and metadata center 640px.
 - Public interaction smoke test passed: nameplate hidden initially, visible Guangzhou marker reveals 广州, language toggle changes it to Guangzhou, and dev.logs() returned [].
+- Public zoom-boundary smoke test passed on run #7: after 20 zoom-in clicks, the 160 × 160 render remained inside the 461 × 461 stage with 10px left/right and 12px top/bottom margins; `touchesStageEdge: false` and scroll stayed locked at 1280 × 720.
 - Public robots.txt and sitemap.xml both returned HTTP 200 via the bundled runtime fetch.
 
 ### Iteration 2 — centered globe follow-up
