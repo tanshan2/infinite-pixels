@@ -26,7 +26,7 @@
 - 创建：`index.html`
 - 测试：bundled Node 静态结构检查
 
-- [ ] **步骤 1：创建语义 HTML 文档并复制当前地球体验**
+- [x] **步骤 1：创建语义 HTML 文档并复制当前地球体验**
 
 以当前 visual companion 的地球结构和脚本为基础，创建完整 HTML 文档。`head` 必须包含以下公开站点信息：
 
@@ -46,7 +46,7 @@
 
 页面正文保留 `h1`、中文简介、英文简介、canvas、地点名称的文本 fallback、控制按钮和 footer；不加入独立子页面链接或作品卡片。
 
-- [ ] **步骤 2：运行主页结构检查**
+- [x] **步骤 2：运行主页结构检查**
 
 运行：
 
@@ -57,7 +57,7 @@ $node = 'C:\Users\tant2\.cache\codex-runtimes\codex-primary-runtime\dependencies
 
 预期输出：`homepage structure: PASS`。
 
-- [ ] **步骤 3：Commit**
+- [x] **步骤 3：Commit**
 
 ```powershell
 git add -- index.html
@@ -71,11 +71,11 @@ git commit -m "feat: add Infinite Pixels homepage"
 - 修改：`index.html` 中地图数据 URL
 - 测试：JSON 解析和资源引用检查
 
-- [ ] **步骤 1：下载并保存真实世界 GeoJSON**
+- [x] **步骤 1：下载并保存真实世界 GeoJSON**
 
 使用当前原型所依赖的世界边界源保存到 `data/world.geojson`，保持原始 `FeatureCollection` 结构，不手绘或删减非洲、南美洲、北美洲、亚洲、欧洲和澳大利亚。
 
-- [ ] **步骤 2：改用仓库内相对路径**
+- [x] **步骤 2：改用仓库内相对路径**
 
 将主页脚本中的外部地址替换为：
 
@@ -85,7 +85,7 @@ const DATA_URL = 'data/world.geojson';
 
 保留 `buildTexture()`、最近邻采样、自然光照、地点投影和前后遮挡逻辑不变。
 
-- [ ] **步骤 3：运行地图数据检查**
+- [x] **步骤 3：运行地图数据检查**
 
 运行：
 
@@ -96,7 +96,7 @@ $node = 'C:\Users\tant2\.cache\codex-runtimes\codex-primary-runtime\dependencies
 
 预期输出包含：`local map data: PASS` 和大于 100 的 feature 数量。
 
-- [ ] **步骤 4：Commit**
+- [x] **步骤 4：Commit**
 
 ```powershell
 git add -- data/world.geojson index.html
@@ -112,7 +112,7 @@ git commit -m "feat: bundle world map data"
 - 修改：`index.html` 增加 JSON-LD
 - 测试：文本内容和 workflow 关键字段检查
 
-- [ ] **步骤 1：加入 JSON-LD、robots 和 sitemap**
+- [x] **步骤 1：加入 JSON-LD、robots 和 sitemap**
 
 在 `index.html` 的 `head` 增加：
 
@@ -148,7 +148,7 @@ Sitemap: https://tanshan2.github.io/infinite-pixels/sitemap.xml
 </urlset>
 ```
 
-- [ ] **步骤 2：创建 Actions 发布流程**
+- [x] **步骤 2：创建 Actions 发布流程**
 
 `.github/workflows/pages.yml` 使用 GitHub Pages 官方 artifact/deploy actions：
 
@@ -185,7 +185,7 @@ jobs:
         uses: actions/deploy-pages@v4
 ```
 
-- [ ] **步骤 3：运行收录和 workflow 检查**
+- [x] **步骤 3：运行收录和 workflow 检查**
 
 运行：
 
@@ -196,7 +196,7 @@ $node = 'C:\Users\tant2\.cache\codex-runtimes\codex-primary-runtime\dependencies
 
 预期输出：`SEO and Pages workflow: PASS`。
 
-- [ ] **步骤 4：Commit**
+- [x] **步骤 4：Commit**
 
 ```powershell
 git add -- index.html robots.txt sitemap.xml .github/workflows/pages.yml
@@ -209,7 +209,7 @@ git commit -m "feat: add Pages deployment and SEO"
 - 修改：`index.html`（只修复真实发现的运行问题）
 - 测试：本地 HTTP 页面、in-app browser、bundled Node
 
-- [ ] **步骤 1：启动静态 HTTP 服务并检查响应**
+- [x] **步骤 1：启动静态 HTTP 服务并检查响应**
 
 在仓库根目录执行下面的 bundled Node 命令，使用 Node 内置 `http`/`fs` 提供静态文件；它不增加项目依赖，也能让 `data/world.geojson` 通过相对路径 fetch：
 
@@ -221,7 +221,7 @@ Invoke-WebRequest http://localhost:4173/ -UseBasicParsing | Select-Object Status
 
 预期 Node 输出 `static server http://localhost:4173/`，HTTP 响应 `StatusCode : 200`。
 
-- [ ] **步骤 2：运行 JavaScript 语法和差异检查**
+- [x] **步骤 2：运行 JavaScript 语法和差异检查**
 
 运行：
 
@@ -233,7 +233,7 @@ git diff --check
 
 预期 JavaScript 输出 `PASS`，`git diff --check` 无输出。
 
-- [ ] **步骤 3：验证页面结构、地图和控制台**
+- [x] **步骤 3：验证页面结构、地图和控制台**
 
 在浏览器中检查：
 
@@ -245,7 +245,7 @@ await tab.playwright.locator('link[rel="canonical"]').getAttribute('href'); // P
 await tab.dev.logs({levels:['error','warn']});              // []
 ```
 
-- [ ] **步骤 4：验证既有地球交互和 SEO 文本**
+- [x] **步骤 4：验证既有地球交互和 SEO 文本**
 
 确认初始截图仍显示真实陆地和暖红像素图钉；点击三个可见地点时名牌只显示城市名；拖动旋转、滚轮缩放、重置、语言切换和点击空白清除均正常；选中地点转到背面时图钉隐藏而名牌保留。检查页面文本包含 `Infinite Pixels`、用户确认的中文描述和三个城市名称，即使不读取 canvas 也能找到这些文本。
 
