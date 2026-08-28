@@ -52,8 +52,7 @@
 </style>
 <style>
   html,body{width:100%;height:100%;overflow:hidden}
-  .globe3d-canvas{position:relative;z-index:1;transform-origin:50% 50%;opacity:0}
-  .earth-artwork{position:absolute;z-index:0;inset:0;display:block;width:100%;height:100%;object-fit:contain;pointer-events:none;user-select:none;image-rendering:auto}
+  .globe3d-canvas{position:relative;z-index:1;transform-origin:50% 50%;opacity:1}
   body{min-width:320px;min-height:100%;background:#111716}
   .site-shell,.site-stage{width:100%;height:100%;margin:0;padding:0}
   .site-header,.site-footer,.globe3d-note{display:none}
@@ -100,7 +99,6 @@
 <div class="globe3d-wrap">
   <div class="globe3d-topline"><button id="langToggle" class="globe3d-lang" type="button" aria-pressed="false">中文 · 英文</button></div>
   <div id="globeStage" class="globe3d-stage" tabindex="0" aria-label="休眠中的像素地球，双击或按回车键唤醒">
-    <img id="earthArtwork" class="earth-artwork" src="assets/earth-model-v2.png" alt="" aria-hidden="true" draggable="false">
     <canvas id="globeCanvas" class="globe3d-canvas" width="160" height="160" aria-hidden="true"></canvas>
     <div id="globeLoading" class="globe3d-loading">正在加载真实海岸线…</div>
     <nav id="globeLocationNav" class="globe3d-location-nav" aria-label="地点选择">
@@ -138,7 +136,6 @@ import {
 
 (() => {
   const canvas = document.getElementById('globeCanvas');
-  const earthArtwork = document.getElementById('earthArtwork');
   const stage = document.getElementById('globeStage');
   const loading = document.getElementById('globeLoading');
   const langToggle = document.getElementById('langToggle');
@@ -155,9 +152,10 @@ import {
   const portalLabel = document.getElementById('portalLabel');
   const uiStatus = document.getElementById('uiStatus');
   const transitionVeil = document.getElementById('transitionVeil');
-  if (!canvas || !earthArtwork || !stage || !loading || !langToggle || !hint || !locationLabel || !locationName || !locationNav || locationButtons.length !== 3 || !zoomOut || !resetButton || !zoomIn || !controls || !portalGate || !portalLabel || !uiStatus || !transitionVeil) return;
+  if (!canvas || !stage || !loading || !langToggle || !hint || !locationLabel || !locationName || !locationNav || locationButtons.length !== 3 || !zoomOut || !resetButton || !zoomIn || !controls || !portalGate || !portalLabel || !uiStatus || !transitionVeil) return;
 
   const DATA_URL = 'data/world.geojson';
+  const TEXTURE_URL = 'assets/earth-texture-v2.png';
   const TEX_W = 128, TEX_H = 64, RENDER_SIZE = 160, TAU = Math.PI * 2;
   const MIN_ZOOM = 0.78, MAX_ZOOM = 1.3, MAX_RENDER_ZOOM = 1.1;
   const DEFAULT_VIEW = {yaw:0, pitch:-0.14, zoom:1};
@@ -255,6 +253,19 @@ import {
     textureCtx.clearRect(0,0,TEX_W,TEX_H);textureCtx.fillStyle='#739b60';
     geo.features.forEach(feature=>fillGeometry(textureCtx,feature.geometry));
     const mask=hardenLand();addTerrainPixels();addPixelCoast(mask);
+    textureData=textureCtx.getImageData(0,0,TEX_W,TEX_H).data;
+  }
+  function buildTextureFromImage(image){
+    textureCtx.clearRect(0,0,TEX_W,TEX_H);
+    textureCtx.drawImage(image,0,0,TEX_W,TEX_H);
+    const imageData=textureCtx.getImageData(0,0,TEX_W,TEX_H),pixels=imageData.data,mask=new Uint8Array(TEX_W*TEX_H);
+    for(let i=0;i<mask.length;i++){
+      const p=i*4,r=pixels[p],g=pixels[p+1],b=pixels[p+2];
+      const land=r>35&&g>b+12&&r>b+18;
+      if(land){mask[i]=1;pixels[p+3]=255;}
+      else{pixels[p]=0;pixels[p+1]=0;pixels[p+2]=0;pixels[p+3]=0;}
+    }
+    textureCtx.putImageData(imageData,0,0);addTerrainPixels();addPixelCoast(mask);
     textureData=textureCtx.getImageData(0,0,TEX_W,TEX_H).data;
   }
   function rotateToWorld(v){
@@ -569,13 +580,17 @@ import {
   zoomIn.addEventListener('click',()=>{if(state.active)setZoom(state.zoom+0.1);});
   locationButtons.forEach(button=>button.addEventListener('click',()=>selectLocationById(button.dataset.locationId)));
   portalGate.addEventListener('click',runPortalPreview);
-  earthArtwork.addEventListener('error',()=>{earthArtwork.hidden=true;canvas.style.opacity='1';});
 
-  fetch(DATA_URL).then(response=>{if(!response.ok)throw new Error('Map data request failed');return response.json();}).then(geo=>{
+  const fallbackToGeoJson=()=>fetch(DATA_URL).then(response=>{if(!response.ok)throw new Error('Map data request failed');return response.json();}).then(geo=>{
     buildTexture(geo);loading.style.display='none';render();
   }).catch(()=>{
     loadFailed=true;loading.textContent=copyFor(state.language,coarsePointer).loadError;loading.classList.add('error');
   });
+  const textureImage=new Image();
+  textureImage.decoding='async';
+  textureImage.onload=()=>{buildTextureFromImage(textureImage);loading.style.display='none';render();};
+  textureImage.onerror=fallbackToGeoJson;
+  textureImage.src=TEXTURE_URL;
   setLanguage();
   syncActivationUi();
   if(!motionFrame)motionFrame=requestAnimationFrame(motionLoop);
