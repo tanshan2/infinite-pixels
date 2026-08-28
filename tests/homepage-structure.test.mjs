@@ -22,6 +22,8 @@ test('第三版包含前景传送门和状态节点', () => {
     assert.match(body, new RegExp(`id=["']${id}["']`));
   }
   assert.match(body, /assets\/portal-foreground\.png/);
+  assert.match(body, /id=["']earthArtwork["']/);
+  assert.match(body, /assets\/earth-model-v2\.png/);
 });
 
 test('中文初始界面没有文字品牌或技术英文', () => {
@@ -36,6 +38,7 @@ test('中文初始界面没有文字品牌或技术英文', () => {
 test('键盘事件、暖光与安全存储接线存在', () => {
   assert.match(html, /event\.target!==stage\|\|!isActivationKey\(event\.key\)/);
   assert.match(html, /\.portal-gate\.is-entering\{/);
+  assert.match(html, /\.portal-gate\{[^}]*scale\(\.85\)/);
   assert.match(html, /try\{return sessionStorage\.getItem/);
   assert.match(html, /try\{sessionStorage\.setItem/);
   assert.match(html, /min-width:44px;min-height:44px/);

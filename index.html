@@ -52,7 +52,8 @@
 </style>
 <style>
   html,body{width:100%;height:100%;overflow:hidden}
-  .globe3d-canvas{transform-origin:50% 50%}
+  .globe3d-canvas{position:relative;z-index:1;transform-origin:50% 50%;opacity:0}
+  .earth-artwork{position:absolute;z-index:0;inset:0;display:block;width:100%;height:100%;object-fit:contain;pointer-events:none;user-select:none;image-rendering:auto}
   body{min-width:320px;min-height:100%;background:#111716}
   .site-shell,.site-stage{width:100%;height:100%;margin:0;padding:0}
   .site-header,.site-footer,.globe3d-note{display:none}
@@ -62,10 +63,10 @@
   .globe3d-topline{position:absolute;top:30px;right:36px;z-index:6}
   .globe3d-topline strong{display:none}
   .globe3d-lang{min-width:44px;min-height:44px}
-  .globe3d-stage{position:absolute;z-index:1;left:50%;top:34%;width:min(62vw,74vh,690px);margin:0;transform:translate(-50%,-50%);outline:none}
+  .globe3d-stage{position:absolute;z-index:1;left:50%;top:37%;width:min(62vw,74vh,690px);margin:0;transform:translate(-50%,-50%);outline:none}
   .globe3d-stage:focus-visible{filter:drop-shadow(0 0 8px rgba(240,235,208,.55))}
   .globe3d-stage:not(.is-active){cursor:default}
-  .globe3d-location-nav{position:absolute;z-index:2;inset:0;width:auto;height:auto;overflow:visible;clip:auto;clip-path:none;white-space:normal;pointer-events:none}
+  .globe3d-location-nav{position:absolute;z-index:3;inset:0;width:auto;height:auto;overflow:visible;clip:auto;clip-path:none;white-space:normal;pointer-events:none}
   .globe3d-location-nav button{position:absolute;min-width:44px;min-height:44px;padding:10px 8px;border:0;background:transparent;color:#f3e4a9;font:700 clamp(10px,1.05vw,15px)/1.15 sans-serif;text-shadow:1px 1px 0 #14201d;white-space:nowrap;transform:translate(-50%,-50%);opacity:1}
   .globe3d-location-nav button:not(:disabled){pointer-events:auto;cursor:pointer}
   .globe3d-location-nav button[hidden]{display:none}
@@ -74,9 +75,9 @@
   .globe3d-controls[hidden]{display:none}
   .globe3d-meta{position:absolute;z-index:6;left:42px;bottom:28px;margin:0;transform:none;white-space:nowrap}
   .globe3d-location-label{position:absolute;left:50%;top:calc(50% + min(30vw,32vh,280px) + 8px);margin:0;transform:translateX(-50%)}
-  .portal-gate{position:absolute;z-index:4;left:50%;bottom:-7.5%;width:min(79vw,1320px);height:auto;padding:0;border:0;background:transparent;transform:translateX(-50%);cursor:pointer;filter:drop-shadow(0 20px 18px rgba(0,0,0,.32));transition:filter .22s ease,transform .22s ease}
-  .portal-gate:hover,.portal-gate:focus-visible{filter:drop-shadow(0 18px 18px rgba(0,0,0,.38)) drop-shadow(0 0 14px rgba(214,157,66,.24));transform:translateX(-50%) translateY(-2px)}
-  .portal-gate.is-entering{filter:drop-shadow(0 14px 18px rgba(0,0,0,.34)) drop-shadow(0 0 26px rgba(247,190,84,.58));transform:translateX(-50%) translateY(-3px) scale(1.012)}
+  .portal-gate{position:absolute;z-index:4;left:50%;bottom:-7.5%;width:min(79vw,1320px);height:auto;padding:0;border:0;background:transparent;transform:translateX(-50%) scale(.85);transform-origin:50% 100%;cursor:pointer;filter:drop-shadow(0 20px 18px rgba(0,0,0,.32));transition:filter .22s ease,transform .22s ease}
+  .portal-gate:hover,.portal-gate:focus-visible{filter:drop-shadow(0 18px 18px rgba(0,0,0,.38)) drop-shadow(0 0 14px rgba(214,157,66,.24));transform:translateX(-50%) translateY(-2px) scale(.85)}
+  .portal-gate.is-entering{filter:drop-shadow(0 14px 18px rgba(0,0,0,.34)) drop-shadow(0 0 26px rgba(247,190,84,.58));transform:translateX(-50%) translateY(-3px) scale(.86)}
   .portal-gate:focus-visible{outline:none}
   .portal-gate:focus-visible .portal-label{outline:2px solid #f0d98b;outline-offset:4px}
   .portal-artwork{display:block;width:100%;height:auto;pointer-events:none;user-select:none;image-rendering:auto}
@@ -93,12 +94,13 @@
     .globe3d-meta{left:16px;bottom:14px;font-size:8px}
     .globe3d-location-label{left:50%}
   }
-  @media(prefers-reduced-motion:reduce){.portal-gate,.globe3d-controls,.transition-veil{transition:none}.portal-gate.is-entering{filter:inherit;transform:translateX(-50%)}}
+  @media(prefers-reduced-motion:reduce){.portal-gate,.globe3d-controls,.transition-veil{transition:none}.portal-gate.is-entering{filter:inherit;transform:translateX(-50%) scale(.85)}}
 </style>
 
 <div class="globe3d-wrap">
   <div class="globe3d-topline"><button id="langToggle" class="globe3d-lang" type="button" aria-pressed="false">中文 · 英文</button></div>
   <div id="globeStage" class="globe3d-stage" tabindex="0" aria-label="休眠中的像素地球，双击或按回车键唤醒">
+    <img id="earthArtwork" class="earth-artwork" src="assets/earth-model-v2.png" alt="" aria-hidden="true" draggable="false">
     <canvas id="globeCanvas" class="globe3d-canvas" width="160" height="160" aria-hidden="true"></canvas>
     <div id="globeLoading" class="globe3d-loading">正在加载真实海岸线…</div>
     <nav id="globeLocationNav" class="globe3d-location-nav" aria-label="地点选择">
@@ -136,6 +138,7 @@ import {
 
 (() => {
   const canvas = document.getElementById('globeCanvas');
+  const earthArtwork = document.getElementById('earthArtwork');
   const stage = document.getElementById('globeStage');
   const loading = document.getElementById('globeLoading');
   const langToggle = document.getElementById('langToggle');
@@ -152,7 +155,7 @@ import {
   const portalLabel = document.getElementById('portalLabel');
   const uiStatus = document.getElementById('uiStatus');
   const transitionVeil = document.getElementById('transitionVeil');
-  if (!canvas || !stage || !loading || !langToggle || !hint || !locationLabel || !locationName || !locationNav || locationButtons.length !== 3 || !zoomOut || !resetButton || !zoomIn || !controls || !portalGate || !portalLabel || !uiStatus || !transitionVeil) return;
+  if (!canvas || !earthArtwork || !stage || !loading || !langToggle || !hint || !locationLabel || !locationName || !locationNav || locationButtons.length !== 3 || !zoomOut || !resetButton || !zoomIn || !controls || !portalGate || !portalLabel || !uiStatus || !transitionVeil) return;
 
   const DATA_URL = 'data/world.geojson';
   const TEX_W = 128, TEX_H = 64, RENDER_SIZE = 160, TAU = Math.PI * 2;
@@ -566,6 +569,7 @@ import {
   zoomIn.addEventListener('click',()=>{if(state.active)setZoom(state.zoom+0.1);});
   locationButtons.forEach(button=>button.addEventListener('click',()=>selectLocationById(button.dataset.locationId)));
   portalGate.addEventListener('click',runPortalPreview);
+  earthArtwork.addEventListener('error',()=>{earthArtwork.hidden=true;canvas.style.opacity='1';});
 
   fetch(DATA_URL).then(response=>{if(!response.ok)throw new Error('Map data request failed');return response.json();}).then(geo=>{
     buildTexture(geo);loading.style.display='none';render();
