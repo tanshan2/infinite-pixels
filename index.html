@@ -99,7 +99,7 @@
 <div class="globe3d-wrap">
   <div class="globe3d-topline"><button id="langToggle" class="globe3d-lang" type="button" aria-pressed="false">中文 · 英文</button></div>
   <div id="globeStage" class="globe3d-stage" tabindex="0" aria-label="休眠中的像素地球，双击或按回车键唤醒">
-    <canvas id="globeCanvas" class="globe3d-canvas" width="160" height="160" aria-hidden="true"></canvas>
+    <canvas id="globeCanvas" class="globe3d-canvas" width="360" height="360" aria-hidden="true"></canvas>
     <div id="globeLoading" class="globe3d-loading">正在加载真实海岸线…</div>
     <nav id="globeLocationNav" class="globe3d-location-nav" aria-label="地点选择">
       <button type="button" data-location-id="guangzhou" aria-label="选择广州" hidden>广州</button>
@@ -133,6 +133,14 @@ import {
   setControlsIntent,
   shouldAutoRotate,
 } from './scripts/globe-ui-state.mjs';
+import {
+  createVoxelGrid,
+  projectCell,
+  projectSurfacePoint,
+  rgbToCss,
+  selectGridDensity,
+  surfaceColor,
+} from './scripts/voxel-globe-renderer.mjs';
 
 (() => {
   const canvas = document.getElementById('globeCanvas');
@@ -156,7 +164,7 @@ import {
 
   const DATA_URL = 'data/world.geojson';
   const TEXTURE_URL = 'assets/earth-texture-v2.png';
-  const TEX_W = 128, TEX_H = 64, RENDER_SIZE = 160, TAU = Math.PI * 2;
+  const TEX_W = 128, TEX_H = 64, RENDER_SIZE = 360, TAU = Math.PI * 2;
   const MIN_ZOOM = 0.78, MAX_ZOOM = 1.3, MAX_RENDER_ZOOM = 1.1;
   const DEFAULT_VIEW = {yaw:0, pitch:-0.14, zoom:1};
   const LOCATIONS = [
@@ -182,6 +190,8 @@ import {
   const drag = {id:null,x:0,y:0,startX:0,startY:0,moved:false,locationId:null};
   const pinch = {distance:0,zoom:1};
   let textureData = null;
+  let voxelCells = [];
+  let gridDensityKey = '';
   let motionFrame = 0;
   let lastMotionTime = 0;
   let activationFrame = 0;
@@ -196,11 +206,6 @@ import {
   canvasCtx.imageSmoothingEnabled = false;
   textureCtx.imageSmoothingEnabled = false;
 
-  function normalize(v){
-    const length = Math.hypot(v.x,v.y,v.z) || 1;
-    return {x:v.x/length,y:v.y/length,z:v.z/length};
-  }
-  const light = normalize({x:-0.45,y:-0.62,z:-0.64});
   function lonLatToTexture(lon,lat){return {x:(lon+180)/360*TEX_W,y:(90-lat)/180*TEX_H};}
   function pathRing(target,ring){
     if(!ring || !ring.length)return;
@@ -268,27 +273,19 @@ import {
     textureCtx.putImageData(imageData,0,0);addTerrainPixels();addPixelCoast(mask);
     textureData=textureCtx.getImageData(0,0,TEX_W,TEX_H).data;
   }
-  function rotateToWorld(v){
-    const cosPitch=Math.cos(state.pitch),sinPitch=Math.sin(state.pitch);
-    const y1=v.y*cosPitch-v.z*sinPitch,z1=v.y*sinPitch+v.z*cosPitch;
-    const cosYaw=Math.cos(state.yaw),sinYaw=Math.sin(state.yaw);
-    return {x:v.x*cosYaw+z1*sinYaw,y:y1,z:-v.x*sinYaw+z1*cosYaw};
-  }
   function locationVector(location){
     const lat=location.lat*Math.PI/180,lon=location.lon*Math.PI/180,cosLat=Math.cos(lat);
     return {x:cosLat*Math.sin(lon),y:Math.sin(lat),z:cosLat*Math.cos(lon)};
   }
-  function worldToView(v){
-    const cosYaw=Math.cos(state.yaw),sinYaw=Math.sin(state.yaw);
-    const x1=v.x*cosYaw-v.z*sinYaw,z1=v.x*sinYaw+v.z*cosYaw;
-    const cosPitch=Math.cos(state.pitch),sinPitch=Math.sin(state.pitch);
-    return {x:x1,y:v.y*cosPitch+z1*sinPitch,z:-v.y*sinPitch+z1*cosPitch};
-  }
   function projectLocation(location){
-    const view=worldToView(locationVector(location));
-    if(view.z<=0.04)return null;
-    const center=RENDER_SIZE/2,radius=globeRadius();
-    return {location,view,x:center+view.x*radius,y:center-view.y*radius,depth:view.z};
+    const point=projectSurfacePoint(locationVector(location),{
+      yaw:state.yaw,
+      pitch:state.pitch,
+      center:RENDER_SIZE/2,
+      radius:globeRadius(),
+    },true);
+    if(!point||point.depth<=0.04)return null;
+    return {location,view:{z:point.depth},x:point.x,y:point.y,depth:point.depth};
   }
   function renderZoom(){return Math.min(state.zoom,MAX_RENDER_ZOOM);}
   function globeRadius(){return RENDER_SIZE*0.43*renderZoom();}
@@ -303,7 +300,7 @@ import {
   function hitLocation(event){
     const rect=canvas.getBoundingClientRect(),scale=RENDER_SIZE/rect.width;
     const px=(event.clientX-rect.left)*scale,py=(event.clientY-rect.top)*scale;
-    return visibleLocations().sort((a,b)=>b.depth-a.depth).find(item=>Math.hypot(item.x-px,item.y-py)<=Math.max(4,Math.round(5/state.zoom)))?.location||null;
+    return visibleLocations().sort((a,b)=>b.depth-a.depth).find(item=>Math.hypot(item.x-px,item.y-py)<=Math.max(9,Math.round(11/state.zoom)))?.location||null;
   }
   function sampleTexture(lon,lat){
     let u=lon/TAU+0.5;u=u-Math.floor(u);
@@ -311,9 +308,67 @@ import {
     const x=Math.max(0,Math.min(TEX_W-1,Math.floor(u*TEX_W))),y=Math.max(0,Math.min(TEX_H-1,Math.floor(v*TEX_H)));
     const p=(y*TEX_W+x)*4;return [textureData[p],textureData[p+1],textureData[p+2],textureData[p+3]];
   }
-  function shadeColor(color,brightness){return [Math.max(0,Math.min(255,Math.round(color[0]*brightness))),Math.max(0,Math.min(255,Math.round(color[1]*brightness))),Math.max(0,Math.min(255,Math.round(color[2]*brightness)))];}
+  function rebuildVoxelGrid(force=false){
+    if(!textureData)return false;
+    const density=selectGridDensity(window.innerWidth);
+    const nextKey=`${density.longitudeSegments}x${density.latitudeSegments}`;
+    if(!force&&nextKey===gridDensityKey&&voxelCells.length)return false;
+    voxelCells=createVoxelGrid({
+      ...density,
+      isLand:(lon,lat)=>sampleTexture(lon,lat)[3]>0,
+    });
+    gridDensityKey=nextKey;
+    return true;
+  }
+  function tracePolygon(points){
+    if(!points.length)return;
+    canvasCtx.beginPath();
+    canvasCtx.moveTo(points[0].x,points[0].y);
+    for(let i=1;i<points.length;i++)canvasCtx.lineTo(points[i].x,points[i].y);
+    canvasCtx.closePath();
+  }
+  function drawVoxelCell(projected){
+    const {cell,shape}=projected;
+    tracePolygon(shape.top);
+    canvasCtx.fillStyle=rgbToCss(surfaceColor({
+      isLand:cell.isLand,
+      normal:shape.normal,
+      depth:shape.depth,
+      variation:cell.variation,
+    }));
+    canvasCtx.fill();
+    canvasCtx.strokeStyle=cell.isLand?'rgba(39,48,11,.82)':'rgba(3,43,46,.76)';
+    canvasCtx.lineWidth=window.innerWidth<=760?0.48:0.68;
+    canvasCtx.stroke();
+    canvasCtx.beginPath();
+    canvasCtx.moveTo(shape.top[3].x,shape.top[3].y);
+    canvasCtx.lineTo(shape.top[0].x,shape.top[0].y);
+    canvasCtx.lineTo(shape.top[1].x,shape.top[1].y);
+    canvasCtx.strokeStyle=cell.isLand?'rgba(246,223,75,.26)':'rgba(44,146,145,.18)';
+    canvasCtx.lineWidth=window.innerWidth<=760?0.34:0.5;
+    canvasCtx.stroke();
+  }
+  function drawCoastSides(projected){
+    const {cell,shape}=projected;
+    const edgeCorners={north:[0,1],east:[1,2],south:[2,3],west:[3,0]};
+    canvasCtx.fillStyle=rgbToCss(surfaceColor({
+      isLand:true,
+      normal:shape.normal,
+      depth:shape.depth,
+      variation:cell.variation,
+      side:true,
+    }));
+    cell.coastEdges.forEach(edge=>{
+      const [start,end]=edgeCorners[edge];
+      tracePolygon([shape.top[start],shape.top[end],shape.base[end],shape.base[start]]);
+      canvasCtx.fill();
+      canvasCtx.strokeStyle='rgba(31,39,8,.72)';
+      canvasCtx.lineWidth=0.6;
+      canvasCtx.stroke();
+    });
+  }
   function drawLocationMarker(item){
-    const unit=Math.max(1,Math.round(state.zoom)),px=Math.round(item.x),py=Math.round(item.y),selected=item.location.id===state.selectedLocationId;
+    const unit=Math.max(2,Math.round(state.zoom*2)),px=Math.round(item.x),py=Math.round(item.y),selected=item.location.id===state.selectedLocationId;
     const blink=selected&&!state.reducedMotion?(0.68+0.32*(0.5+0.5*Math.sin(performance.now()/1200*Math.PI*2))):1;
     canvasCtx.save();canvasCtx.globalAlpha=blink;
     canvasCtx.fillStyle='#d7654f';
@@ -330,10 +385,11 @@ import {
     canvasCtx.restore();
   }
   function syncGlobeLocationButtons(items){
+    const layoutScale=RENDER_SIZE/160;
     const layouts={
-      guangzhou:{dx:-7,dy:5},
-      indianapolis:{dx:16,dy:13},
-      toronto:{dx:-14,dy:-14}
+      guangzhou:{dx:-7*layoutScale,dy:5*layoutScale},
+      indianapolis:{dx:16*layoutScale,dy:13*layoutScale},
+      toronto:{dx:-14*layoutScale,dy:-14*layoutScale}
     };
     locationButtons.forEach(button=>{
       const item=items.find(candidate=>candidate.location.id===button.dataset.locationId);
@@ -346,22 +402,18 @@ import {
   }
   function render(){
     if(!textureData)return;
+    if(!voxelCells.length)rebuildVoxelGrid(true);
     syncCanvasScale();
     syncSelectionVisibility();
-    const image=canvasCtx.createImageData(RENDER_SIZE,RENDER_SIZE),pixels=image.data;
-    const center=RENDER_SIZE/2,radius=globeRadius();
-    for(let y=0;y<RENDER_SIZE;y++){
-      for(let x=0;x<RENDER_SIZE;x++){
-        const sx=(x+0.5-center)/radius,sy=(y+0.5-center)/radius,r2=sx*sx+sy*sy,index=(y*RENDER_SIZE+x)*4;
-        if(r2>1){pixels[index+3]=0;continue;}
-        const local={x:sx,y:-sy,z:Math.sqrt(1-r2)},world=rotateToWorld(local);
-        const lon=Math.atan2(world.x,world.z),lat=Math.asin(Math.max(-1,Math.min(1,world.y)));
-        const tex=sampleTexture(lon,lat),diff=Math.max(0,world.x*light.x+world.y*light.y+world.z*light.z);
-        const base=tex[3]>0?shadeColor(tex,0.58+diff*0.62):shadeColor([18,69,76],0.42+diff*0.55);
-        const rim=r2>0.91?0.86:1;pixels[index]=Math.round(base[0]*rim);pixels[index+1]=Math.round(base[1]*rim);pixels[index+2]=Math.round(base[2]*rim);pixels[index+3]=255;
-      }
-    }
-    canvasCtx.putImageData(image,0,0);
+    canvasCtx.clearRect(0,0,RENDER_SIZE,RENDER_SIZE);
+    const view={yaw:state.yaw,pitch:state.pitch,center:RENDER_SIZE/2,radius:globeRadius()};
+    const projected=voxelCells
+      .map(cell=>({cell,shape:projectCell(cell,view)}))
+      .filter(item=>item.shape)
+      .sort((a,b)=>a.shape.depth-b.shape.depth);
+    projected.filter(({cell})=>!cell.isLand).forEach(drawVoxelCell);
+    projected.filter(({cell})=>cell.isLand).forEach(drawCoastSides);
+    projected.filter(({cell})=>cell.isLand).forEach(drawVoxelCell);
     const locations=visibleLocations();
     locations.forEach(drawLocationMarker);
     syncGlobeLocationButtons(locations);
@@ -580,15 +632,18 @@ import {
   zoomIn.addEventListener('click',()=>{if(state.active)setZoom(state.zoom+0.1);});
   locationButtons.forEach(button=>button.addEventListener('click',()=>selectLocationById(button.dataset.locationId)));
   portalGate.addEventListener('click',runPortalPreview);
+  window.addEventListener('resize',()=>{
+    if(rebuildVoxelGrid())render();
+  });
 
   const fallbackToGeoJson=()=>fetch(DATA_URL).then(response=>{if(!response.ok)throw new Error('Map data request failed');return response.json();}).then(geo=>{
-    buildTexture(geo);loading.style.display='none';render();
+    buildTexture(geo);rebuildVoxelGrid(true);loading.style.display='none';render();
   }).catch(()=>{
     loadFailed=true;loading.textContent=copyFor(state.language,coarsePointer).loadError;loading.classList.add('error');
   });
   const textureImage=new Image();
   textureImage.decoding='async';
-  textureImage.onload=()=>{buildTextureFromImage(textureImage);loading.style.display='none';render();};
+  textureImage.onload=()=>{buildTextureFromImage(textureImage);rebuildVoxelGrid(true);loading.style.display='none';render();};
   textureImage.onerror=fallbackToGeoJson;
   textureImage.src=TEXTURE_URL;
   setLanguage();

@@ -1,7 +1,7 @@
 export const LAND_LIFT = 1.045;
 
 const LIGHT = (() => {
-  const source = { x: -0.45, y: -0.62, z: 0.64 };
+  const source = { x: -0.45, y: 0.62, z: 0.64 };
   const length = Math.hypot(source.x, source.y, source.z);
   return {
     x: source.x / length,

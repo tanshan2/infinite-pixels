@@ -110,3 +110,19 @@ test('陆地为橄榄金色、海洋为深青色且侧面更暗', () => {
   );
   assert.equal(rgbToCss([12, 34, 56]), 'rgb(12 34 56)');
 });
+
+test('左上方表面明显亮于右下方表面', () => {
+  const upperLeft = surfaceColor({
+    isLand: true,
+    normal: { x: -0.45, y: 0.62, z: 0.64 },
+    depth: 0.9,
+  });
+  const lowerRight = surfaceColor({
+    isLand: true,
+    normal: { x: 0.45, y: -0.62, z: 0.64 },
+    depth: 0.9,
+  });
+  const total = (rgb) => rgb.reduce((sum, channel) => sum + channel, 0);
+
+  assert.ok(total(upperLeft) > total(lowerRight) * 1.25);
+});
