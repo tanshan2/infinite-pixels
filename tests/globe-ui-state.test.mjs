@@ -5,6 +5,9 @@ import {
   controlsVisible,
   copyFor,
   createUiState,
+  isActivationKey,
+  isDoubleTap,
+  nextLanguage,
   pauseAutoRotation,
   restoreSession,
   serializeSession,
@@ -72,3 +75,24 @@ test('会话只恢复安全视角', () => {
   assert.equal(restoreSession('{bad json'), null);
 });
 
+test('键盘、触摸和语言输入使用同一组纯函数', () => {
+  assert.equal(isActivationKey('Enter'), true);
+  assert.equal(isActivationKey(' '), true);
+  assert.equal(isActivationKey('Escape'), false);
+  assert.equal(isDoubleTap(1000, 1319), true);
+  assert.equal(isDoubleTap(1000, 1321), false);
+  assert.equal(nextLanguage('zh'), 'en');
+  assert.equal(nextLanguage('en'), 'zh');
+});
+
+test('非法会话视角被夹紧到安全范围', () => {
+  const restored = restoreSession(JSON.stringify({
+    active: true,
+    language: 'zh',
+    yaw: 1,
+    pitch: 99,
+    zoom: 99,
+  }));
+  assert.equal(restored.pitch, 1.25);
+  assert.equal(restored.zoom, 1.3);
+});

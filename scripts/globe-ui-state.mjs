@@ -104,6 +104,20 @@ export function copyFor(language = 'zh', coarsePointer = false) {
   };
 }
 
+export function isActivationKey(key) {
+  return key === 'Enter' || key === ' ';
+}
+
+export function isDoubleTap(previousTime, currentTime, threshold = 320) {
+  if (!Number.isFinite(previousTime) || !Number.isFinite(currentTime)) return false;
+  const elapsed = currentTime - previousTime;
+  return elapsed > 0 && elapsed <= threshold;
+}
+
+export function nextLanguage(language) {
+  return language === 'en' ? 'zh' : 'en';
+}
+
 export function serializeSession(state) {
   return JSON.stringify({
     active: Boolean(state.active),
@@ -131,4 +145,3 @@ export function restoreSession(raw) {
     return null;
   }
 }
-
