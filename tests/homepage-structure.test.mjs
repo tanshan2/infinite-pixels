@@ -22,7 +22,7 @@ test('第三版包含前景传送门和状态节点', () => {
     assert.match(body, new RegExp(`id=["']${id}["']`));
   }
   assert.match(body, /assets\/portal-foreground\.png/);
-  assert.match(body, /assets\/earth-texture-v2\.png/);
+  assert.match(body, /assets\/earth-texture-v3\.png/);
 });
 
 test('中文初始界面没有文字品牌或技术英文', () => {
@@ -39,6 +39,8 @@ test('键盘事件、暖光与安全存储接线存在', () => {
   assert.match(html, /\.portal-gate\.is-entering\{/);
   assert.match(html, /\.portal-gate\{[^}]*scale\(\.85\)/);
   assert.match(html, /function buildTextureFromImage\(image\)/);
+  assert.match(html, /const TEXTURE_URL = 'assets\/earth-texture-v3\.png';/);
+  assert.match(html, /const light = normalize\(\{x:-0\.45,y:0\.62,z:0\.64\}\);/);
   assert.match(html, /\.globe3d-canvas\{[^}]*opacity:1/);
   assert.match(html, /try\{return sessionStorage\.getItem/);
   assert.match(html, /try\{sessionStorage\.setItem/);
