@@ -1,101 +1,57 @@
-# Infinite Pixels 全屏主页 Design QA
+# 地球与作品传送门 Design QA
 
-## Source visual truth
+## 视觉基准
 
-- Source screenshot: user-provided reference image (737 × 678)
-- Source pixels / CSS viewport: 737 × 678 / reference capture (device density not reported)
-- Intended state: 初始中文状态、真实地图已加载、无地点名牌、无滚动
+- 用户参考图：`codex-clipboard-3d8f9138-280c-4199-bc29-f999f1315382.png`，1672 × 941。
+- 用户选定方向：`design-references/earth-portal-ui-v3.png`，1672 × 941。
+- 本地实现截图：`implementation-earth-portal-desktop-1280x720.png`，1280 × 720。
+- 移动端截图：`implementation-earth-portal-mobile-390x844.png`，390 × 844。
+- 对照状态：中文、地球休眠、真实海岸线已加载、传送门可进入。
 
-## Rendered implementation evidence
+三张桌面图在同一比较输入中按相同 16:9 比例检查；判断以构图比例、层级关系、字号与视觉密度为准。
 
-- Local URL: http://localhost:4173/
-- Browser-rendered screenshot: local implementation capture (1280 × 720)
-- Implementation pixels / CSS viewport: 1280 × 720 / 1280 × 720
-- Device density: browser capture at 1 CSS pixel per screenshot pixel
-- Normalization: source and implementation were reviewed together at original resolution; viewport widths differ, so comparison uses proportional placement and responsive rules rather than raw pixel distances.
+## 已完成的对照修正
 
-## Evidence and comparison
+### 第一轮
 
-The source and implementation screenshots were opened together. Both show the same sparse composition: a dark full-screen field, a large pixel globe, the language control in the upper-right corner, and the zoom/reset row plus metadata below the globe. The implementation has no visible title, intro, card border, note, or footer. The follow-up user instruction to center the globe supersedes the screenshot's earlier left-weighted placement.
+- 问题：牌匾文字浮在门楣上方。
+- 修正：文字锚点从图片高度 27.7% 调整到 33.7%，现在位于红色牌匾中心。
+- 问题：默认视角朝向太平洋，首屏缺少大陆识别度。
+- 修正：默认经度改为大西洋视角，欧洲与非洲成为视觉中心。
 
-The implementation's desktop stage is min(60vw, 64vh, 560px) and its narrow-screen rule is min(88vw, 64vh, 560px); both use a 50% viewport anchor with a -50% transform. scrollHeight and clientHeight both resolve to 720 in the local desktop capture, and the measured stage center matches the viewport center with 0px error.
+### 第二轮
 
-The zoom boundary is split between interaction and rendering: MAX_ZOOM is 1.3 while MAX_RENDER_ZOOM remains 1.1. The fixed 160 × 160 render canvas therefore keeps a 75.68px sphere radius inside the 80px canvas half-size and leaves a 4.32px internal margin; the transparent Canvas transform supplies the remaining visible scale without exposing a square edge.
+- 问题：传送门尺寸过大且位置过高，遮挡了过多地球。
+- 修正：桌面端改为 `min(79vw, 1320px)`，底部锚点调整为 `-7.5%`；地球保持在后层，前景平台完整可见。
+- 问题：地球偏暗、与第三版视觉稿的明暗层次不符。
+- 修正：提高陆地基础亮度，降低海洋基础亮度，并微调桌面地球尺寸。
 
-## Required fidelity surfaces
+### 第三轮
 
-- Fonts / typography: existing Courier-style pixel UI font is retained; button labels, metadata, letter spacing, and compact line-height match the reference's monospaced treatment.
-- Spacing / layout rhythm: language toggle is inset approximately 8–10px from the top/right; globe, controls, and metadata share the viewport center axis; outer padding, card radius, and section gaps are removed.
-- Colors / tokens: background remains #111716; controls use the existing muted green-gray border and cream text palette visible in the reference.
-- Image quality / asset fidelity: the existing Canvas globe continues to use the real data/world.geojson texture, 160 × 160 internal pixels, and image-rendering: pixelated; no placeholder or CSS-drawn globe was introduced.
-- Copy / content: visible copy is limited to 中文 · EN, −, 重置, ＋, 拖动旋转 · 滚轮缩放 · 双指缩放, and PIXEL SOURCE 128×64. SEO metadata remains in <head> only.
+- 问题：画布内绘制的中文地点名发糊且容易重叠。
+- 修正：地点名移到清晰的 DOM 文字层；休眠时可见但不可点击，地球唤醒后才可操作。
+- 问题：鼠标触发传送门后，焦点框覆盖整张透明图片。
+- 修正：键盘焦点提示只包围牌匾文字，不再出现巨型矩形。
 
-## Focused regions
+## 交互验证
 
-No separate crop was needed: the reference's only focused UI regions (top-right language toggle and bottom control/meta row) remain legible in the original-resolution paired screenshots, and their alignment is directly measurable from the DOM rectangles.
+- 双击地球可从 `globe3d-stage` 进入 `is-active`，提示改为“拖动旋转 · 滚动缩放”。
+- 键盘聚焦地球后按回车键也可唤醒。
+- 唤醒后自动旋转；拖动后截图哈希在暂停窗口内保持一致，超过两秒后重新变化。
+- 地球休眠时地点按钮禁用；唤醒后恢复可操作。
+- 悬停地球时按需显示缩放与重置控件。
+- 点击传送门后出现 450 毫秒过渡遮罩，随后读屏状态更新为“作品空间正在设计中”。
+- 中文状态的可见文字无普通英文；语言按钮显示“中文 · 英文”。
+- 390 × 844 移动端截图没有页面滚动，传送门两侧按设计裁切，核心门楼与人物完整保留。
+- 浏览器控制台无错误或警告。
 
-## Interaction checks
+## 自动化验证
 
-- Map loading: #globeLoading becomes display: none; Canvas remains 160 × 160.
-- Locations: guangzhou, indianapolis, and toronto buttons remain present.
-- Nameplate: hidden initially; clicking the visible Guangzhou marker reveals 广州; language toggle changes it to Guangzhou; clicking empty globe space clears it.
-- Controls: zoom in/out changes the render and clamps at the 1.3 interactive maximum while the internal render cap remains 1.1; reset restores the view; drag and wheel/pinch paths change the render; no automatic rotation or inertia was added.
-- Console: dev.logs() returned [].
+- 10 项 Node 测试通过。
+- 覆盖休眠/激活、两秒暂停恢复、减少动态效果、按需控件、中文文案、会话恢复、键盘与双击输入、视角安全边界和主页结构。
 
-## Comparison history
+## 结论
 
-### Iteration 1 — fullscreen DOM/CSS
-
-- Earlier finding: old layout exposed title, intro, card border, note, footer, and a fixed-height shell that did not match the supplied screenshot.
-- Fix: removed visible chrome and applied the responsive full-viewport layout rules in index.html.
-- Post-fix evidence: paired source/local screenshots show only the requested globe, language control, controls, and metadata; local scroll lock and interaction checks pass.
-
-### Public verification
-
-- Public URL: https://tanshan2.github.io/infinite-pixels/
-- Browser-rendered screenshot: public implementation capture (1280 × 720)
-- GitHub Actions run #5 for the centered layout and run #9 for commit 409ef81 (1.3× zoom) completed with conclusion success.
-- Public DOM reports loading display:none, scrollWidth/scrollHeight 1280/720, no wrap border, the three location IDs, and the expected − / 重置 / ＋ controls.
-- Public center assertion reports stage center 640px, viewport center 640px, centerDelta 0px, controls center 640px, and metadata center 640px.
-- Public interaction smoke test passed: nameplate hidden initially, visible Guangzhou marker reveals 广州, language toggle changes it to Guangzhou, and dev.logs() returned [].
-- Public zoom-boundary smoke test passed on run #9: after 20 zoom-in clicks, computed Canvas transform was `matrix(1.18182, 0, 0, 1.18182, 0, 0)`, the transformed Canvas measured 544.58px, internal globe pixels did not touch the transformed Canvas edge, and scroll stayed locked at 1280 × 720.
-- Public robots.txt and sitemap.xml both returned HTTP 200 via the bundled runtime fetch.
-
-### Iteration 2 — centered globe follow-up
-
-- Earlier finding: the first fullscreen implementation intentionally followed the screenshot's left-weighted desktop placement, but the user then requested the globe to be in the exact center.
-- Fix: changed the desktop stage, controls, metadata, and conditional nameplate anchors to 50% with centered transforms; narrow-screen behavior remains centered.
-- Post-fix evidence: local center assertion passed with 0px error, controls/meta centers equal 640px in a 1280px viewport, and the public page reports the same centered rectangles with no console errors.
-
-### Iteration 3 — safe zoom boundary follow-up
-
-- Earlier finding: repeated zoom-in clicks allowed state.zoom to reach 1.55, which made the rendered sphere radius 106.64px on a 160px canvas; the sphere touched all four canvas edges and appeared as a square crop.
-- Fix: added shared MIN_ZOOM/MAX_ZOOM constants, capped MAX_ZOOM at 1.1, and reused one globeRadius() calculation for the render and location projection.
-- Post-fix evidence: screenshot pixel scans at default, minimum, and maximum zoom reported no stage-edge contact. The maximum-zoom scan measured a 10px left/right and 12px top/bottom stage margin in the 1280 × 720 capture; scroll stayed locked at 1280 × 720.
-
-### Iteration 4 — 1.3× visible zoom follow-up
-
-- Earlier finding: the 1.1× safety cap prevented clipping but did not provide the requested 1.3× visible zoom.
-- Fix: separated `MAX_ZOOM = 1.3` from `MAX_RENDER_ZOOM = 1.1`; the render remains inside the 160 × 160 buffer while the transparent Canvas scales by `1.3 / 1.1 ≈ 1.1818` only above the internal cap.
-- Post-fix evidence: local computed transform at the maximum is `matrix(1.18182, 0, 0, 1.18182, 0, 0)`; the transformed Canvas is 544.58px while the stage remains 460.80px, and the screenshot shows the globe as a circle with no square overlay. Reset returns the transform to identity and scroll remains locked at 1280 × 720.
-- Public post-fix evidence matches the local result at the clean URL: centered stage at 640px, identity transform by default, 1.18182 transform at the 1.3× cap, no transformed-Canvas edge contact, and no scroll.
-
-## Findings
-
-No actionable P0, P1, or P2 visual findings remain in the local implementation. The different screenshot widths are intentional evidence of responsive behavior, not a layout defect.
-
-## Implementation Checklist
-
-- [x] Full-screen viewport with no page scrolling.
-- [x] Only screenshot-approved visible UI remains.
-- [x] Real pixel globe and three location interactions preserved.
-- [x] Centered desktop/narrow-screen placement rules verified.
-- [x] Safe internal render cap prevents square canvas clipping while interactive zoom reaches 1.3×.
-- [x] Local interaction and console checks pass.
-- [x] Public GitHub Pages screenshot and SEO endpoints verified.
-
-## Follow-up Polish
-
-None required for this handoff; the default globe orientation remains unchanged intentionally so the map content and existing location behavior are not altered by the centered-layout revision.
+未发现剩余的 P0、P1 或 P2 问题。
 
 final result: passed

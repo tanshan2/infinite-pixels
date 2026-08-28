@@ -3,27 +3,27 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Infinite Pixels — 3D Pixel Globe Portfolio</title>
-  <meta name="description" content="Infinite Pixels 是我的个人与游戏工作室网站，记录我在中国、美国和加拿大的旅游、生活、学习和创作经历，并以 3D 像素地球连接广州、印第安纳波利斯与多伦多。">
+  <title>地球与作品传送门</title>
+  <meta name="description" content="个人游戏工作室的地球与作品传送门，连接广州、印第安纳波利斯与多伦多的经历和创作。">
   <meta name="author" content="tanshan2">
   <meta name="robots" content="index,follow">
   <meta name="theme-color" content="#111716">
   <link rel="canonical" href="https://tanshan2.github.io/infinite-pixels/">
   <meta property="og:type" content="website">
-  <meta property="og:site_name" content="Infinite Pixels">
-  <meta property="og:title" content="Infinite Pixels — 3D Pixel Globe Portfolio">
-  <meta property="og:description" content="Infinite Pixels 是我的个人与游戏工作室网站，记录我在中国、美国和加拿大的旅游、生活、学习和创作经历，并以 3D 像素地球连接广州、印第安纳波利斯与多伦多。">
+  <meta property="og:site_name" content="个人游戏工作室">
+  <meta property="og:title" content="地球与作品传送门">
+  <meta property="og:description" content="个人游戏工作室的地球与作品传送门，连接广州、印第安纳波利斯与多伦多的经历和创作。">
   <meta property="og:url" content="https://tanshan2.github.io/infinite-pixels/">
   <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="Infinite Pixels — 3D Pixel Globe Portfolio">
-  <meta name="twitter:description" content="Infinite Pixels 是我的个人与游戏工作室网站，记录我在中国、美国和加拿大的旅游、生活、学习和创作经历，并以 3D 像素地球连接广州、印第安纳波利斯与多伦多。">
+  <meta name="twitter:title" content="地球与作品传送门">
+  <meta name="twitter:description" content="个人游戏工作室的地球与作品传送门，连接广州、印第安纳波利斯与多伦多的经历和创作。">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@type": "WebSite",
-    "name": "Infinite Pixels",
+    "name": "个人游戏工作室",
     "url": "https://tanshan2.github.io/infinite-pixels/",
-    "description": "Infinite Pixels 是我的个人与游戏工作室网站，记录我在中国、美国和加拿大的旅游、生活、学习和创作经历，并以 3D 像素地球连接广州、印第安纳波利斯与多伦多。",
+    "description": "个人游戏工作室的地球与作品传送门，连接广州、印第安纳波利斯与多伦多的经历和创作。",
     "inLanguage": ["zh-CN", "en"]
   }
   </script>
@@ -61,18 +61,23 @@
   .globe3d-wrap{position:relative;width:100%;height:100%;min-height:0;padding:0;border:0;border-radius:0;background:#111716}
   .globe3d-topline{position:absolute;top:30px;right:36px;z-index:6}
   .globe3d-topline strong{display:none}
-  .globe3d-stage{position:absolute;z-index:1;left:50%;top:34%;width:min(59vw,70vh,650px);margin:0;transform:translate(-50%,-50%);outline:none}
+  .globe3d-stage{position:absolute;z-index:1;left:50%;top:34%;width:min(62vw,74vh,690px);margin:0;transform:translate(-50%,-50%);outline:none}
   .globe3d-stage:focus-visible{filter:drop-shadow(0 0 8px rgba(240,235,208,.55))}
   .globe3d-stage:not(.is-active){cursor:default}
+  .globe3d-location-nav{position:absolute;z-index:2;inset:0;width:auto;height:auto;overflow:visible;clip:auto;clip-path:none;white-space:normal;pointer-events:none}
+  .globe3d-location-nav button{position:absolute;padding:2px 4px;border:0;background:rgba(17,23,22,.7);color:#f3e4a9;font:700 clamp(10px,1.05vw,15px)/1.15 sans-serif;text-shadow:1px 1px 0 #14201d;white-space:nowrap;transform:translate(-50%,-50%);opacity:1}
+  .globe3d-location-nav button:not(:disabled){pointer-events:auto;cursor:pointer}
+  .globe3d-location-nav button[hidden]{display:none}
   .globe3d-controls{position:absolute;z-index:6;right:clamp(18px,3vw,44px);top:50%;left:auto;bottom:auto;margin:0;transform:translateY(-50%);flex-direction:column;opacity:1;transition:opacity .18s ease}
   .globe3d-controls[hidden]{display:none}
   .globe3d-meta{position:absolute;z-index:6;left:42px;bottom:28px;margin:0;transform:none;white-space:nowrap}
   .globe3d-location-label{position:absolute;left:50%;top:calc(50% + min(30vw,32vh,280px) + 8px);margin:0;transform:translateX(-50%)}
-  .portal-gate{position:absolute;z-index:4;left:50%;bottom:-1.8%;width:min(92vw,1220px);height:auto;padding:0;border:0;background:transparent;transform:translateX(-50%);cursor:pointer;filter:drop-shadow(0 20px 18px rgba(0,0,0,.32));transition:filter .22s ease,transform .22s ease}
+  .portal-gate{position:absolute;z-index:4;left:50%;bottom:-7.5%;width:min(79vw,1320px);height:auto;padding:0;border:0;background:transparent;transform:translateX(-50%);cursor:pointer;filter:drop-shadow(0 20px 18px rgba(0,0,0,.32));transition:filter .22s ease,transform .22s ease}
   .portal-gate:hover,.portal-gate:focus-visible{filter:drop-shadow(0 18px 18px rgba(0,0,0,.38)) drop-shadow(0 0 14px rgba(214,157,66,.24));transform:translateX(-50%) translateY(-2px)}
-  .portal-gate:focus-visible{outline:2px solid #f0d98b;outline-offset:4px}
+  .portal-gate:focus-visible{outline:none}
+  .portal-gate:focus-visible .portal-label{outline:2px solid #f0d98b;outline-offset:4px}
   .portal-artwork{display:block;width:100%;height:auto;pointer-events:none;user-select:none;image-rendering:auto}
-  .portal-label{position:absolute;left:50%;top:27.7%;min-width:23%;padding:.25em .75em;transform:translate(-50%,-50%);color:#f6e6ad;font:clamp(14px,1.75vw,26px)/1.1 'Courier New',monospace;letter-spacing:.08em;text-shadow:2px 2px 0 #6f2b23;white-space:nowrap;pointer-events:none}
+  .portal-label{position:absolute;left:50%;top:33.7%;min-width:23%;padding:.25em .75em;transform:translate(-50%,-50%);color:#f6e6ad;font:clamp(14px,1.75vw,26px)/1.1 'Courier New',monospace;letter-spacing:.08em;text-shadow:2px 2px 0 #6f2b23;white-space:nowrap;pointer-events:none}
   .transition-veil{position:absolute;z-index:10;inset:0;background:#0b1211;opacity:0;pointer-events:none;transition:opacity .45s ease}
   .transition-veil.is-active{opacity:.92}
   .site-noscript{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%)}
@@ -93,13 +98,13 @@
   <div id="globeStage" class="globe3d-stage" tabindex="0" aria-label="休眠中的像素地球，双击或按回车键唤醒">
     <canvas id="globeCanvas" class="globe3d-canvas" width="160" height="160" aria-hidden="true"></canvas>
     <div id="globeLoading" class="globe3d-loading">正在加载真实海岸线…</div>
+    <nav id="globeLocationNav" class="globe3d-location-nav" aria-label="地点选择">
+      <button type="button" data-location-id="guangzhou" aria-label="选择广州" hidden>广州</button>
+      <button type="button" data-location-id="indianapolis" aria-label="选择印第安纳波利斯" hidden>印第安纳波利斯</button>
+      <button type="button" data-location-id="toronto" aria-label="选择多伦多" hidden>多伦多</button>
+    </nav>
   </div>
   <div id="globeLocationLabel" class="globe3d-location-label" role="status" aria-live="polite" hidden><span id="globeLocationName"></span></div>
-  <nav id="globeLocationNav" class="globe3d-location-nav" aria-label="地点选择">
-    <button type="button" data-location-id="guangzhou" aria-label="选择广州">广州</button>
-    <button type="button" data-location-id="indianapolis" aria-label="选择印第安纳波利斯">印第安纳波利斯</button>
-    <button type="button" data-location-id="toronto" aria-label="选择多伦多">多伦多</button>
-  </nav>
   <div id="globeControls" class="globe3d-controls" role="group" aria-label="地球视图控制" aria-hidden="true" hidden><button id="zoomIn" type="button" aria-label="放大">＋</button><button id="resetView" type="button" aria-label="重置地球视角">重置</button><button id="zoomOut" type="button" aria-label="缩小">−</button></div>
   <div class="globe3d-meta"><span id="interactionHint">鼠标双击地球唤醒</span></div>
   <button id="portalGate" class="portal-gate" type="button" aria-label="进入全部作品">
@@ -149,13 +154,13 @@ import {
   const DATA_URL = 'data/world.geojson';
   const TEX_W = 128, TEX_H = 64, RENDER_SIZE = 160, TAU = Math.PI * 2;
   const MIN_ZOOM = 0.78, MAX_ZOOM = 1.3, MAX_RENDER_ZOOM = 1.1;
-  const DEFAULT_VIEW = {yaw:Math.PI, pitch:-0.14, zoom:1};
+  const DEFAULT_VIEW = {yaw:0, pitch:-0.14, zoom:1};
   const LOCATIONS = [
     {id:'guangzhou', name:{zh:'广州', en:'Guangzhou'}, lat:23.129, lon:113.264},
     {id:'indianapolis', name:{zh:'印第安纳波利斯', en:'Indianapolis'}, lat:39.768, lon:-86.158},
     {id:'toronto', name:{zh:'多伦多', en:'Toronto'}, lat:43.653, lon:-79.383}
   ];
-  const SESSION_KEY = 'earth-portal-view';
+  const SESSION_KEY = 'earth-portal-view-v2';
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const coarsePointer = window.matchMedia('(pointer: coarse)').matches;
   const restoredState = restoreSession(sessionStorage.getItem(SESSION_KEY));
@@ -300,6 +305,21 @@ import {
     }
     canvasCtx.restore();
   }
+  function syncGlobeLocationButtons(items){
+    const layouts={
+      guangzhou:{dx:-7,dy:5},
+      indianapolis:{dx:16,dy:13},
+      toronto:{dx:-14,dy:-14}
+    };
+    locationButtons.forEach(button=>{
+      const item=items.find(candidate=>candidate.location.id===button.dataset.locationId);
+      button.hidden=!item;
+      if(!item)return;
+      const layout=layouts[item.location.id];
+      button.style.left=`${(item.x+layout.dx)/RENDER_SIZE*100}%`;
+      button.style.top=`${(item.y+layout.dy)/RENDER_SIZE*100}%`;
+    });
+  }
   function render(){
     if(!textureData)return;
     syncCanvasScale();
@@ -312,13 +332,15 @@ import {
         if(r2>1){pixels[index+3]=0;continue;}
         const local={x:sx,y:-sy,z:Math.sqrt(1-r2)},world=rotateToWorld(local);
         const lon=Math.atan2(world.x,world.z),lat=Math.asin(Math.max(-1,Math.min(1,world.y)));
-        const tex=sampleTexture(lon,lat),diff=Math.max(0,world.x*light.x+world.y*light.y+world.z*light.z),brightness=0.38+diff*0.62;
-        const base=tex[3]>0?shadeColor(tex,brightness):shadeColor([18,69,76],0.52+diff*0.48);
+        const tex=sampleTexture(lon,lat),diff=Math.max(0,world.x*light.x+world.y*light.y+world.z*light.z);
+        const base=tex[3]>0?shadeColor(tex,0.58+diff*0.62):shadeColor([18,69,76],0.42+diff*0.55);
         const rim=r2>0.91?0.86:1;pixels[index]=Math.round(base[0]*rim);pixels[index+1]=Math.round(base[1]*rim);pixels[index+2]=Math.round(base[2]*rim);pixels[index+3]=255;
       }
     }
     canvasCtx.putImageData(image,0,0);
-    visibleLocations().forEach(drawLocationMarker);
+    const locations=visibleLocations();
+    locations.forEach(drawLocationMarker);
+    syncGlobeLocationButtons(locations);
   }
   function saveSessionView(){
     sessionStorage.setItem(SESSION_KEY,serializeSession(state));
@@ -386,7 +408,9 @@ import {
     portalLabel.textContent=copy.portalLabel;
     portalGate.setAttribute('aria-label',english?'Enter all works':'进入全部作品');
     loading.textContent=loadFailed?copy.loadError:copy.loading;
-    syncLocationLabel();updateHint();syncActivationUi();saveSessionView();
+    syncLocationLabel();updateHint();syncActivationUi();
+    if(textureData)render();
+    saveSessionView();
   }
   function syncControlsVisibility(){
     const visible=controlsVisible(state);
@@ -412,11 +436,12 @@ import {
     syncActivationUi();render();saveSessionView();
   }
   function motionLoop(now){
-    const elapsed=Math.min(50,Math.max(0,now-lastMotionTime));
-    lastMotionTime=now;
-    if(textureData&&shouldAutoRotate(state,now)){
+    const elapsed=Math.min(80,Math.max(0,now-lastMotionTime));
+    if(textureData&&shouldAutoRotate(state,now)&&elapsed>=48){
       state={...state,yaw:state.yaw+elapsed*0.00005};
-      render();
+      render();lastMotionTime=now;
+    }else if(!textureData||!shouldAutoRotate(state,now)){
+      lastMotionTime=now;
     }
     motionFrame=requestAnimationFrame(motionLoop);
   }

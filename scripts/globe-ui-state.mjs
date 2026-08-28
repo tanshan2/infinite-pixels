@@ -5,7 +5,7 @@ export const MAX_PITCH = 1.25;
 export const AUTO_RESUME_MS = 2000;
 
 const DEFAULT_VIEW = Object.freeze({
-  yaw: Math.PI,
+  yaw: 0,
   pitch: -0.14,
   zoom: 1,
 });
