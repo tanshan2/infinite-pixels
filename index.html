@@ -44,9 +44,9 @@
   </style>
 </head>
 <body>
-  <main class="globe-page" aria-label="Infinite Pixels 3D 像素地球">
-    <h1 class="sr-only">Infinite Pixels</h1>
-    <section class="site-stage" aria-label="可旋转的 3D 像素地球">
+  <main class="globe-page" aria-label="地球与作品传送门">
+    <h1 class="sr-only">地球与作品传送门</h1>
+    <section class="site-stage" aria-label="地球与作品传送门">
 <style>
   .globe3d-wrap{min-height:720px;border:1px solid #3f5048;border-radius:14px;background:#111716;color:#e9eadb;position:relative;overflow:hidden;padding:20px}.globe3d-topline{position:relative;z-index:2;display:flex;align-items:center;justify-content:space-between;font:10px 'Courier New',monospace;letter-spacing:.11em;color:#b9c8b4}.globe3d-lang{border:1px solid #69776c;border-radius:2px;background:#15201d;color:#ede8ce;padding:5px 8px;font:10px 'Courier New',monospace;letter-spacing:.04em;cursor:pointer}.globe3d-lang:focus-visible{outline:2px solid #d5d7a2;outline-offset:2px}.globe3d-stage{position:relative;width:min(86vw,520px);aspect-ratio:1;margin:32px auto 0;touch-action:none;cursor:grab;display:grid;place-items:center}.globe3d-stage.dragging{cursor:grabbing}.globe3d-canvas{display:block;width:100%;height:100%;image-rendering:pixelated;image-rendering:crisp-edges}.globe3d-loading{position:absolute;inset:0;display:grid;place-items:center;background:#111716;color:#b9c8b4;font:10px 'Courier New',monospace;text-align:center}.globe3d-loading.error{color:#e3a17f}.globe3d-location-label{display:flex;justify-content:center;min-height:20px;margin-top:10px;color:#f0ebd0;font:12px 'Courier New',monospace;letter-spacing:.08em;text-align:center}.globe3d-location-label[hidden]{display:none}.globe3d-location-label span{border:1px solid #69776c;background:#172622;padding:5px 10px;image-rendering:pixelated}.globe3d-location-nav{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}.globe3d-location-nav button{font:12px 'Courier New',monospace}.globe3d-location-nav button:focus-visible{outline:2px solid #d5d7a2;outline-offset:3px}.globe3d-controls{display:flex;justify-content:center;gap:6px;margin-top:14px}.globe3d-controls button{min-width:40px;height:36px;border:1px solid #627268;border-radius:2px;background:#172622;color:#ede8ce;font:12px 'Courier New',monospace;cursor:pointer;image-rendering:pixelated}.globe3d-controls button:hover{background:#253b31;border-color:#aebd86}.globe3d-controls button:focus-visible{outline:2px solid #d5d7a2;outline-offset:2px}.globe3d-controls button:active{transform:translateY(1px)}.globe3d-meta{display:flex;justify-content:center;gap:18px;margin-top:18px;color:#9caf9f;font:9px 'Courier New',monospace;letter-spacing:.06em;text-align:center}.globe3d-note{position:relative;z-index:1;margin:22px auto 0;max-width:700px;color:#aebbb2;font-size:12px;line-height:1.55;text-align:center}.globe3d-note strong{color:#f0ebd0}@media(max-width:640px){.globe3d-wrap{padding:13px;min-height:650px}.globe3d-stage{margin-top:26px}.globe3d-location-label{font-size:11px;margin-top:8px}.globe3d-location-label span{padding:5px 8px}.globe3d-controls{gap:6px}.globe3d-controls button{min-width:40px;height:36px}.globe3d-meta{gap:10px;font-size:8px;flex-wrap:wrap}.globe3d-note{font-size:11px}}
 </style>
@@ -59,24 +59,40 @@
   .globe-page{position:relative;width:100vw;height:100dvh;min-height:100vh;overflow:hidden;background:#111716}
   .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);clip-path:inset(50%);white-space:nowrap;border:0}
   .globe3d-wrap{position:relative;width:100%;height:100%;min-height:0;padding:0;border:0;border-radius:0;background:#111716}
-  .globe3d-topline{position:absolute;top:8px;right:10px;z-index:4}
+  .globe3d-topline{position:absolute;top:30px;right:36px;z-index:6}
   .globe3d-topline strong{display:none}
-  .globe3d-stage{position:absolute;left:50%;top:50%;width:min(60vw,64vh,560px);margin:0;transform:translate(-50%,-50%)}
-  .globe3d-controls{position:absolute;left:50%;bottom:clamp(45px,7vh,68px);margin:0;transform:translateX(-50%)}
-  .globe3d-meta{position:absolute;left:50%;bottom:clamp(9px,2vh,16px);margin:0;transform:translateX(-50%);white-space:nowrap}
+  .globe3d-stage{position:absolute;z-index:1;left:50%;top:34%;width:min(59vw,70vh,650px);margin:0;transform:translate(-50%,-50%);outline:none}
+  .globe3d-stage:focus-visible{filter:drop-shadow(0 0 8px rgba(240,235,208,.55))}
+  .globe3d-stage:not(.is-active){cursor:default}
+  .globe3d-controls{position:absolute;z-index:6;right:clamp(18px,3vw,44px);top:50%;left:auto;bottom:auto;margin:0;transform:translateY(-50%);flex-direction:column;opacity:1;transition:opacity .18s ease}
+  .globe3d-controls[hidden]{display:none}
+  .globe3d-meta{position:absolute;z-index:6;left:42px;bottom:28px;margin:0;transform:none;white-space:nowrap}
   .globe3d-location-label{position:absolute;left:50%;top:calc(50% + min(30vw,32vh,280px) + 8px);margin:0;transform:translateX(-50%)}
+  .portal-gate{position:absolute;z-index:4;left:50%;bottom:-1.8%;width:min(92vw,1220px);height:auto;padding:0;border:0;background:transparent;transform:translateX(-50%);cursor:pointer;filter:drop-shadow(0 20px 18px rgba(0,0,0,.32));transition:filter .22s ease,transform .22s ease}
+  .portal-gate:hover,.portal-gate:focus-visible{filter:drop-shadow(0 18px 18px rgba(0,0,0,.38)) drop-shadow(0 0 14px rgba(214,157,66,.24));transform:translateX(-50%) translateY(-2px)}
+  .portal-gate:focus-visible{outline:2px solid #f0d98b;outline-offset:4px}
+  .portal-artwork{display:block;width:100%;height:auto;pointer-events:none;user-select:none;image-rendering:auto}
+  .portal-label{position:absolute;left:50%;top:27.7%;min-width:23%;padding:.25em .75em;transform:translate(-50%,-50%);color:#f6e6ad;font:clamp(14px,1.75vw,26px)/1.1 'Courier New',monospace;letter-spacing:.08em;text-shadow:2px 2px 0 #6f2b23;white-space:nowrap;pointer-events:none}
+  .transition-veil{position:absolute;z-index:10;inset:0;background:#0b1211;opacity:0;pointer-events:none;transition:opacity .45s ease}
+  .transition-veil.is-active{opacity:.92}
   .site-noscript{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%)}
   @media(max-width:760px){
-    .globe3d-stage{left:50%;width:min(88vw,64vh,560px);transform:translate(-50%,-50%)}
-    .globe3d-controls,.globe3d-meta,.globe3d-location-label{left:50%}
+    .globe3d-topline{top:14px;right:14px}
+    .globe3d-stage{left:50%;top:31%;width:min(92vw,55vh,560px);transform:translate(-50%,-50%)}
+    .portal-gate{width:max(760px,176vw);bottom:-.5%;overflow:hidden}
+    .portal-label{font-size:15px}
+    .globe3d-controls{right:12px}
+    .globe3d-meta{left:16px;bottom:14px;font-size:8px}
+    .globe3d-location-label{left:50%}
   }
+  @media(prefers-reduced-motion:reduce){.portal-gate,.globe3d-controls,.transition-veil{transition:none}}
 </style>
 
 <div class="globe3d-wrap">
-  <div class="globe3d-topline"><button id="langToggle" class="globe3d-lang" type="button" aria-pressed="false">中文 · EN</button></div>
-  <div id="globeStage" class="globe3d-stage">
-    <canvas id="globeCanvas" class="globe3d-canvas" width="160" height="160" aria-label="可旋转的像素地球"></canvas>
-    <div id="globeLoading" class="globe3d-loading">LOADING REAL COASTLINES · 正在加载真实海岸线…</div>
+  <div class="globe3d-topline"><button id="langToggle" class="globe3d-lang" type="button" aria-pressed="false">中文 · 英文</button></div>
+  <div id="globeStage" class="globe3d-stage" tabindex="0" aria-label="休眠中的像素地球，双击或按回车键唤醒">
+    <canvas id="globeCanvas" class="globe3d-canvas" width="160" height="160" aria-hidden="true"></canvas>
+    <div id="globeLoading" class="globe3d-loading">正在加载真实海岸线…</div>
   </div>
   <div id="globeLocationLabel" class="globe3d-location-label" role="status" aria-live="polite" hidden><span id="globeLocationName"></span></div>
   <nav id="globeLocationNav" class="globe3d-location-nav" aria-label="地点选择">
@@ -84,8 +100,14 @@
     <button type="button" data-location-id="indianapolis" aria-label="选择印第安纳波利斯">印第安纳波利斯</button>
     <button type="button" data-location-id="toronto" aria-label="选择多伦多">多伦多</button>
   </nav>
-  <div id="globeControls" class="globe3d-controls" role="group" aria-label="地球视图控制"><button id="zoomOut" type="button" aria-label="缩小">−</button><button id="resetView" type="button" aria-label="重置地球视角">重置</button><button id="zoomIn" type="button" aria-label="放大">＋</button></div>
-  <div class="globe3d-meta"><span id="interactionHint">拖动旋转 · 滚轮缩放 · 双指缩放</span><span>PIXEL SOURCE 128×64</span></div>
+  <div id="globeControls" class="globe3d-controls" role="group" aria-label="地球视图控制" aria-hidden="true" hidden><button id="zoomIn" type="button" aria-label="放大">＋</button><button id="resetView" type="button" aria-label="重置地球视角">重置</button><button id="zoomOut" type="button" aria-label="缩小">−</button></div>
+  <div class="globe3d-meta"><span id="interactionHint">鼠标双击地球唤醒</span></div>
+  <button id="portalGate" class="portal-gate" type="button" aria-label="进入全部作品">
+    <img id="portalArtwork" class="portal-artwork" src="assets/portal-foreground.png" alt="" draggable="false">
+    <span id="portalLabel" class="portal-label">全部作品</span>
+  </button>
+  <p id="uiStatus" class="sr-only" aria-live="polite"></p>
+  <div id="transitionVeil" class="transition-veil" aria-hidden="true"></div>
 </div>
 
 <script>
