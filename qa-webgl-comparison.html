@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>体素地球视觉对照</title>
+  <style>
+    *{box-sizing:border-box}body{margin:0;background:#0c1110;color:#eee;font:14px sans-serif}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:10px}.panel{min-width:0;background:#151b19;border:1px solid #35423d;padding:8px}.panel h2{margin:0 0 8px;font-size:13px;font-weight:600}.image{width:100%;aspect-ratio:1;display:block;background:#101513;overflow:hidden}.image img{display:block;width:100%;height:100%;object-fit:contain}.implementation img{width:154%;height:auto;max-width:none;transform:translate(-18%,-10%)}
+  </style>
+</head>
+<body>
+  <main class="grid">
+    <section class="panel"><h2>参考图</h2><div class="image"><img src="assets/earth-model-v2.png" alt="参考体素地球"></div></section>
+    <section class="panel"><h2>网站实现</h2><div class="image implementation"><img src="implementation-webgl-voxel-674x912.png" alt="网站体素地球实现"></div></section>
+  </main>
+</body>
+</html>

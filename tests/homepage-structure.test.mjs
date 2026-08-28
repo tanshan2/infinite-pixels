@@ -46,10 +46,14 @@ test('键盘事件、暖光与安全存储接线存在', () => {
 });
 
 test('主页接入实时球面体素渲染器', () => {
+  assert.match(html, /from '\.\/scripts\/webgl-voxel-globe\.mjs'/);
   assert.match(html, /from '\.\/scripts\/voxel-globe-renderer\.mjs'/);
-  assert.match(html, /width="360" height="360"/);
+  assert.match(body, /id="globeOverlay"/);
+  assert.match(html, /TEX_W = 720, TEX_H = 360/);
   assert.match(html, /function rebuildVoxelGrid\(force=false\)/);
-  assert.match(html, /function drawVoxelCell\(projected\)/);
-  assert.match(html, /function drawCoastSides\(projected\)/);
+  assert.match(html, /createWebGlVoxelRenderer\(canvas\)/);
+  assert.match(html, /webGlRenderer\.setInstances\(voxelCells,density\)/);
+  assert.doesNotMatch(html, /function drawVoxelCell\(projected\)/);
+  assert.doesNotMatch(html, /function drawCoastSides\(projected\)/);
   assert.doesNotMatch(html, /createImageData\(RENDER_SIZE,RENDER_SIZE\)/);
 });

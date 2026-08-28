@@ -23,9 +23,9 @@ const LIGHT = (() => {
 })();
 
 export function selectGridDensity(viewportWidth) {
-  return viewportWidth <= 760
-    ? { longitudeSegments: 64, latitudeSegments: 32 }
-    : { longitudeSegments: 88, latitudeSegments: 44 };
+  return viewportWidth <= 480
+    ? { longitudeSegments: 160, latitudeSegments: 80 }
+    : { longitudeSegments: 256, latitudeSegments: 128 };
 }
 
 function unitVector(lon, lat) {
@@ -69,6 +69,8 @@ export function createVoxelGrid({ longitudeSegments, latitudeSegments, isLand })
       return {
         row,
         column,
+        longitude: (lon0 + lon1) / 2,
+        latitude: (lat0 + lat1) / 2,
         isLand: isLandCell,
         coastEdges,
         variation,

@@ -38,16 +38,24 @@ test('真实地理数据失败时才使用风格化图片回退', async () => {
 
 test('桌面和手机使用已确认的体素密度', () => {
   assert.deepEqual(selectGridDensity(1280), {
-    longitudeSegments: 88,
-    latitudeSegments: 44,
+    longitudeSegments: 256,
+    latitudeSegments: 128,
   });
   assert.deepEqual(selectGridDensity(761), {
-    longitudeSegments: 88,
-    latitudeSegments: 44,
+    longitudeSegments: 256,
+    latitudeSegments: 128,
   });
   assert.deepEqual(selectGridDensity(760), {
-    longitudeSegments: 64,
-    latitudeSegments: 32,
+    longitudeSegments: 256,
+    latitudeSegments: 128,
+  });
+  assert.deepEqual(selectGridDensity(481), {
+    longitudeSegments: 256,
+    latitudeSegments: 128,
+  });
+  assert.deepEqual(selectGridDensity(480), {
+    longitudeSegments: 160,
+    latitudeSegments: 80,
   });
 });
 
@@ -69,6 +77,8 @@ test('球面网格记录陆海类型、相邻海岸和稳定色差', () => {
     rebuilt.map((cell) => cell.variation),
     cells.map((cell) => cell.variation),
   );
+  assert.equal(typeof cells[0].longitude, 'number');
+  assert.equal(typeof cells[0].latitude, 'number');
 });
 
 test('背面体素被剔除且陆地比海洋抬高', () => {
