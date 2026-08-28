@@ -9,6 +9,7 @@ import {
   rotateVector,
   selectGridDensity,
   surfaceColor,
+  voxelVariation,
 } from '../scripts/voxel-globe-renderer.mjs';
 
 test('真实地理数据优先于带阴影的风格化图片', async () => {
@@ -79,6 +80,20 @@ test('球面网格记录陆海类型、相邻海岸和稳定色差', () => {
   );
   assert.equal(typeof cells[0].longitude, 'number');
   assert.equal(typeof cells[0].latitude, 'number');
+});
+
+test('陆地起伏使用二维散列，避免形成规则斜向条纹', () => {
+  const cells = createVoxelGrid({
+    longitudeSegments: 16,
+    latitudeSegments: 16,
+    isLand: () => true,
+  });
+  const row = cells.filter((cell) => cell.row === 4).map((cell) => cell.variation);
+  const deltas = row.slice(1).map((value, index) => Number((value - row[index]).toFixed(5)));
+
+  assert.ok(new Set(deltas).size >= 4);
+  assert.ok(new Set(cells.map((cell) => cell.variation)).size >= 12);
+  assert.equal(voxelVariation(7, 4), voxelVariation(7, 4));
 });
 
 test('背面体素被剔除且陆地比海洋抬高', () => {

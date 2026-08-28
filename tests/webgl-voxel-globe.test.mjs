@@ -1,12 +1,23 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  LAND_BLOCK_HEIGHT,
+  LAND_HEIGHT_VARIATION,
+  OCEAN_BLOCK_HEIGHT,
   VOXEL_FRAGMENT_SHADER,
   VOXEL_VERTEX_SHADER,
   createBeveledVoxelMesh,
   createVoxelInstanceData,
   createWebGlVoxelRenderer,
 } from '../scripts/webgl-voxel-globe.mjs';
+
+test('陆地厚度接近一个体素，避免斜视时出现多层台阶', () => {
+  const cellHeight = 0.82 * (Math.PI / 128) * 0.94;
+
+  assert.ok(LAND_BLOCK_HEIGHT <= cellHeight * 1.5);
+  assert.ok(LAND_HEIGHT_VARIATION <= 0.05);
+  assert.ok(OCEAN_BLOCK_HEIGHT < LAND_BLOCK_HEIGHT);
+});
 
 test('倒角体素包含顶面、倒角面和侧面，并使用单位法线', () => {
   const mesh = createBeveledVoxelMesh();

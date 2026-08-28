@@ -1,3 +1,7 @@
+export const OCEAN_BLOCK_HEIGHT = 0.011;
+export const LAND_BLOCK_HEIGHT = 0.024;
+export const LAND_HEIGHT_VARIATION = 0.05;
+
 export const VOXEL_VERTEX_SHADER = `#version 300 es
 precision highp float;
 
@@ -48,7 +52,7 @@ void main() {
   float globeRadius = 0.82;
   float cellWidth = globeRadius * u_cellStep.x * max(cosLatitude, 0.055) * 0.94;
   float cellHeight = globeRadius * u_cellStep.y * 0.94;
-  float blockHeight = mix(0.017, 0.058 + variation * 0.22, isLand);
+  float blockHeight = mix(${OCEAN_BLOCK_HEIGHT}, ${LAND_BLOCK_HEIGHT} + variation * ${LAND_HEIGHT_VARIATION}, isLand);
 
   vec3 worldPosition = radial * (globeRadius + a_position.z * blockHeight)
     + east * (a_position.x * cellWidth)

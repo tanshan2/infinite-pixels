@@ -28,6 +28,15 @@ export function selectGridDensity(viewportWidth) {
     : { longitudeSegments: 256, latitudeSegments: 128 };
 }
 
+export function voxelVariation(column, row) {
+  let seed = Math.imul((column + 1) ^ 0x9e3779b9, 374761393);
+  seed = Math.imul(seed ^ Math.imul(row + 1, 668265263), 1274126177);
+  seed ^= seed >>> 13;
+  seed = Math.imul(seed, 1274126177);
+  seed ^= seed >>> 16;
+  return (((seed >>> 0) / 4294967295) - 0.5) * 0.08;
+}
+
 function unitVector(lon, lat) {
   const cosLat = Math.cos(lat);
   return {
@@ -64,7 +73,7 @@ export function createVoxelGrid({ longitudeSegments, latitudeSegments, isLand })
             ['west', neighbor(column - 1, row)],
           ].filter(([, adjacentLand]) => !adjacentLand).map(([edge]) => edge)
         : [];
-      const variation = ((column * 37 + row * 53) % 17 - 8) / 100;
+      const variation = voxelVariation(column, row);
 
       return {
         row,
