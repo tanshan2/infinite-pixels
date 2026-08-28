@@ -135,6 +135,7 @@ import {
 } from './scripts/globe-ui-state.mjs';
 import {
   createVoxelGrid,
+  loadLandTopology,
   projectCell,
   projectSurfacePoint,
   rgbToCss,
@@ -337,8 +338,8 @@ import {
       variation:cell.variation,
     }));
     canvasCtx.fill();
-    canvasCtx.strokeStyle=cell.isLand?'rgba(39,48,11,.82)':'rgba(3,43,46,.76)';
-    canvasCtx.lineWidth=window.innerWidth<=760?0.48:0.68;
+    canvasCtx.strokeStyle=cell.isLand?'rgba(39,48,11,.48)':'rgba(3,43,46,.58)';
+    canvasCtx.lineWidth=window.innerWidth<=760?(cell.isLand?0.28:0.34):(cell.isLand?0.34:0.42);
     canvasCtx.stroke();
     canvasCtx.beginPath();
     canvasCtx.moveTo(shape.top[3].x,shape.top[3].y);
@@ -636,16 +637,24 @@ import {
     if(rebuildVoxelGrid())render();
   });
 
-  const fallbackToGeoJson=()=>fetch(DATA_URL).then(response=>{if(!response.ok)throw new Error('Map data request failed');return response.json();}).then(geo=>{
-    buildTexture(geo);rebuildVoxelGrid(true);loading.style.display='none';render();
+  const loadGeoJson=()=>fetch(DATA_URL).then(response=>{
+    if(!response.ok)throw new Error('Map data request failed');
+    return response.json();
+  });
+  const loadTextureImage=()=>new Promise((resolve,reject)=>{
+    const textureImage=new Image();
+    textureImage.decoding='async';
+    textureImage.onload=()=>resolve(textureImage);
+    textureImage.onerror=()=>reject(new Error('Texture request failed'));
+    textureImage.src=TEXTURE_URL;
+  });
+  loadLandTopology({loadGeoJson,loadTexture:loadTextureImage}).then(({source,data})=>{
+    if(source==='geojson')buildTexture(data);
+    else buildTextureFromImage(data);
+    rebuildVoxelGrid(true);loading.style.display='none';render();
   }).catch(()=>{
     loadFailed=true;loading.textContent=copyFor(state.language,coarsePointer).loadError;loading.classList.add('error');
   });
-  const textureImage=new Image();
-  textureImage.decoding='async';
-  textureImage.onload=()=>{buildTextureFromImage(textureImage);rebuildVoxelGrid(true);loading.style.display='none';render();};
-  textureImage.onerror=fallbackToGeoJson;
-  textureImage.src=TEXTURE_URL;
   setLanguage();
   syncActivationUi();
   if(!motionFrame)motionFrame=requestAnimationFrame(motionLoop);

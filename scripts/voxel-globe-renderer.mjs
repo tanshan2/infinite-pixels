@@ -1,5 +1,17 @@
 export const LAND_LIFT = 1.045;
 
+export async function loadLandTopology({ loadGeoJson, loadTexture }) {
+  try {
+    return { source: 'geojson', data: await loadGeoJson() };
+  } catch (geoJsonError) {
+    try {
+      return { source: 'texture', data: await loadTexture() };
+    } catch {
+      throw geoJsonError;
+    }
+  }
+}
+
 const LIGHT = (() => {
   const source = { x: -0.45, y: 0.62, z: 0.64 };
   const length = Math.hypot(source.x, source.y, source.z);

@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   createVoxelGrid,
+  loadLandTopology,
   projectCell,
   projectSurfacePoint,
   rgbToCss,
@@ -9,6 +10,31 @@ import {
   selectGridDensity,
   surfaceColor,
 } from '../scripts/voxel-globe-renderer.mjs';
+
+test('真实地理数据优先于带阴影的风格化图片', async () => {
+  let textureLoads = 0;
+  const geoJson = { type: 'FeatureCollection', features: [] };
+  const result = await loadLandTopology({
+    loadGeoJson: async () => geoJson,
+    loadTexture: async () => {
+      textureLoads += 1;
+      return { width: 1774, height: 887 };
+    },
+  });
+
+  assert.deepEqual(result, { source: 'geojson', data: geoJson });
+  assert.equal(textureLoads, 0);
+});
+
+test('真实地理数据失败时才使用风格化图片回退', async () => {
+  const texture = { width: 1774, height: 887 };
+  const result = await loadLandTopology({
+    loadGeoJson: async () => { throw new Error('地图数据不可用'); },
+    loadTexture: async () => texture,
+  });
+
+  assert.deepEqual(result, { source: 'texture', data: texture });
+});
 
 test('桌面和手机使用已确认的体素密度', () => {
   assert.deepEqual(selectGridDensity(1280), {
