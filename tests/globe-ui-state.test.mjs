@@ -24,6 +24,7 @@ test('初始休眠且控件隐藏', () => {
 
 test('激活后转动，交互后暂停两秒', () => {
   let state = activateGlobe(createUiState({ reducedMotion: false }));
+  assert.equal(state.zoom, 1.08);
   assert.equal(shouldAutoRotate(state, 1000), true);
   state = pauseAutoRotation(state, 1000);
   assert.equal(shouldAutoRotate(state, 2999), false);
@@ -31,8 +32,10 @@ test('激活后转动，交互后暂停两秒', () => {
 });
 
 test('减少动态效果时不自动转动', () => {
-  const state = activateGlobe(createUiState({ reducedMotion: true }));
+  const initial = {...createUiState({ reducedMotion: true }), zoom: 0.9};
+  const state = activateGlobe(initial);
   assert.equal(shouldAutoRotate(state, 5000), false);
+  assert.equal(state.zoom, 0.9);
 });
 
 test('控件需激活且存在显示意图', () => {
@@ -70,7 +73,7 @@ test('会话只恢复安全视角', () => {
       pitch: restored.pitch,
       zoom: restored.zoom,
     },
-    { active: true, yaw: 2, pitch: 0.2, zoom: 1.2 },
+    { active: false, yaw: 2, pitch: 0.2, zoom: 1.2 },
   );
   assert.equal(restoreSession('{bad json'), null);
 });
@@ -95,4 +98,5 @@ test('非法会话视角被夹紧到安全范围', () => {
   }));
   assert.equal(restored.pitch, 1.25);
   assert.equal(restored.zoom, 1.3);
+  assert.equal(restored.active, false);
 });

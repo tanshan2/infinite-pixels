@@ -61,19 +61,22 @@
   .globe3d-wrap{position:relative;width:100%;height:100%;min-height:0;padding:0;border:0;border-radius:0;background:#111716}
   .globe3d-topline{position:absolute;top:30px;right:36px;z-index:6}
   .globe3d-topline strong{display:none}
+  .globe3d-lang{min-width:44px;min-height:44px}
   .globe3d-stage{position:absolute;z-index:1;left:50%;top:34%;width:min(62vw,74vh,690px);margin:0;transform:translate(-50%,-50%);outline:none}
   .globe3d-stage:focus-visible{filter:drop-shadow(0 0 8px rgba(240,235,208,.55))}
   .globe3d-stage:not(.is-active){cursor:default}
   .globe3d-location-nav{position:absolute;z-index:2;inset:0;width:auto;height:auto;overflow:visible;clip:auto;clip-path:none;white-space:normal;pointer-events:none}
-  .globe3d-location-nav button{position:absolute;padding:2px 4px;border:0;background:rgba(17,23,22,.7);color:#f3e4a9;font:700 clamp(10px,1.05vw,15px)/1.15 sans-serif;text-shadow:1px 1px 0 #14201d;white-space:nowrap;transform:translate(-50%,-50%);opacity:1}
+  .globe3d-location-nav button{position:absolute;min-width:44px;min-height:44px;padding:10px 8px;border:0;background:transparent;color:#f3e4a9;font:700 clamp(10px,1.05vw,15px)/1.15 sans-serif;text-shadow:1px 1px 0 #14201d;white-space:nowrap;transform:translate(-50%,-50%);opacity:1}
   .globe3d-location-nav button:not(:disabled){pointer-events:auto;cursor:pointer}
   .globe3d-location-nav button[hidden]{display:none}
   .globe3d-controls{position:absolute;z-index:6;right:clamp(18px,3vw,44px);top:50%;left:auto;bottom:auto;margin:0;transform:translateY(-50%);flex-direction:column;opacity:1;transition:opacity .18s ease}
+  .globe3d-controls button{min-width:44px;height:44px}
   .globe3d-controls[hidden]{display:none}
   .globe3d-meta{position:absolute;z-index:6;left:42px;bottom:28px;margin:0;transform:none;white-space:nowrap}
   .globe3d-location-label{position:absolute;left:50%;top:calc(50% + min(30vw,32vh,280px) + 8px);margin:0;transform:translateX(-50%)}
   .portal-gate{position:absolute;z-index:4;left:50%;bottom:-7.5%;width:min(79vw,1320px);height:auto;padding:0;border:0;background:transparent;transform:translateX(-50%);cursor:pointer;filter:drop-shadow(0 20px 18px rgba(0,0,0,.32));transition:filter .22s ease,transform .22s ease}
   .portal-gate:hover,.portal-gate:focus-visible{filter:drop-shadow(0 18px 18px rgba(0,0,0,.38)) drop-shadow(0 0 14px rgba(214,157,66,.24));transform:translateX(-50%) translateY(-2px)}
+  .portal-gate.is-entering{filter:drop-shadow(0 14px 18px rgba(0,0,0,.34)) drop-shadow(0 0 26px rgba(247,190,84,.58));transform:translateX(-50%) translateY(-3px) scale(1.012)}
   .portal-gate:focus-visible{outline:none}
   .portal-gate:focus-visible .portal-label{outline:2px solid #f0d98b;outline-offset:4px}
   .portal-artwork{display:block;width:100%;height:auto;pointer-events:none;user-select:none;image-rendering:auto}
@@ -90,7 +93,7 @@
     .globe3d-meta{left:16px;bottom:14px;font-size:8px}
     .globe3d-location-label{left:50%}
   }
-  @media(prefers-reduced-motion:reduce){.portal-gate,.globe3d-controls,.transition-veil{transition:none}}
+  @media(prefers-reduced-motion:reduce){.portal-gate,.globe3d-controls,.transition-veil{transition:none}.portal-gate.is-entering{filter:inherit;transform:translateX(-50%)}}
 </style>
 
 <div class="globe3d-wrap">
@@ -163,7 +166,10 @@ import {
   const SESSION_KEY = 'earth-portal-view-v2';
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const coarsePointer = window.matchMedia('(pointer: coarse)').matches;
-  const restoredState = restoreSession(sessionStorage.getItem(SESSION_KEY));
+  function readStoredSession(){
+    try{return sessionStorage.getItem(SESSION_KEY);}catch{return null;}
+  }
+  const restoredState = restoreSession(readStoredSession());
   let state = {
     ...createUiState({reducedMotion}),
     ...(restoredState || {}),
@@ -175,10 +181,10 @@ import {
   const drag = {id:null,x:0,y:0,startX:0,startY:0,moved:false,locationId:null};
   const pinch = {distance:0,zoom:1};
   let textureData = null;
-  let blinkFrame = 0;
   let motionFrame = 0;
   let lastMotionTime = 0;
-  let lastTouchTap = 0;
+  let activationFrame = 0;
+  let lastTouchTap = {time:Number.NaN,x:0,y:0};
   let touchControlsTimer = 0;
   let loadFailed = false;
 
@@ -272,7 +278,11 @@ import {
   }
   function renderZoom(){return Math.min(state.zoom,MAX_RENDER_ZOOM);}
   function globeRadius(){return RENDER_SIZE*0.43*renderZoom();}
-  function syncCanvasScale(){const scale=state.zoom/renderZoom();canvas.style.transform=`scale(${scale})`;}
+  function syncCanvasScale(){
+    const scale=state.zoom/renderZoom();
+    canvas.style.transform=`scale(${scale})`;
+    locationNav.style.transform=`scale(${scale})`;
+  }
   function visibleLocations(){
     return LOCATIONS.map(projectLocation).filter(Boolean).filter(item=>!state.selectedLocationId||item.location.id===state.selectedLocationId);
   }
@@ -290,7 +300,7 @@ import {
   function shadeColor(color,brightness){return [Math.max(0,Math.min(255,Math.round(color[0]*brightness))),Math.max(0,Math.min(255,Math.round(color[1]*brightness))),Math.max(0,Math.min(255,Math.round(color[2]*brightness)))];}
   function drawLocationMarker(item){
     const unit=Math.max(1,Math.round(state.zoom)),px=Math.round(item.x),py=Math.round(item.y),selected=item.location.id===state.selectedLocationId;
-    const blink=selected?(0.68+0.32*(0.5+0.5*Math.sin(performance.now()/1200*Math.PI*2))):1;
+    const blink=selected&&!state.reducedMotion?(0.68+0.32*(0.5+0.5*Math.sin(performance.now()/1200*Math.PI*2))):1;
     canvasCtx.save();canvasCtx.globalAlpha=blink;
     canvasCtx.fillStyle='#d7654f';
     canvasCtx.fillRect(px-2*unit,py-2*unit,4*unit,3*unit);
@@ -343,7 +353,7 @@ import {
     syncGlobeLocationButtons(locations);
   }
   function saveSessionView(){
-    sessionStorage.setItem(SESSION_KEY,serializeSession(state));
+    try{sessionStorage.setItem(SESSION_KEY,serializeSession(state));}catch{}
   }
   function setZoom(nextZoom){
     state={...state,zoom:Math.max(MIN_ZOOM,Math.min(MAX_ZOOM,nextZoom))};
@@ -352,18 +362,6 @@ import {
   function resetView(){
     state={...state,...DEFAULT_VIEW};
     clearLocationSelection();saveSessionView();
-  }
-  function tickBlink(){
-    blinkFrame=0;
-    if(!state.selectedLocationId)return;
-    render();blinkFrame=requestAnimationFrame(tickBlink);
-  }
-  function ensureBlink(){
-    if(state.selectedLocationId&&!blinkFrame)blinkFrame=requestAnimationFrame(tickBlink);
-  }
-  function stopBlink(){
-    if(blinkFrame)cancelAnimationFrame(blinkFrame);
-    blinkFrame=0;
   }
   function selectedLocation(){return LOCATIONS.find(location=>location.id===state.selectedLocationId)||null;}
   function syncLocationLabel(){
@@ -390,23 +388,29 @@ import {
     if(!state.selectedLocationId)return;
     const location=selectedLocation();
     if(!location){
-      state.selectedLocationId=null;state.hoverLocationId=null;stopBlink();syncLocationLabel();updateHint();
+      state.selectedLocationId=null;state.hoverLocationId=null;syncLocationLabel();updateHint();
     }
   }
   function clearLocationSelection(){
-    state.selectedLocationId=null;state.hoverLocationId=null;stopBlink();syncLocationLabel();updateHint();render();
+    state.selectedLocationId=null;state.hoverLocationId=null;syncLocationLabel();updateHint();render();
   }
   function selectLocation(location){
     if(!state.active||!location)return;
-    state.selectedLocationId=location.id;state.hoverLocationId=location.id;syncLocationLabel();updateHint();render();ensureBlink();
+    state.selectedLocationId=location.id;state.hoverLocationId=location.id;syncLocationLabel();updateHint();render();
   }
   function selectLocationById(id){selectLocation(LOCATIONS.find(location=>location.id===id)||null);}
   function setLanguage(){
     const english=state.language==='en',copy=copyFor(state.language,coarsePointer);
+    document.documentElement.lang=english?'en':'zh-CN';
     langToggle.textContent=copy.languageToggle;
     langToggle.setAttribute('aria-pressed',String(english));
     portalLabel.textContent=copy.portalLabel;
     portalGate.setAttribute('aria-label',english?'Enter all works':'进入全部作品');
+    controls.setAttribute('aria-label',english?'Globe view controls':'地球视图控制');
+    zoomIn.setAttribute('aria-label',english?'Zoom in':'放大');
+    resetButton.textContent=english?'Reset':'重置';
+    resetButton.setAttribute('aria-label',english?'Reset globe view':'重置地球视角');
+    zoomOut.setAttribute('aria-label',english?'Zoom out':'缩小');
     loading.textContent=loadFailed?copy.loadError:copy.loading;
     syncLocationLabel();updateHint();syncActivationUi();
     if(textureData)render();
@@ -431,16 +435,33 @@ import {
   }
   function activateFromInput(){
     if(state.active)return;
-    state=activateGlobe(state);
+    const initialZoom=state.zoom,activated=activateGlobe(state),targetZoom=activated.zoom;
+    state=state.reducedMotion?activated:{...activated,zoom:initialZoom};
+    if(stage.contains(document.activeElement))state=setControlsIntent(state,'focus',true);
     uiStatus.textContent=state.language==='en'?'The globe is awake':'地球已唤醒';
     syncActivationUi();render();saveSessionView();
+    if(!state.reducedMotion&&targetZoom>initialZoom){
+      const startedAt=performance.now(),duration=320;
+      if(activationFrame)cancelAnimationFrame(activationFrame);
+      const step=(now)=>{
+        const progress=Math.min(1,(now-startedAt)/duration),eased=1-Math.pow(1-progress,3);
+        state={...state,zoom:initialZoom+(targetZoom-initialZoom)*eased};
+        render();
+        if(progress<1)activationFrame=requestAnimationFrame(step);
+        else{activationFrame=0;saveSessionView();}
+      };
+      activationFrame=requestAnimationFrame(step);
+    }
   }
   function motionLoop(now){
-    const elapsed=Math.min(80,Math.max(0,now-lastMotionTime));
-    if(textureData&&shouldAutoRotate(state,now)&&elapsed>=48){
-      state={...state,yaw:state.yaw+elapsed*0.00005};
+    const elapsed=Math.max(0,now-lastMotionTime),rotationElapsed=Math.min(80,elapsed);
+    const auto=textureData&&shouldAutoRotate(state,now);
+    const blinking=textureData&&Boolean(state.selectedLocationId)&&!state.reducedMotion;
+    const interval=auto?48:(blinking?120:Number.POSITIVE_INFINITY);
+    if(textureData&&elapsed>=interval){
+      if(auto)state={...state,yaw:state.yaw+rotationElapsed*0.00005};
       render();lastMotionTime=now;
-    }else if(!textureData||!shouldAutoRotate(state,now)){
+    }else if(!textureData||interval===Number.POSITIVE_INFINITY){
       lastMotionTime=now;
     }
     motionFrame=requestAnimationFrame(motionLoop);
@@ -492,9 +513,9 @@ import {
   function endPointer(event,allowClick){
     if(!state.active){
       if(allowClick&&event.pointerType==='touch'){
-        const now=performance.now();
-        if(isDoubleTap(lastTouchTap,now))activateFromInput();
-        lastTouchTap=now;
+        const now=performance.now(),distance=Math.hypot(event.clientX-lastTouchTap.x,event.clientY-lastTouchTap.y);
+        if(isDoubleTap(lastTouchTap.time,now)&&distance<=32)activateFromInput();
+        lastTouchTap={time:now,x:event.clientX,y:event.clientY};
       }
       return;
     }
@@ -526,18 +547,18 @@ import {
   canvas.addEventListener('contextmenu',(event)=>event.preventDefault());
   stage.addEventListener('dblclick',event=>{event.preventDefault();activateFromInput();});
   stage.addEventListener('keydown',event=>{
-    if(!isActivationKey(event.key))return;
+    if(event.target!==stage||!isActivationKey(event.key))return;
     event.preventDefault();activateFromInput();
   });
   stage.addEventListener('pointerenter',()=>{if(state.active)setControls('hover',true);});
   stage.addEventListener('pointerleave',()=>setControls('hover',false));
-  stage.addEventListener('focus',()=>{if(state.active)setControls('focus',true);});
-  stage.addEventListener('blur',()=>window.setTimeout(()=>{
-    if(!controls.contains(document.activeElement))setControls('focus',false);
+  stage.addEventListener('focusin',()=>{if(state.active)setControls('focus',true);});
+  stage.addEventListener('focusout',()=>window.setTimeout(()=>{
+    if(!stage.contains(document.activeElement)&&!controls.contains(document.activeElement))setControls('focus',false);
   },0));
   controls.addEventListener('focusin',()=>setControls('focus',true));
   controls.addEventListener('focusout',()=>window.setTimeout(()=>{
-    if(document.activeElement!==stage&&!controls.contains(document.activeElement))setControls('focus',false);
+    if(!stage.contains(document.activeElement)&&!controls.contains(document.activeElement))setControls('focus',false);
   },0));
   langToggle.addEventListener('click',()=>{state={...state,language:nextLanguage(state.language)};setLanguage();});
   zoomOut.addEventListener('click',()=>{if(state.active)setZoom(state.zoom-0.1);});

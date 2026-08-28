@@ -57,7 +57,7 @@ export function activateGlobe(state) {
   return {
     ...state,
     active: true,
-    zoom: Math.max(state.zoom, 1.08),
+    zoom: state.reducedMotion ? state.zoom : Math.max(state.zoom, 1.08),
     autoResumeAt: 0,
   };
 }
@@ -120,7 +120,6 @@ export function nextLanguage(language) {
 
 export function serializeSession(state) {
   return JSON.stringify({
-    active: Boolean(state.active),
     language: state.language === 'en' ? 'en' : 'zh',
     yaw: finiteOr(state.yaw, DEFAULT_VIEW.yaw),
     pitch: clamp(finiteOr(state.pitch, DEFAULT_VIEW.pitch), MIN_PITCH, MAX_PITCH),
@@ -135,7 +134,7 @@ export function restoreSession(raw) {
     if (!parsed || typeof parsed !== 'object') return null;
     return {
       ...createUiState({ reducedMotion: false }),
-      active: Boolean(parsed.active),
+      active: false,
       language: parsed.language === 'en' ? 'en' : 'zh',
       yaw: finiteOr(parsed.yaw, DEFAULT_VIEW.yaw),
       pitch: clamp(finiteOr(parsed.pitch, DEFAULT_VIEW.pitch), MIN_PITCH, MAX_PITCH),

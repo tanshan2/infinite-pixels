@@ -32,3 +32,11 @@ test('中文初始界面没有文字品牌或技术英文', () => {
   assert.match(visibleBody, /鼠标双击地球唤醒/);
   assert.match(visibleBody, /全部作品/);
 });
+
+test('键盘事件、暖光与安全存储接线存在', () => {
+  assert.match(html, /event\.target!==stage\|\|!isActivationKey\(event\.key\)/);
+  assert.match(html, /\.portal-gate\.is-entering\{/);
+  assert.match(html, /try\{return sessionStorage\.getItem/);
+  assert.match(html, /try\{sessionStorage\.setItem/);
+  assert.match(html, /min-width:44px;min-height:44px/);
+});
