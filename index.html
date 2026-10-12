@@ -236,7 +236,8 @@ button{font:inherit;color:inherit}
 .rm-hot:hover+.rm-tag,.rm-hot:focus-visible+.rm-tag{color:var(--ember);border-color:var(--ember)}
 .rm-shot,.rm-card{position:absolute;opacity:0;visibility:hidden;transition:opacity .35s,visibility 0s .35s}
 .rm.shown .rm-shot,.rm.shown .rm-card{opacity:1;visibility:visible;transition:opacity .45s}
-.rm-shot{overflow:hidden;background:#0A0E11}.rm-shot img{display:block;width:100%;height:100%;object-fit:cover}.rm-shot video{display:block;width:100%;height:100%;object-fit:contain;background:#000}.rm-shot.vid::after{display:none}
+.rm-shot{overflow:hidden;background:#0A0E11}.rm-shot img{display:block;width:100%;height:100%;object-fit:cover}.trial{display:flex;flex-direction:column;gap:12px;padding-top:4px;border-top:1px solid var(--line)}.rm-card .trial p{font-family:var(--f-serif);font-size:14.5px;line-height:2;font-weight:400;color:#D8D2C1;text-indent:2em;text-wrap:pretty}.rm-card .trial p.brk{text-indent:0;text-align:center;color:var(--mute)}.rm-card p.trial-end{text-align:center;font-size:12px;letter-spacing:.2em}
+.rm-shot video{display:block;width:100%;height:100%;object-fit:contain;background:#000}.rm-shot.vid::after{display:none}
 .rm-shot::after{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(rgba(6,8,10,.14) 0 1px,transparent 1px 3px);box-shadow:inset 0 0 60px rgba(6,8,10,.5)}
 .rm-shot .badge{position:absolute;left:10px;top:10px;padding:3px 8px;background:rgba(6,8,10,.78);font-size:10px;letter-spacing:.16em}
 .rm-card{display:flex;flex-direction:column;gap:16px;padding:28px 30px;background:rgba(8,11,14,.9);border:1px solid var(--line);overflow:auto;overscroll-behavior:contain;touch-action:pan-y}
@@ -2008,6 +2009,112 @@ const posterSrc = (f) => (f.length < 80 ? f : 'data:image/webp;base64,' + f);
 function setPoster(i) { const f = room.focus; if (!f || !f.set) return; UI.flip(); const it = f.set.items, n = it.length; room.pi = ((i % n) + n) % n;
   const im = document.getElementById('rmPoster'); if (im) im.src = posterSrc(it[room.pi].f); const ct = document.getElementById('rmPcount'); if (ct) ct.textContent = `${String(room.pi + 1).padStart(2, '0')} / ${n}`;
   rmCard.querySelectorAll('[data-pi]').forEach((b) => { const on = +b.dataset.pi === room.pi; b.classList.toggle('on', on); if (on && b.scrollIntoView) b.scrollIntoView({ block: 'nearest', inline: 'nearest' }); }); }
+// the first chapter of the novel PARADISE (乐园), as the trial read: one paragraph per string, from his draft
+// (a line of its own, so it never shares a line with code)
+const PARADISE_CH1 = ['朋友把车停在旧城区的路口，熄了引擎，却没有拔钥匙。酒店就在街道尽头。它比埃利奥特记得的高，顶上几层像被火咬空了，黑色窗洞朝向城里尚未落雪的夜。',
+  '“我可以陪你走到围栏。”朋友说。',
+  '“你留在车里。二十分钟以后我还没出来，就报警。”',
+  '朋友转过头，等他补上一句解释。埃利奥特下午打电话时只说自己要确认十八层是否有人。如今楼在那里，他仍说不出那个人的姓名怎样会与一间烧毁多年的客房连在一起。说出口以后，朋友多半会替他把车开回医院。',
+  '“你看到人影，是在什么时候？”',
+  '“今天傍晚。”',
+  '“隔着这条街？”',
+  '“在另一处。”埃利奥特推开车门，“我去看看那扇窗就回来。”',
+  '朋友用指节敲了一下方向盘。傍晚接到电话时，他先问埃利奥特是否又忘了自己走到哪里；埃利奥特说这次知道，甚至给出了酒店的地址。直到抵达路口，朋友才明白“知道地址”不等于知道为什么要来。',
+  '“你刚才一路都在看后座。”朋友说，“车上只有我们两个。”',
+  '埃利奥特没有转头。他确实曾从后视镜里看见深色衣袖，像有人在后座把一张纸慢慢折小。第二次看，那里放的只是朋友的旧外套。若把这件事也讲出来，朋友就不会让他靠近围栏了。',
+  '“我知道。”他说，“你把门锁上，二十分钟后再开。”',
+  '朋友没有追问“另一处”在哪里。他朝酒店最高的几层看了一眼，伸手按开了车内灯。“十八层的地板塌过。别为了看清一张脸走到边上。”',
+  '埃利奥特应了一声。风从门缝灌进来，带着融雪盐的味道。他下车后回头，朋友仍坐着，双手握在方向盘上。灯亮在他脸旁，窗外却没有雪。',
+  '围栏后原本是药房的矮墙。埃利奥特翻过去，在侧门前停下。他记得门后有五级水泥台阶，最下面堆着两只洗衣袋；手电照进去，台阶只剩断裂的前两级，再往里是倾斜的楼板和锈蚀钢筋。',
+  '他退到街灯够得着的地方，看了一眼自己刚踩出的脚印。盐粒沾在鞋底，半圈痕迹清楚地留在灰里。楼并没有在他开门时换掉，他只可能记错了。',
+  '大厅的服务楼梯也不在记忆中的右侧。手电光晃过去，烧裂的拱门里短暂亮起暗红地毯和一截黄铜扶手。埃利奥特把光束移回来，拱门后仍是裸露的墙。',
+  '一楼没有人的声音。他沿着还能承重的楼梯上去。经过十七层时，风把一块旧门牌推得贴上墙，轻轻响了三下。他站着听完，又等了一会儿，才继续走。',
+  '十八层有一半悬在夜色里。走廊中的墙漆被烟熏成深灰，墙角躺着一块黄铜牌：1814。埃利奥特弯腰捡起它，边缘压在右手掌心长好的旧伤上。那疼痛非常具体，比刚才看见的地毯可信得多。',
+  '手电照向尽头。一个女人站在断墙前，离没有栏杆的边缘只有半步。她没有回头，手指在身旁的管道上敲了三下，停住，再敲两下。',
+  '埃利奥特把手电压低，怕光晃得她向后躲。',
+  '“先往我这边走。”他说，“前面没有地板。”',
+  '她的肩膀动了动。那件深色开衫和垂过肩头的长发，他都曾在别处看过。可是这里隔着一整条走廊，她的脸仍藏在夜色里。他不能凭一件衣服就断定是谁。',
+  '他还是叫出了那个名字。',
+  '“卡琳娜？”',
+  '女人抬起头。埃利奥特向前迈了一步，鞋底踩到的灰突然向下倾斜。黄铜牌从他手中滑走，他伸手去抓，指尖先碰到一阵冷风。',
+  '＊',
+  '认识卡琳娜的那个下午，谈话室的窗外没有雪。安全网上挂着前一夜的雨水，工作人员在门口核对了两个名字，提醒他们公共谈话室四点半要关。埃利奥特从值班台借来一支圆珠笔，放在软皮本旁边。卡琳娜进来以后，先看了一眼靠门的椅子，才走向窗边坐下。',
+  '她穿浅灰衬衫，外面是一件炭灰色开衫。黑发长而直，薄刘海刚碰到睫毛；灰褐色的眼睛细长，眼尾微微上挑。她左侧嘴角下方有一粒浅痣，不在说话时最显眼，安静下来反而容易注意到。',
+  '埃利奥特翻开本子。以前他也试过跟人谈他们的噩梦：问题排得足够整齐，对方就会放心把话交给他。他从不说自己能治好什么，只是觉得，眼前如果有人肯说，自己至少不该先退开。',
+  '“你昨晚睡了吗？”',
+  '“睡过。”卡琳娜望着他的本子，“你打算把我写在哪一页？”',
+  '埃利奥特停了一下，将书签从写过字的地方抽出来，翻到空白页。“从这里。”',
+  '“那就别先替我写梦的名字。”',
+  '“我还没有写。”',
+  '“刚才在门外，你问值班员我是不是常做噩梦。”',
+  '“她只说你愿意谈睡眠。”',
+  '“这和常做噩梦不一样。”卡琳娜将手里的一张厚纸对折，沿折痕压了一遍，“我有时觉得自己已经醒了。过一阵才发现，刚才醒的那一次也在梦里。”',
+  '埃利奥特没有急着追问画面。他请她从最近的一次说起。卡琳娜讲得很慢：她在一间卧室睁眼，知道床头有杯水，也记得前一天洗过杯子；可她端起来时，杯底有几天未擦的灰。她又去看钟，钟在走。窗户能打开，风也是真的冷。',
+  '“后来你怎么确定那是梦？”埃利奥特问。',
+  '“我没确定。又醒了一次，杯子没了。”',
+  '他在纸上记下“杯子、钟、窗户”，问第二次的房间是否和第一次相同。',
+  '“门的位置不同。”她说，“其余地方一样得让我不敢碰。”',
+  '埃利奥特抬头看了看谈话室的门。窗上的长方形玻璃里，有人推着小车经过。车轮碾过门口的接缝，发出一声短响。他收回目光，发现卡琳娜正看着他。',
+  '“你也会看门。”她说。',
+  '“听见有人经过，谁都会看。”',
+  '“你在小车到门口以前就看了。”',
+  '这个纠正并不尖锐。他却把本子稍微拉近了些。卡琳娜折好第一道，又慢慢拆开，仿佛并没有打算从这件事得到他的回答。',
+  '“那你醒来以后先检查什么？”埃利奥特问。',
+  '“人。”',
+  '“同房间的人？”',
+  '“梦里跟我在一起的人。他的脸有时不一样，声音也会变，可我知道那时自己不想一个人留着。”卡琳娜抬眼，见他没有下笔，才继续说，“醒来时我会先看旁边还有没有人，再看钟和门。”',
+  '“如果人也会在梦里出现呢？”',
+  '“当然会。”她把纸翻到另一面，“所以我只是看，并没有说那能证明我醒了。”',
+  '窗外的水沿安全网落下，过了几秒，又有一滴顺着同一根铁线滑下来。埃利奥特拿本子挡住桌上的水印，忽然发现卡琳娜已把第一张厚纸折成四角相等的小方块。她折得很整齐，仿佛手边有一件可按顺序完成的事，便不必总去想门后的房间。',
+  '“你什么时候开始这样检查？”他问。',
+  '“上次醒来以后，我打电话给一个认识的人，问她昨天我们有没有见面。她说见过，还说我坐在她家里喝了茶。我记得那杯茶、她家的地毯，也记得回来路上公交车怎样转弯。”“后来呢？”',
+  '“后来我又醒了一次，电话机就在床边。我没有号码可以拨。”卡琳娜把小方块拆开一角，“我没告诉那个人这段梦。她会怕以后自己说的每句话都被我拿来查验。”',
+  '埃利奥特本来想问她是否能在醒来时立即辨出声音、气味的不同。卡琳娜刚才已说过，梦里那杯茶也有温度；他若继续把感官逐一列出来，不过是让她再证明一次自己试过而失败。他改问她后来还会不会想给那人打电话。',
+  '“会。”卡琳娜说，“但不是每次都打。有些早晨，我只是坐着等房间慢慢变熟。”',
+  '埃利奥特记下“等房间变熟”，又把笔放低。他忽然想到自己有时醒在陌生的街道，先摸外套口袋里的换乘票，再凭票上的日期决定该往哪边走。他从没向卡琳娜讲过这些。眼下若讲出来，会让她觉得他懂；也可能让他失去继续提问时那一点可借用的距离。',
+  '卡琳娜看见他停笔。“你也在想一间房？”',
+  '“一条街。”他没有说谎，却只说到这里，“我有过想不起怎么走到那里的时候。”',
+  '“你后来怎么办？”',
+  '“先找能告诉我日期的东西。再找人问路。”',
+  '卡琳娜把纸翻回未折的一面。“那你知道，问路和让人替你决定自己去过哪里，不是一回事。”',
+  '埃利奥特抬头看她。她这句话没有把他推到病人的位置，也没有把自己的疑虑交给他处理。两人隔着一张桌子，竟第一次谈到同一件事时都没有可以肯定对方的答案。',
+  '埃利奥特原想问她究竟怕梦，还是怕醒后身旁无人。这问题落到嘴边，他意识到自己已经替她选择了答案。卡琳娜把最初折开的角重新压平，那里仍留着白色的折痕。',
+  '“假如有人真的在，”他换了一个说法，“你希望他做什么？”',
+  '“先告诉我他看见了什么。比如这屋里有两只杯子，窗上有网，桌子是固定的。不要一上来就说‘你清醒了’。”',
+  '“因为那句话你听过太多次？”',
+  '“因为说的人也可能没看清。”卡琳娜指了指他的笔，“你写完会给我看吗？”',
+  '“如果你想看。”',
+  '“那你先写你看见的。”',
+  '埃利奥特望向纸页。上面已有三个名词，都来自她的话。他把“门的位置不同”补在下面，笔尖却在最后一笔断了墨。他在页边划了两下，蓝色重新出来。卡琳娜看了一会儿，没有再纠正他。',
+  '门外的值班员抬腕看表。埃利奥特合上本子。“今天先到这里。下次我把这页给你看。”卡琳娜掌中的纸还没来得及折回去。窗户忽然响了。',
+  '一只灰黑色的椋鸟撞进安全网与玻璃之间，翅膀在狭窄的缝里拍动。第一下很重，第二下轻些；两根细羽贴住玻璃，随着它每次挣扎上下颤。',
+  '卡琳娜的手猛地合拢，厚纸从折痕处裂开。她没有叫，只盯着窗角。埃利奥特看见她的胸口停在那里，像一口气没有跟上下一口。',
+  '她眼前短暂出现一间比谈话室小得多的厨房。烟贴着天花板，黑翅尖扫过碗柜，有人把一件潮湿的羊毛外套抖开，盖到她头上。外套起初温热，后来只剩焦煳味。',
+  '又一下撞击把她拉回窗前。她松不开手里的纸，也没有力气问自己刚才是否又醒了一次。',
+  '埃利奥特站起来。卡琳娜的肩膀立刻绷紧。他停在桌边，先告诉她：“我去把窗挡住，不碰你。”',
+  '百叶窗降下时，鸟还在玻璃上拍动。他一片片合拢叶片，直到羽毛和安全网从房间里消失。然后他走到门口，叫值班员找人把网与窗之间的缝打开。',
+  '“别让它在里面耗死。”他说。',
+  '值班员看了一眼卡琳娜，去拿毛巾和长柄钩。埃利奥特把椅子搬到窗前，让椅背挡着百叶窗，自己坐在卡琳娜与撞击声之间。两人原来隔着的桌子现在留在侧面。',
+  '卡琳娜试着把裂开的纸对齐。纸纤维卷了边，怎么压也接不上。她终于问：“它死了',
+  '吗？”',
+  '“我还没看见。”埃利奥特说，“有人在外面处理。等我知道了，再告诉你。”',
+  '“你可以拉开看。”',
+  '“现在不拉。它如果又撞一下，你会先听见。”',
+  '她抬头看他。他这句话没有把她当成不能承受答案的人，也没有说鸟一定能活。走廊外传来金属钩碰到网框的声音，接着是短促的扑翅。声音移远后，埃利奥特起身，从百叶的一道窄缝往外看。',
+  '值班员用毛巾托着那只鸟。鸟的一只脚勾住网，松开后忽然振翅，越过院墙。值班员回头朝屋里比了个手势。埃利奥特等它真正飞远，才坐回来。',
+  '“它走了。”他说。',
+  '卡琳娜没有立刻松开纸。她问：“你刚才看见我怎么了？”',
+  '“你把纸撕开了，呼吸停了一会儿。现在已经能跟我说话。”埃利奥特把本子推过去，“我没写鸟，也没写你看见了什么。”',
+  '“你不想知道？”',
+  '“想。但刚才要紧的是先让它出去。”',
+  '卡琳娜低头看向那张空白页。她来时准备过许多关于梦的解释，没有一个能解释眼前这个人为什么宁愿把自己的记录停在半途。值班员再次敲了门上的玻璃，提醒他们该走了。',
+  '卡琳娜将纸握到掌心里，刚才被捏出的裂口磨着指腹。她知道值班员救鸟也只是做了一件眼前的事，埃利奥特却没有在鸟飞走后立刻把她的反应写成一个症状。她很久没遇见这种停顿：有人看见她害怕，不急着告诉她那恐惧从何而来。她因此更想开口，反倒说不出昨天夜里究竟醒过几次。',
+  '埃利奥特也没有再翻笔记。他想问她在鸟撞上的一刻是否看见过别的房间，但走廊里正在收拾钩子和毛巾，她一离开这个位置就得经过那扇窗。他先把椅子移远，让她可以从桌子另一侧走向门口。卡琳娜看见这个小小的让路，想起母亲曾用外套给窗边的鸟留出出口，又立刻把那画面压下去。她不愿把一个刚认识的人硬放进那间厨房。',
+  '埃利奥特拿起本子，又放下。“下次你愿意说，我们再从这里开始。也可以说别的。”',
+  '“下次如果我不愿意说呢？”',
+  '“那我也可以先告诉你我看见了什么。”他看了一眼被椅背遮住的窗，“从刚才起，这屋里少了一只鸟。”',
+  '卡琳娜把两截纸重叠，沿裂口折出一道新痕。她没有说自己会不会再来，只在起身时把椅子向桌边推回去一点，替后面进屋的人留下过道。',
+  '埃利奥特站在门边等她先出去。他重新翻开本子，看到那张未写完的空白页。笔尖悬在纸上，直到值班员收回借给他的圆珠笔，也没有落下。'];
 // real works, as they are added. What is not known yet (cover art, description, role) stays "to be added" on the card
 const WORKS = {
   feedfish: { zh: '摸鱼', en: 'Feedfish', sum: { zh: '一款简单的休闲养成游戏。上下班坐地铁的时候、无聊的时候、工作累了的时候，拿出来玩上一会儿。', en: 'A simple, casual raising game: something to play for a little while on the commute, when you are bored, or when work has worn you out.' },
@@ -2025,10 +2132,10 @@ const WORKS = {
     host: { zh: '竖屏视频 · 1 分 05 秒', en: 'Portrait video · 1 min 05 s' }, go: { zh: '在新窗口播放', en: 'Play in a new window' }, url: 'videos/ad2.mp4', video: 'videos/ad2.mp4',
     role: { zh: '个人完成', en: 'Solo' }, contrib: { zh: '全部由我自己完成', en: 'All my own work' }, img: { zh: 'ad2', en: 'ad2' }, shot: { zh: '影片截图', en: 'Still from the film' } },
   // a work in progress: no link yet, so the card has no "open" button
-  paradise: { zh: 'PARADISE', en: 'PARADISE', tall: true,
+  paradise: { zh: '乐园', en: 'PARADISE', tall: true, trial: { title: { zh: '第一章 没有落下的雪', en: 'Chapter 1 · The Snow That Never Fell' }, paras: PARADISE_CH1 },
     sum: { zh: '一部心理悬疑小说的初稿，之后打算拍成一部微电影。埃利奥特独自走进一座烧毁多年的旧酒店，在十八层的断墙前，看见一个像是卡琳娜的女人——那个他在谈话室里认识的人。记忆、幻觉，和一扇本不该存在的门，慢慢缠在了一起。',
       en: 'The draft of a psychological suspense novel that I plan to turn into a short film. Elliott walks alone into a hotel that burned down years ago; on the eighteenth floor, at the edge of a broken wall, he sees a woman who looks like Karina — someone he first met in a talking room. Memory, hallucination and a door that should not exist slowly wind together.' },
-    host: { zh: '小说初稿 · 8 章 · 计划拍成微电影', en: 'Novel draft · 8 chapters · to become a short film' }, role: { zh: '个人创作', en: 'Solo' }, contrib: { zh: '小说由我自己写作', en: 'I wrote the novel myself' },
+    host: { zh: '小说初稿 · 8 章 · 计划拍成微电影', en: 'Novel draft · 8 chapters · to become a short film' }, role: { zh: '个人创作', en: 'Solo' }, contrib: { zh: '小说和海报都由我自己完成', en: 'I wrote the novel and made the poster myself' },
     img: { zh: 'paradise', en: 'paradise' }, shot: { zh: '海报', en: 'Poster' } },
 };
 const ROOMS = { game: { build: buildRoomGame, dyn: dynGame, base: null, home: 160, start: 62, lead: { zh: '街机上是《摸鱼》，电视上是《你好，新朋友！》。', en: '“Feedfish” is on the arcade cabinet, and “Hello, New Friend!” on the television.' }, secs: [[160, '游戏角', 'Arcade'], [400, '工作台', 'Workshop'], [648, '放映角', 'Screening'], [880, '休息舱', 'Bunks']], hots: [{ id: 'w1', i: 1, work: WORKS.feedfish, rect: [36, 44, 52, 106], screen: [45, 65, 34, 27], tag: [62, 43] }, { id: 'w2', i: 2, work: WORKS.hello, rect: [98, 72, 54, 72], screen: [108, 90, 30, 24], tag: [125, 71] }, { id: 'exit', rect: [248, 34, 50, 96], tag: [273, 33] }] } };
@@ -2130,13 +2237,17 @@ function roomRender() {
     else { const left = D.x + D.w + Math.round(vw * 0.045); rmCard.style.left = left + 'px'; rmCard.style.top = '50%'; rmCard.style.width = Math.max(280, Math.min(440, vw - left - 48)) + 'px'; rmCard.style.maxHeight = (vh - 180) + 'px'; rmCard.style.transform = 'translateY(-46%)'; if (f.set) { rmCard.style.top = D.y + 'px'; rmCard.style.maxHeight = (vh - D.y - 22) + 'px'; rmCard.style.transform = ''; }
       if (f.card && f.card.pn) { rmCard.style.top = '86px'; rmCard.style.maxHeight = (vh - 110) + 'px'; rmCard.style.width = Math.max(340, Math.min(640, vw - left - 36)) + 'px'; rmCard.style.transform = ''; if (f.id === 'about') rmCard.style.height = Math.min(vh - 110, 660) + 'px'; } } // a set's card stands beside its picture, top to top, with room for the thumbnails
     if (f.set) { const w = f.set, row = (k, v) => `<dt>${k}</dt><dd>${esc(v)}</dd>`; rmCard.innerHTML = `<span class="eyebrow">${n.en} · ${t('slot')} ${String(f.i).padStart(2, '0')} · ${t('setWord')}</span><h2>${esc(name(w))}${lang === 'zh' ? `<span class="en">${esc(w.en)}</span>` : ''}</h2><p>${esc(w.sum[lang])}</p><dl>${row(t('fCat'), name(n))}${row(t('fCount'), `${w.items.length} ${w.unit[lang]}`)}${row(t('fRole'), w.role[lang])}${row(t('fContrib'), w.contrib[lang])}</dl><div class="rm-thumbs">${w.items.map((q, i) => `<button type="button" data-pi="${i}" class="${i === room.pi ? 'on' : ''}" aria-label="${i + 1}"><img alt="" loading="lazy" src="data:image/webp;base64,${q.t}"></button>`).join('')}</div><button class="sv-link" type="button" data-rmback><span aria-hidden="true">←</span> ${rm.back ? rm.back[lang] : t('rmBack')}</button>`; }
-    else if (f.work) { const w = f.work, row = (k, v) => `<dt>${k}</dt><dd>${esc(v)}</dd>`; rmCard.innerHTML = `<span class="eyebrow">${n.en} · ${t('slot')} ${String(f.i).padStart(2, '0')}</span><h2>${esc(name(w))}${lang === 'zh' && w.en !== w.zh ? `<span class="en">${esc(w.en)}</span>` : ''}</h2><p>${w.sum ? esc(w.sum[lang]) : t('workReal')}</p><dl>${row(t('fCat'), name(n))}${w.series ? row(t('fSeries'), w.series[lang]) : ''}${w.by ? row(t('fAuthor'), w.by) : ''}${row(t('fHost'), w.host[lang])}${w.modes ? row(t('fModes'), w.modes[lang]) : ''}${w.sum ? '' : `<dt>${t('fSummary')}</dt>${todo}`}<dt>${t('fRole')}</dt>${w.role ? `<dd>${esc(w.role[lang])}</dd>` : todo}<dt>${t('fContrib')}</dt>${w.contrib ? `<dd>${esc(w.contrib[lang])}</dd>` : todo}</dl>${w.url ? `<a class="sv-link go" href="${esc(w.url)}" target="_blank" rel="noopener noreferrer">${w.go[lang]} <span aria-hidden="true">↗</span></a>` : ''}<button class="sv-link" type="button" data-rmback><span aria-hidden="true">←</span> ${rm.back ? rm.back[lang] : t('rmBack')}</button>`; }
+    else if (f.work) { const w = f.work, row = (k, v) => `<dt>${k}</dt><dd>${esc(v)}</dd>`; rmCard.innerHTML = `<span class="eyebrow">${n.en} · ${t('slot')} ${String(f.i).padStart(2, '0')}</span><h2>${esc(name(w))}${lang === 'zh' && w.en !== w.zh ? `<span class="en">${esc(w.en)}</span>` : ''}</h2><p>${w.sum ? esc(w.sum[lang]) : t('workReal')}</p><dl>${row(t('fCat'), name(n))}${w.series ? row(t('fSeries'), w.series[lang]) : ''}${w.by ? row(t('fAuthor'), w.by) : ''}${row(t('fHost'), w.host[lang])}${w.modes ? row(t('fModes'), w.modes[lang]) : ''}${w.sum ? '' : `<dt>${t('fSummary')}</dt>${todo}`}<dt>${t('fRole')}</dt>${w.role ? `<dd>${esc(w.role[lang])}</dd>` : todo}<dt>${t('fContrib')}</dt>${w.contrib ? `<dd>${esc(w.contrib[lang])}</dd>` : todo}</dl>${w.url ? `<a class="sv-link go" href="${esc(w.url)}" target="_blank" rel="noopener noreferrer">${w.go[lang]} <span aria-hidden="true">↗</span></a>` : ''}${w.trial ? `<button class="sv-link go" type="button" data-wread>${lang === 'zh' ? '试读第一章' : 'Read chapter 1'} <span aria-hidden="true">→</span></button>` : ''}<button class="sv-link" type="button" data-rmback><span aria-hidden="true">←</span> ${rm.back ? rm.back[lang] : t('rmBack')}</button>`; }
     else if (f.tool) { rmCard.innerHTML = toolCard(f, n); }
     else if (f.card && f.card.pn) { rmCard.innerHTML = moonPanel(f, n); photoIn(!rmEl.classList.contains('shown')); }
     else if (f.card) { const k = f.card; rmCard.innerHTML = `<span class="eyebrow">${n.en} · ${esc(k.at[lang])}</span><h2>${esc(k.title[lang])}</h2>${k.body ? k.body() : `<p>${esc(k.lead ? k.lead[lang] : t('intro'))}</p><dl>${k.rows.map((r) => `<dt>${esc(r[lang])}</dt>${todo}`).join('')}</dl>`}<button class="sv-link" type="button" data-rmback><span aria-hidden="true">←</span> ${t('rmCamp')}</button>`; }
     else rmCard.innerHTML = `<span class="eyebrow">${n.en} · ${t('slot')} ${String(f.i).padStart(2, '0')}</span><h2>${t('workName')}</h2><p>${t('workLead')}</p><dl><dt>${t('fCat')}</dt><dd>${esc(name(n))}</dd><dt>${t('fSummary')}</dt>${todo}<dt>${t('fRole')}</dt>${todo}<dt>${t('fContrib')}</dt>${todo}<dt>${t('fLinks')}</dt>${todo}</dl><button class="sv-link" type="button" data-rmback><span aria-hidden="true">←</span> ${rm.back ? rm.back[lang] : t('rmBack')}</button>`; }
 }
 function roomRing() { const RM_SECS = ROOMS[sv.id].secs; $('#rmRing').innerHTML = RM_SECS.map((q, i) => `<button type="button" data-sec="${i}" class="${i === room.sec ? 'on' : ''}" aria-label="${lang === 'zh' ? q[1] : q[2]}"></button>`).join('') + `<span>${String(room.sec + 1).padStart(2, '0')} · ${lang === 'zh' ? RM_SECS[room.sec][1] : RM_SECS[room.sec][2]}</span>`; }
+// a work's trial read takes over its card: the chapter, and a way back to the card
+function readTrial(w) { const zh = lang === 'zh', back = `<button class="sv-link" type="button" data-wreadback><span aria-hidden="true">←</span> ${zh ? '回到作品介绍' : 'Back to the work'}</button>`;
+  rmCard.innerHTML = `<span class="eyebrow">${esc(name(w))} · ${zh ? '试读' : 'Trial read'}</span><h2>${esc(w.trial.title[lang])}</h2>${zh ? '' : '<p>The trial chapter is in Chinese only for now.</p>'}<div class="trial">${w.trial.paras.map((p) => (p === '＊' ? '<p class="brk">＊</p>' : `<p>${esc(p)}</p>`)).join('')}</div><p class="trial-end">${zh ? '— 第一章完 —' : '— End of chapter 1 —'}</p>` + back;
+  rmCard.scrollTop = 0; }
 function roomFocus(h) { if (h) UI.focus(); else if (room.focus) { UI.unfocus(); if (sv.id === 'prototype') UI.refill(); } room.focus = h; room.settled = false; rmEl.classList.remove('shown'); roomRender(); }
 rmEl.addEventListener('pointerdown', (e) => { room.drag = { x: e.clientX, id: e.pointerId }; room.moved = false; });
 rmEl.addEventListener('pointermove', (e) => { room.mx = e.clientX / vw; room.my = e.clientY / vh; const d = room.drag; if (d && d.id === e.pointerId && !room.focus) { const dx = e.clientX - d.x; if (Math.abs(dx) > 6 || room.moved) { room.moved = true; if (ROOMS[sv.id].drag) ROOMS[sv.id].drag(dx); else { room.px -= dx / roomP(); room.goto = null; } d.x = e.clientX; } }
@@ -2151,6 +2262,7 @@ rmEl.addEventListener('click', (e) => {
   if (room.focus && room.focus.set) { const th = e.target.closest('[data-pi]'), pn = e.target.closest('[data-pn]'); if (th) { setPoster(+th.dataset.pi); return; } if (pn) { setPoster(room.pi + +pn.dataset.pn); return; } }
   if (room.focus && moonClick(e)) return;
   if (room.focus && room.focus.tool && toolClick(e)) return;
+  if (room.focus && room.focus.work && room.focus.work.trial) { if (e.target.closest('[data-wread]')) { readTrial(room.focus.work); return; } if (e.target.closest('[data-wreadback]')) { roomRender(); return; } }
   if (room.focus) { if (e.target.closest('[data-rmback]') || !e.target.closest('.rm-card,.rm-shot')) roomFocus(null); return; }
   if (e.target.closest('[data-bpview]') && ROOMS[sv.id].view) { ROOMS[sv.id].view(bp.to < 0.5); return; }
   const b = e.target.closest('[data-hot]'); if (!b) return; const h = ROOMS[sv.id].hots.find((q) => q.id === b.dataset.hot); if (h.id === 'exit') closeSat(); else if (ROOMS[sv.id].pick) ROOMS[sv.id].pick(h); else if (h.kind === 'chan') { room.chan = room.chan === h ? null : h; room.lastKey = h.i; room.press = 1; room.tune = 0; if (room.chan) room.wave = 0; UI.key(h.i, !!room.chan); roomRender(); } else roomFocus(h);
@@ -2325,7 +2437,7 @@ function dynVisual(g, R, tt) {
   const sx = Math.round(330 + Math.cos(tt * 0.25) * 4), sy = Math.round(70 + Math.sin(tt * 0.4) * 3); R(sx, sy, 9, 11, '#E8E4DA'); R(sx + 2, sy + 2, 5, 1, '#6E7875'); R(sx + 2, sy + 4, 4, 1, '#6E7875'); R(sx + 2, sy + 6, 5, 1, '#6E7875');
   [['#D8503E', 0], ['#6FB7FF', 2], ['#F3D27A', 4]].forEach(([col, p], i) => R(Math.round(400 + i * 8 + Math.sin(tt * 0.35 + p) * 3), Math.round(84 + Math.sin(tt * 0.5 + p * 1.7) * 4), 2, 2, col));
 }
-ROOMS.visual = { build: buildRoomVisual, dyn: dynVisual, base: null, home: 172, start: 103, lead: { zh: '左边是小说《PARADISE》的海报，右边是「实习海报合集」，点开可以一张张翻。', en: 'On the left, the poster for my novel PARADISE; on the right, the set of internship posters — open it to leaf through them.' },
+ROOMS.visual = { build: buildRoomVisual, dyn: dynVisual, base: null, home: 172, start: 103, lead: { zh: '左边是小说《乐园》（PARADISE）的海报，点开可以试读第一章；右边是「实习海报合集」，点开可以一张张翻。', en: 'On the left, the poster for my novel PARADISE; on the right, the set of internship posters — open it to leaf through them.' },
   secs: [[172, '展厅', 'Gallery'], [440, '画室', 'Studio'], [672, '暗房', 'Darkroom'], [884, '光影', 'Light']],
   hots: [{ id: 'w1', i: 1, work: WORKS.paradise, rect: [64, 32, 78, 68], screen: [88, 48, 30, 44], tag: [103, 31] }, { id: 'w2', i: 2, set: SETS.intern, rect: [154, 26, 52, 76], screen: [157.5, 42, 45, 52], tag: [180, 25] }, { id: 'exit', rect: [272, 34, 50, 96], tag: [297, 33] }] };
 // the telescope, drawn again at ten times the detail; we go in through the long window in its side
@@ -2685,7 +2797,7 @@ function dynPrototype(g, R, tt) {
   const sx = Math.round(40 + Math.cos(tt * 0.2) * 4), sy = Math.round(58 + Math.sin(tt * 0.33) * 5); R(sx, sy, 8, 10, '#E8E4DA'); R(sx + 1, sy + 2, 5, 1, '#6E7875'); R(sx + 1, sy + 4, 6, 1, '#6E7875'); R(sx + 1, sy + 6, 4, 1, '#6E7875');
 }
 ROOMS.prototype = { build: buildRoomPrototype, dyn: dynPrototype, base: null, fixed: true, bg: '#0E1518', home: 160, start: 84,
-  lead: { zh: '第二个培养罐里泡着的是我正在写的心理悬疑小说《PARADISE》，之后打算拍成微电影。其余三个还是展位样例。', en: 'The second tank holds PARADISE, a psychological suspense novel I am writing and plan to turn into a short film. The other three are still sample slots.' },
+  lead: { zh: '第二个培养罐里泡着的是我正在写的心理悬疑小说《乐园》（PARADISE），之后打算拍成微电影，点开可以试读第一章。其余三个还是展位样例。', en: 'The second tank holds PARADISE, a psychological suspense novel I am writing and plan to turn into a short film. The other three are still sample slots.' },
   hint: { zh: '点一个培养罐，把它排空，看里面的原型', en: 'Pick a tank to drain it and look at what is inside' },
   secs: TANKS.map((tk) => [0, tk.work ? WORKS[tk.work].zh : '[作品名称]', tk.work ? WORKS[tk.work].en : '[Work title]']),
   hots: TANKS.map((tk, i) => ({ id: 'w' + (i + 1), i: i + 1, ...(tk.work ? { work: WORKS[tk.work] } : { img: tk.img }), rect: [tk.cx - 27, 29, 54, 103], screen: tk.img === 'p' ? [tk.cx - 17, 42, 34, 46] : [tk.cx - 19, 54, 38, 26], tag: [tk.cx, 28] })),
