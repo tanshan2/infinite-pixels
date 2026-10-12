@@ -4438,70 +4438,109 @@ function applyLang() {
 /* ---------- film grain ---------- */
 (function grain() { const g = document.createElement('canvas'); g.width = g.height = 160; const c = g.getContext('2d'), d = c.createImageData(160, 160); for (let i = 0; i < d.data.length; i += 4) { const v = (Math.random() * 255) | 0; d.data[i] = d.data[i + 1] = d.data[i + 2] = v; d.data[i + 3] = 255; } c.putImageData(d, 0, 0); const el = $('#grain'); el.style.backgroundImage = `url(${g.toDataURL()})`; if (!reduced) el.classList.add('live'); })();
 
-/* ---------- the cat: about once a minute, a big plush cat drifts in out of space, gives the Earth a swat that sends it spinning, waves, and drifts off again ----------
-   Only on the plain globe view, while nobody is busy with it. The cat is the JJIMYANG kitty doll, from the picture Dave sent. */
-const CAT = { next: 60, t: -1, spin: null, spr: {}, R0: 0, Rz: 0 };
-const CAT_DUR = 4.9, CAT_HIT = 1.75, CAT_N = 96; // seconds: the whole visit, and the moment the paw lands; the sprite is CAT_N pixels square
+/* ---------- the cat: about once a minute, just猫 (drawn exactly as in Dave's picture) comes in out of space and stands behind the Earth,
+   pats the globe's side lightly with a short arm and sends it spinning, waves, and leaves. Only on the plain globe view, while nobody is busy with it.
+   The drawing and the timing live in assets/cat.js (pasted in below by build.ps1); the same file drives 猫预览.html. ---------- */
+// The visiting cat: just猫 (the grey cartoon cat of Karina / 柳智敏), drawn exactly as in Dave's reference picture and never altered:
+// flat grey, a thick black outline, a huge head that is wider at the cheeks, two pointed ears with a V between them, cross half-moon eyes
+// under thick slanting brows, a little black nose, a ω mouth and a small mole; a small body with two short, stubby arms and two feet.
+// Nothing about it changes while it moves — not the face, not the length of its arms. It only turns its short arms at the shoulder,
+// and leans and bobs as a whole.
+// It stands BEHIND the Earth: the globe hides its body, its head rises above it, and it pats the top of the globe with a short arm.
+// One file, used twice: 猫预览.html loads it as it is, and build.ps1 pastes it into the site at %%CAT%%.
+const CATK = (() => {
+  const PI = Math.PI, D2R = PI / 180, clamp = (v, a, b) => Math.max(a, Math.min(b, v)), lerp = (a, b, k) => a + (b - a) * k;
+  const ease = (u) => 1 - Math.pow(1 - clamp(u, 0, 1), 3), easeIn = (u) => clamp(u, 0, 1) ** 2, easeIO = (u) => { u = clamp(u, 0, 1); return u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2; };
+  // the drawing, in its own units: 712 wide, 905 tall, the chin's middle at (356, 645)
+  const CW = 712, CH = 905, CX = 356, CHIN = 645, OL = 18, FUR = '#7D7A80', INK = '#0D0D10';
+  // the arms, as in the picture: short stubs, wide where they join the body and rounded at the tip. A is on the right of the screen (it pats), B on the left
+  const SH_A = [500, 700], SH_B = [212, 700], ARM_LEN = 88, ARM_BASE = 34, ARM_TIP = 22;
+
+  const headPath = (c) => { c.beginPath(); c.moveTo(356, 178);
+    c.quadraticCurveTo(270, 95, 185, 14); c.quadraticCurveTo(168, 0, 160, 22); c.quadraticCurveTo(120, 160, 70, 255); c.bezierCurveTo(10, 330, -5, 470, 40, 545); c.bezierCurveTo(95, 625, 250, 645, 356, 645);
+    c.bezierCurveTo(462, 645, 617, 625, 672, 545); c.bezierCurveTo(717, 470, 702, 330, 642, 255); c.quadraticCurveTo(592, 160, 552, 22); c.quadraticCurveTo(544, 0, 527, 14); c.quadraticCurveTo(442, 95, 356, 178); c.closePath(); };
+  const bodyPath = (c) => { c.beginPath(); c.moveTo(205, 600); c.lineTo(205, 840); c.bezierCurveTo(205, 905, 340, 915, 350, 862); c.quadraticCurveTo(356, 846, 362, 862); c.bezierCurveTo(372, 915, 507, 905, 507, 840); c.lineTo(507, 600); c.closePath(); };
+  const armTip = (sh, ang) => [sh[0] + Math.cos(ang * D2R) * ARM_LEN, sh[1] + Math.sin(ang * D2R) * ARM_LEN];
+  // a short arm: a tapering stub from the shoulder, its tip rounded; always the same size, only its angle changes
+  const armPath = (c, sh, ang) => { const [tx, ty] = armTip(sh, ang), d = ang * D2R, px = -Math.sin(d), py = Math.cos(d);
+    c.beginPath(); c.moveTo(sh[0] + px * ARM_BASE, sh[1] + py * ARM_BASE); c.lineTo(tx + px * ARM_TIP, ty + py * ARM_TIP); c.arc(tx, ty, ARM_TIP, d + PI / 2, d - PI / 2, true); c.lineTo(sh[0] - px * ARM_BASE, sh[1] - py * ARM_BASE); c.arc(sh[0], sh[1], ARM_BASE, d - PI / 2, d + PI / 2, true); c.closePath(); };
+  // an arm pointing upward is raised in front of the head; one pointing down sits against the body, behind the head's chin
+  const raised = (ang) => { const a = ((ang % 360) + 360) % 360; return a > 195 && a < 345; };
+
+  // the face, exactly as in the picture: half-moon eyes cut off by thick brows slanting down toward the nose, a little nose, a ω mouth, a mole
+  function face(c) { c.lineCap = 'round'; c.lineJoin = 'round'; c.fillStyle = INK; c.strokeStyle = INK;
+    for (const side of [0, 1]) { const X = (x) => (side ? CW - x : x);
+      c.save(); c.beginPath(); c.moveTo(X(100), 352 - 0.277 * 19); c.lineTo(X(300), 398 + 0.277 * 15); c.lineTo(X(300), 620); c.lineTo(X(100), 620); c.closePath(); c.clip();
+      c.beginPath(); c.ellipse(X(204), 440, 76, 70, 0, 0, PI * 2); c.fill(); c.restore();
+      c.lineWidth = 22; c.beginPath(); c.moveTo(X(114), 350); c.lineTo(X(292), 400); c.stroke(); }
+    c.beginPath(); c.ellipse(357, 476, 14, 11, 0, 0, PI * 2); c.fill();
+    c.lineWidth = 10; c.beginPath(); c.moveTo(297, 518); c.quadraticCurveTo(327, 552, 357, 522); c.quadraticCurveTo(387, 552, 417, 518); c.stroke();
+    c.beginPath(); c.arc(460, 558, 6, 0, PI * 2); c.fill(); }
+
+  // the whole cat in its own units. Outlines go down first and the fills over them, so arms and body join with no seam, as in the picture
+  function cat(c, P) { c.lineJoin = 'round';
+    const arms = [[SH_A, P.a], [SH_B, P.b]], low = arms.filter(([, a]) => !raised(a)), high = arms.filter(([, a]) => raised(a));
+    c.strokeStyle = INK; c.lineWidth = OL * 2; for (const [sh, a] of low) { armPath(c, sh, a); c.stroke(); } bodyPath(c); c.stroke();
+    c.fillStyle = FUR; for (const [sh, a] of low) { armPath(c, sh, a); c.fill(); } bodyPath(c); c.fill();
+    headPath(c); c.strokeStyle = INK; c.stroke(); c.fillStyle = FUR; c.fill();
+    face(c);
+    for (const [sh, a] of high) { armPath(c, sh, a); c.strokeStyle = INK; c.stroke(); c.fillStyle = FUR; c.fill(); } }
+
+  // ---- the visit, second by second. HIT is when the paw lands (the Earth is set spinning then). Angles are the arms' directions, in degrees
+  const DUR = 5.6, HIT = 2.35, REST_A = 40, REST_B = 140;
+  function pose(t) {
+    const P = { a: REST_A, b: REST_B, rot: 0, sx: 1, sy: 1, dx: 0, dy: 0, jx: 0, alpha: 1, pat: false, name: '站着' };
+    if (t < 1.2) { const e = ease(t / 1.2); P.dx = (1 - e) * 0.9; P.dy = -(1 - e) * 1.0; P.rot = -0.16 * (1 - e); P.name = '飞来'; }
+    else if (t < 1.5) { const b = Math.sin((t - 1.2) / 0.3 * PI); P.sx = 1 + 0.05 * b; P.sy = 1 - 0.06 * b; P.name = '落地'; }
+    else if (t < 1.95) { P.name = '盯着地球'; P.rot = 0.02 * Math.sin((t - 1.5) * 8); }
+    else if (t < 2.25) { const k = easeIO((t - 1.95) / 0.3); P.a = lerp(REST_A, -15, k); P.rot = 0.03 * k; P.name = '抬手'; } // the short arm lifts, its tip coming out past the globe's side
+    else if (t < HIT) { const k = easeIn((t - 2.25) / (HIT - 2.25)); P.a = lerp(-15, 58, k); P.rot = lerp(0.03, -0.02, k); P.pat = k > 0.6; P.name = '轻拍'; } // and comes down lightly on the globe's side
+    else if (t < 2.75) { const k = (t - HIT) / 0.4; P.a = 58 - Math.sin(k * PI) * 5; P.rot = lerp(-0.02, 0, ease(k)); P.pat = true; P.name = '拍完'; }
+    else if (t < 3.1) { const k = easeIO((t - 2.75) / 0.35); P.a = lerp(58, REST_A, k); P.pat = k < 0.3; P.name = '收手'; }
+    else if (t < 3.7) { P.name = '看地球转'; P.sy = 1 + Math.sin((t - 3.1) * 6) * 0.008; }
+    else if (t < 4.5) { const k = ease((t - 3.7) / 0.2); P.a = lerp(REST_A, -65, k) + (k >= 1 ? Math.sin((t - 3.9) * 16) * 15 : 0); P.name = '挥手'; } // waves with the arm that is out beside the globe
+    else { const e = easeIn((t - 4.5) / (DUR - 4.5)); P.dx = e * 0.9; P.dy = -e * 1.0; P.rot = 0.16 * e; P.alpha = 1 - e * 0.6; P.name = '飞走'; }
+    return P; }
+
+  // where the cat goes for an Earth at (ex, ey) of radius R: centred behind it, a little taller than the Earth is wide, its chin above the globe's top.
+  // R should leave room above the globe for the head: fitR() says how big the Earth may be when its centre is at ey.
+  const TALL = 2.7, CHIN_AT = 0.88, OFFX = 0.25; // the cat's full height, in Earth radii; how far above the globe's middle its chin sits; and a touch to the right, so a short arm can reach the globe's side
+  const fitR = (ey) => (ey - 14) / (TALL * CHIN / CH + CHIN_AT);
+  const layout = (ex, ey, R) => { const s = TALL * R / CH; return { s, px: ex + OFFX * R, py: ey - CHIN_AT * R, H: CH * s, earth: { x: ex, y: ey, r: R } }; };
+  const toScreen = (L, P, x, y) => { const dxu = (x - CX) * P.sx, dyu = (y - CHIN) * P.sy, c = Math.cos(P.rot), s = Math.sin(P.rot); return [L.px + (P.dx + P.jx) * L.H + (dxu * c - dyu * s) * L.s, L.py + P.dy * L.H + (dxu * s + dyu * c) * L.s]; };
+  const paw = (L, t) => { const P = pose(t); return toScreen(L, P, ...armTip(SH_A, P.a)); };
+
+  // draw the cat at time t, behind the globe. When it pats, the round tip of its arm rests on the globe's rim, in front of it
+  function draw(ctx, t, L) { if (t < 0 || t >= DUR) return; const P = pose(t), bob = P.name === '飞来' || P.name === '飞走' ? 0 : Math.sin(t * 2.4) * L.H * 0.006;
+    const into = (c) => { c.translate(L.px + (P.dx + P.jx) * L.H, L.py + P.dy * L.H + bob); c.rotate(P.rot); c.scale(L.s * P.sx, L.s * P.sy); c.translate(-CX, -CHIN); };
+    const E = L.earth;
+    ctx.save(); ctx.globalAlpha = P.alpha; ctx.beginPath(); ctx.rect(-1e5, -1e5, 2e5, 2e5); ctx.arc(E.x, E.y, E.r, 0, PI * 2); ctx.clip('evenodd'); into(ctx); cat(ctx, P); ctx.restore();
+    if (P.pat) { const [tx, ty] = armTip(SH_A, P.a); ctx.save(); ctx.globalAlpha = P.alpha; into(ctx); ctx.beginPath(); ctx.arc(tx, ty, ARM_TIP + OL + 14, 0, PI * 2); ctx.clip(); ctx.lineJoin = 'round'; armPath(ctx, SH_A, P.a); ctx.strokeStyle = INK; ctx.lineWidth = OL * 2; ctx.stroke(); ctx.fillStyle = FUR; ctx.fill(); ctx.restore(); }
+    // a burst of little stars where the paw lands, and a few lines for the swing
+    const [hx, hy] = paw(L, HIT), u = L.s * 30;
+    ctx.save(); ctx.fillStyle = '#EDE6D3';
+    if (t >= HIT - 0.08 && t < HIT + 0.12) { ctx.globalAlpha = 0.8 * (1 - (t - HIT + 0.08) / 0.2); for (const [dx, dy, w] of [[0.8, -2.2, 1.6], [1.8, -1.6, 1.3], [2.4, -0.7, 1.0]]) { ctx.save(); ctx.translate(hx + dx * u, hy + dy * u); ctx.rotate(-0.5); ctx.fillRect(0, 0, w * u, Math.max(2, u * 0.16)); ctx.restore(); } }
+    if (t >= HIT && t < HIT + 0.6) { const k = (t - HIT) / 0.6; ctx.globalAlpha = 1 - k; ctx.fillStyle = '#FFF1CF'; for (let i = 0; i < 10; i++) { const a = i / 10 * PI * 2, r = u * (1 + k * 3), d = Math.max(2, u * 0.2); ctx.fillRect(hx + Math.cos(a) * r - d / 2, hy + Math.sin(a) * r - d / 2, d, d); } }
+    ctx.restore(); }
+  // the cat alone, at time t, filling a size × size square (for the preview's pictures)
+  function drawAlone(ctx, t, size) { const P = pose(t), s = size / CH * 0.96; ctx.save(); ctx.translate(size / 2, size * 0.02 + CHIN * s); ctx.rotate(P.rot); ctx.scale(s * P.sx, s * P.sy); ctx.translate(-CX, -CHIN); cat(ctx, P); ctx.restore(); }
+  return { DUR, HIT, pose, layout, fitR, paw, draw, drawAlone };
+})();
+
+const CAT = { next: 60, t: -1, spin: null, R0: 0, Rz: 0 };
 if (/[?&]stats\b/.test(location.search)) window.__cat = CAT; // ?stats: set __cat.next = 0 to call it at once
-// The JJIMYANG kitty doll, drawn fine: a fuzzy grey plush lit from the upper left, a big head with tall pointed ears,
-// cross eyes slanting down toward the nose, a small sulky mouth, stubby limbs. One picture per pose: rest, up (winding up), swat, wave.
-function catSprite(pose) { if (CAT.spr[pose]) return CAT.spr[pose];
-  const N = CAT_N, cv = document.createElement('canvas'); cv.width = cv.height = N; const g = cv.getContext('2d'), im = g.createImageData(N, N), D = im.data;
-  // the parts, back to front: [cx, cy, rx, ry]; the paw toward the Earth and the other paw change with the pose
-  const armL = pose === 'up' ? [16, 46, 7, 13] : pose === 'swat' ? [13, 70, 16, 7] : [25, 76, 7, 10], armR = pose === 'wave' ? [82, 44, 7, 13] : [71, 76, 7, 10];
-  const raised = pose === 'up' || pose === 'wave', parts = [[76, 86, 8, 6], [48, 78, 25, 17], [36, 92, 9, 4.5], [60, 92, 9, 4.5]];
-  if (!raised) parts.push(armL, armR); parts.push([48, 42, 37, 30]); if (raised) parts.push(armL, armR);
-  // a soft edge: the radius wavers by angle, so the outline is tufted like fur
-  const inPart = (x, y, p) => { const nx = (x + 0.5 - p[0]) / p[2], ny = (y + 0.5 - p[1]) / p[3], a = Math.atan2(ny, nx), r = 1 + 0.07 * (hash2(Math.floor((a + PI) * 9), p[0] + p[1]) - 0.5) + 0.03 * Math.sin(a * 23); return nx * nx + ny * ny <= r * r ? [nx, ny] : null; };
-  const tri = (x, y, a, b, c) => { const s = (p, q, r) => (p[0] - r[0]) * (q[1] - r[1]) - (q[0] - r[0]) * (p[1] - r[1]), d1 = s([x, y], a, b), d2 = s([x, y], b, c), d3 = s([x, y], c, a); return !((d1 < 0 || d2 < 0 || d3 < 0) && (d1 > 0 || d2 > 0 || d3 > 0)); };
-  const put = (x, y, r, gg, b) => { const i = (y * N + x) * 4; D[i] = r; D[i + 1] = gg; D[i + 2] = b; D[i + 3] = 255; };
-  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
-    let nrm = null; for (const p of parts) { const q = inPart(x, y, p); if (q) nrm = q; }
-    const mx = x < 48 ? x : 95 - x, ear = tri(mx + 0.5, y + 0.5, [10, 36], [21, 1], [42, 20]), inner = tri(mx + 0.5, y + 0.5, [17, 29], [22, 9], [35, 21]);
-    if (!nrm && !ear) continue;
-    // fur: shaded by the light, combed into short strands, with a few darker flecks
-    let l; if (nrm) { const [nx, ny] = nrm, nz = Math.sqrt(Math.max(0, 1 - nx * nx - ny * ny)); l = clamp(-0.42 * nx - 0.5 * ny + 0.76 * nz, 0, 1); } else l = 0.55 - (y / 36) * 0.15;
-    let v = 112 + 78 * l + (hash2(Math.floor((x + y * 0.4) / 1.5), Math.floor(y / 3)) - 0.5) * 22; if (hash2(x * 3 + 1, y * 5 + 2) < 0.05) v -= 26; if (hash2(x + 9, y * 7) > 0.97) v += 22;
-    if (!nrm && inner) v -= 38; // the inside of the ear
-    put(x, y, v - 4, v - 3, v + 4); }
-  // the face, laid over the fur
-  const dark = (x, y, c) => put(x, y, c[0], c[1], c[2]);
-  for (let y = 30; y < 66; y++) for (let x = 18; x < 78; x++) { const i = (y * N + x) * 4; if (!D[i + 3]) continue; const left = x < 48, mx = left ? x : 95 - x;
-    const cut = 37 + (mx - 24) * 0.42; // the line of the brow: lower toward the nose, which makes the look cross
-    const dx = mx + 0.5 - 33, dy = y + 0.5 - 47, u = dx * Math.cos(-0.45) + dy * Math.sin(-0.45), w = -dx * Math.sin(-0.45) + dy * Math.cos(-0.45), inEye = (u / 7.5) ** 2 + (w / 10.5) ** 2 <= 1 && mx < 43;
-    if (pose === 'swat') { if (mx > 24 && mx < 41 && y >= cut + 6 && y < cut + 9) dark(x, y, [18, 18, 22]); }
-    else if (inEye && y >= cut) { const gl = mx >= 28 && mx <= 30 && y >= cut + 2 && y <= cut + 4; gl ? dark(x, y, [235, 235, 240]) : dark(x, y, [15, 15, 19]); }
-    else if (inEye && y >= cut - 2.5) dark(x, y, [84, 84, 92]); // the brow
-  }
-  for (const [x, y, w] of [[47, 55, 2], [46, 56, 4]]) for (let k = 0; k < w; k++) dark(x + k, y, [70, 70, 78]); // nose
-  for (let k = 0; k < 8; k++) dark(44 + k, 61, [44, 44, 52]); dark(43, 62, [44, 44, 52]); dark(52, 62, [44, 44, 52]); // a small sulky mouth
-  // a thin dark outline all round, so it reads against both space and the sea
-  const on = (x, y) => x >= 0 && y >= 0 && x < N && y < N && D[(y * N + x) * 4 + 3] === 255, edge = [];
-  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) if (!on(x, y) && (on(x - 1, y) || on(x + 1, y) || on(x, y - 1) || on(x, y + 1))) edge.push([x, y]);
-  for (const [x, y] of edge) { const i = (y * N + x) * 4; D[i] = 36; D[i + 1] = 36; D[i + 2] = 42; D[i + 3] = 254; }
-  g.putImageData(im, 0, 0); return (CAT.spr[pose] = cv); }
 function catFree() { return introDone && !reduced && !sv.id && !cityMode && !paintMode && !flight && !drag && !pinch && !launch && cam.pitch === 0 && !detailEl.classList.contains('open') && document.visibilityState === 'visible'; }
-// the Earth steps back while the cat is here (to about six tenths), so a cat bigger than the Earth still fits on the screen
+// the Earth steps back while the cat is here, so that the cat's head fits above it
 function catDone() { if (CAT.Rz && Math.abs(Rt - CAT.Rz) < 1) Rt = CAT.R0; CAT.t = -1; CAT.Rz = 0; }
+const catLay = () => CATK.layout(cx, cy, cam.R);
 function stepCat(dt) {
-  if (CAT.t < 0) { if (catFree()) CAT.next -= dt; if (CAT.next <= 0) { CAT.t = 0; CAT.next = 55 + Math.random() * 10; CAT.R0 = Rt; CAT.Rz = Rt * 0.6; Rt = CAT.Rz; } }
+  if (CAT.t < 0) { if (catFree()) CAT.next -= dt; if (CAT.next <= 0) { CAT.t = 0; CAT.next = 55 + Math.random() * 10; CAT.R0 = Rt; CAT.Rz = Math.min(Rt * 0.6, CATK.fitR(cy - 60)); /* its ears clear the buttons along the top */ Rt = CAT.Rz; } }
   else { if (!catFree()) { catDone(); CAT.spin = null; return; } const was = CAT.t; CAT.t += dt;
-    if (was < CAT_HIT && CAT.t >= CAT_HIT) { CAT.spin = { t: 0, dur: 3.2, total: TAU * 4, done: 0 }; const cg = catGeo(), hv = unproject(cg.px + cg.W * 0.03, cg.py); if (hv) ripples.push({ v: hv, rad: 0, w: 0.12, k: 1, speed: 0.9, age: 0, life: 3 }); sfxTone([88, 83, 76], 0.05, 0.22, 0.05); sfxWhoosh(); }
-    if (CAT.t >= CAT_DUR) catDone(); }
+    if (was < CATK.HIT && CAT.t >= CATK.HIT) { CAT.spin = { t: 0, dur: 3.2, total: TAU * 4, done: 0 }; const [hx, hy] = CATK.paw(catLay(), CATK.HIT), hv = unproject(hx - 4, hy); if (hv) ripples.push({ v: hv, rad: 0, w: 0.12, k: 1, speed: 0.9, age: 0, life: 3 }); sfxTone([88, 83, 76], 0.05, 0.22, 0.05); sfxWhoosh(); }
+    if (CAT.t >= CATK.DUR) catDone(); }
   // the spin: several whole turns, fast at first and easing to a stop where it began
   if (CAT.spin) { const s = CAT.spin; s.t += dt / s.dur; const u = Math.min(1, s.t), e = 1 - Math.pow(1 - u, 3), d = s.total * e - s.done; cam.lon += d; s.done += d; idle = Math.min(idle, 8); if (u >= 1) CAT.spin = null; } }
-// where the cat stands: a little taller than the Earth is wide, at its right, the swatting paw reaching onto the globe; its face always on the screen
-const catGeo = () => { const R = CAT.Rz || cam.R, H = Math.min(R * 2.6, vh * 0.96), W = H, x = Math.max(cx - R * 0.35, Math.min(cx + R - W * 0.08, vw - W - 8)), y = clamp(cy - H * 0.73, -H * 0.02, vh - H * 0.97); return { W, H, x, y, px: x + W * 0.02, py: y + H * 0.73 }; };
-function drawCat() { app.classList.toggle('cat', CAT.t >= 0 && CAT.t < CAT_DUR - 0.6); if (CAT.t < 0) return; const t = CAT.t, { W, H, x: hx, y: hy, px, py } = catGeo(), fx = vw + 20, fy = hy - H * 0.15; // it comes from off the right edge
-  const ease = (u) => 1 - Math.pow(1 - clamp(u, 0, 1), 3); let x, y, a = 1;
-  if (t < 1.3) { const e = ease(t / 1.3); x = lerp(fx, hx, e); y = lerp(fy, hy, e); }
-  else if (t < 3.7) { x = hx + (t > CAT_HIT && t < CAT_HIT + 0.25 ? -W * 0.025 : 0); y = hy + Math.sin(t * 2.4) * H * 0.01; }
-  else { const e = clamp((t - 3.7) / 1.2, 0, 1); x = lerp(hx, fx, e * e); y = lerp(hy, fy, e * e); a = 1 - e * 0.5; }
-  const pose = t < 1.4 ? 'rest' : t < CAT_HIT - 0.05 ? 'up' : t < CAT_HIT + 0.35 ? 'swat' : t < 3.15 ? 'rest' : 'wave';
-  ctx.save(); ctx.globalAlpha = a; ctx.imageSmoothingEnabled = false; ctx.drawImage(catSprite(pose), Math.round(x), Math.round(y), Math.round(W), Math.round(H));
-  if (t >= CAT_HIT && t < CAT_HIT + 0.5) { const k = (t - CAT_HIT) / 0.5, s = Math.max(2, Math.round(W / 96 * 1.5)); ctx.globalAlpha = 1 - k; ctx.fillStyle = '#FFF1CF'; for (let i = 0; i < 9; i++) { const ang = PI * 0.4 + i * 0.25, r = W * (0.03 + k * 0.09); ctx.fillRect(Math.round(px + (x - hx) + Math.cos(ang) * r), Math.round(py + (y - hy) + Math.sin(ang) * r), s, s); } } // a little burst where the paw lands
-  ctx.restore(); }
-
+function drawCat() { app.classList.toggle('cat', CAT.t >= 0 && CAT.t < CATK.DUR - 0.6); if (CAT.t < 0) return; CATK.draw(ctx, CAT.t, catLay()); }
 /* ---------- main loop ---------- */
 let last = performance.now(), miniTick = 0;
 function frame(now) {
