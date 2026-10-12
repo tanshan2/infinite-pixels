@@ -164,6 +164,9 @@ button{font:inherit;color:inherit}
 .pn-facts{flex:none;display:grid;grid-template-columns:repeat(3,1fr);border-bottom:1px solid var(--line)}.pn-facts div{display:flex;flex-direction:column;gap:5px;padding:12px 16px 13px;min-width:0}.pn-facts div+div{border-left:1px solid var(--line)}.pn-facts div:first-child{padding-left:26px}
 .pn-facts small{font-family:var(--f-mono);font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:var(--mute)}.pn-facts b{font-weight:400;font-size:13px;line-height:1.5;color:var(--ivory)}
 .pn-tabs{flex:none;display:flex;gap:0;padding:0 18px;border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none}.pn-tabs button{flex:none;padding:13px 12px 11px;border:0;border-bottom:2px solid transparent;background:none;color:var(--mute);font:inherit;font-size:12px;letter-spacing:.16em;cursor:pointer;transition:color .2s,border-color .2s}
+.es{display:flex;flex-direction:column;gap:12px}.es h3{margin:10px 0 0;font-family:var(--f-serif);font-size:19px;font-weight:700;line-height:1.35;color:var(--ivory)}.es h3:first-child{margin-top:0}.es h4{margin:8px 0 0;font-size:13px;font-weight:500;letter-spacing:.06em;line-height:1.6;color:var(--ac)}
+.rm-card.pn .es p{font-size:14px;line-height:1.95;color:#D8D2C1;text-wrap:pretty}.stop-r .es{gap:8px}.rm-card.pn .stop-r .es p{font-size:13px;line-height:1.85}
+.hob{display:flex;flex-direction:column;gap:14px;padding-top:18px;border-top:1px solid var(--line)}.hob-h b{font-size:12px;letter-spacing:.2em;color:var(--mute);font-weight:500}.pn-tabs.hob-tabs{padding:0;margin-top:-6px}
 .pn-tabs button:hover,.pn-tabs button:focus-visible{color:var(--ivory)}.pn-tabs button.on{color:var(--ivory);border-bottom-color:var(--ac)}
 .pn-b{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:18px;padding:22px 26px 24px;touch-action:pan-y;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 .pn-f{flex:none;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:6px 26px;border-top:1px solid var(--line)}.pn-f .sv-link{margin:0;min-height:40px}
@@ -3274,12 +3277,91 @@ const CV = {
   ],
 };
 CV.all = [...CV.edu, ...CV.work, ...CV.act].sort((a, b) => a.s - b.s || a.e - b.e); // every dated entry, earliest first
+// In his own words (given 2026-10-11): who he is, what he studies, what he loves, where he has been. The English is a translation.
+// Each block is [kind, zh, en]: 'h' a heading, 's' a sub-heading, 'p' a paragraph.
+const ME = {
+  me: [
+    ['h', '从游戏设计，到儿童心理学', 'From game design to child psychology'],
+    ['p', '在印第安纳大学读游戏设计时，我想做的事很简单：做出好玩的游戏。', 'At Indiana University I studied game design, and what I wanted was simple: to make games that are fun to play.'],
+    ['p', '可学着学着，有一个问题越来越常冒出来——人，为什么会长成现在的样子？', 'But as I went on, one question kept coming back to me: why do people grow up to be who they are?'],
+    ['p', '我越往下找，越觉得答案藏在童年里。家里的氛围、小时候经历过的事，会悄悄决定一个人后来的性格和选择。这不是某一天突然的顿悟，而是一点一点意识到：这件事太重要了，重要到我想把它当成正事来做。', 'The further I looked, the more the answer seemed to lie in childhood. The atmosphere of a home and what we live through as children quietly shape the people we become and the choices we make. It wasn’t a sudden revelation — it was a slow realisation that this mattered so much I wanted to make it my real work.'],
+    ['p', '还有一个更直接的触动：需要心理帮助的孩子，远比我想象的多。有些困境，如果在小时候被人看见、被人拉一把，长大后的路可能就完全不同。', 'Something else moved me more directly: far more children need psychological help than I had imagined. Some struggles, if someone sees them and lends a hand early, can lead to a completely different life.'],
+    ['p', '于是读研究生时，我转向了儿童应用心理学。', 'So for graduate school, I turned to applied child psychology.'],
+    ['h', '我在研究什么', 'What I’m studying'],
+    ['s', '家庭，如何塑造一个孩子', 'How a family shapes a child'],
+    ['p', '这是我现在最主要的学习和观察方向。读过很多人的故事之后，我越来越相信：一个孩子会长成什么样，很大程度上早已写在他的家庭里。父母怎么相处，家里是什么气氛，孩子在家被怎样对待——这些不会只停在童年，它们会陪一个人走很远很远。', 'This is the main focus of my study and observation right now. After reading many people’s stories, I’m more and more convinced that who a child becomes is largely written in their family already. How the parents get along, the mood at home, how the child is treated there — none of it stays in childhood. It travels with a person a very long way.'],
+    ['p', '所以我想一直看下去，弄明白一个问题：家庭究竟是通过哪些具体的方式，塑造了一个孩子的心理发展？', 'So I want to keep following one question: through what concrete means does a family shape a child’s psychological development?'],
+    ['s', '自闭症儿童：一堵两边都看不透的墙', 'Autistic children: a wall neither side can see through'],
+    ['p', '我也很关注自闭症儿童。了解得越多，越觉得自闭症孩子和其他孩子之间隔着一堵墙，而这堵墙并不是“他们”单方面造成的。非自闭症的孩子同样走不进自闭症孩子的世界，正是这种双向的不理解，让隔阂越来越深。', 'I also care deeply about autistic children. The more I learn, the more I see a wall between autistic children and other children — and it isn’t one built by “them” alone. Non-autistic children can’t step into an autistic child’s world either, and it is this two-way misunderstanding that keeps deepening the gap.'],
+    ['p', '墙的这一边，还有父母。他们的压力来自四面八方：经济、时间、情绪，还有外界的眼光。理解孩子已经很难，撑起整个家更难。', 'And on this side of the wall are the parents. Their pressure comes from every direction: money, time, emotions, and the way others look at them. Understanding their child is hard enough; holding the whole family together is harder still.'],
+    ['p', '孩子的那一面，父母的那一面，我都想去理解。', 'The child’s side and the parents’ side — I want to understand both.'],
+    ['h', '我的点子从哪里来', 'Where my ideas come from'],
+    ['p', '我的灵感不来自某一个人。我脑子里总有很多想法，新点子常常自己就冒出来了。', 'My inspiration doesn’t come from any one person. My head is always full of ideas, and new ones often just show up on their own.'],
+    ['p', '大概和我的经历有关：在三个国家生活过，从游戏设计跨到儿童心理学，接触的东西很杂，想象力也就一直很丰富。我不太拘一格，想法偏大胆，不喜欢被固定的框架框住。', 'It probably comes from my path: I’ve lived in three countries and crossed from game design into child psychology, so I’ve taken in a wide mix of things, and my imagination has always run rich. I don’t stick to one mould — my ideas lean bold, and I don’t like being boxed in by fixed frameworks.'],
+  ],
+  hob: [
+    { k: ['爱好', 'Interests'], b: [
+      ['p', '我的爱好很杂，没有哪一样是固定的。看电影、旅行、读书、学新东西，我都喜欢；也着迷于古建筑，爱历史、文学和哲学。因为爱旅行，世界上很多地方我都去过。', 'My interests are wide, never just one thing. I love films, travel, reading and learning something new; I’m fascinated by old architecture, and I love history, literature and philosophy. Because I love to travel, I’ve been to many places around the world.'],
+      ['p', '书、电影和吃，在上面的标签里分开说；旅行的故事，在「足迹」里。', 'Books, films and food each have their own tab above; the travel stories are under Footprints.'],
+    ] },
+    { k: ['书', 'Books'], b: [
+      ['p', '历史和文学我都爱，尤其是历史。中国历史里，我最着迷魏晋南北朝和唐代；西方历史里，最喜欢文艺复兴和古罗马。', 'I love history and literature, history most of all. In Chinese history I’m drawn to the Wei, Jin and Northern and Southern dynasties, and to the Tang; in Western history, to the Renaissance and ancient Rome.'],
+      ['p', '喜欢魏晋南北朝，是因为那是一个文化激烈碰撞、交流的年代，长出了许多精彩的东西。它让我相信，文化从来不是一条单线，而是很多条线——不同的文化撞在一起，才能生出更丰富、更多元、更璀璨的新文化。', 'I love the Wei, Jin and Northern and Southern dynasties because it was an age of fierce cultural collision and exchange, and so much brilliance grew out of it. It convinced me that culture is never a single line but many — only when different cultures collide do richer, more diverse, more dazzling new ones come to life.'],
+      ['p', '文学上，我读古典文学，也读小说，尤其是推理小说。最近我在构思一部心理悬疑小说，想把它拍成一部 AI 电影。', 'In literature I read the classics, and novels too — detective fiction above all. Lately I’ve been developing a psychological suspense novel that I want to turn into an AI film.'],
+      ['p', '哲学上，我对弗洛伊德、叔本华很感兴趣。', 'In philosophy, I’m very interested in Freud and Schopenhauer.'],
+      ['p', '对我来说，读书就是不断学到新东西、不断思考——人只有一直在想，才会一直在进步。', 'To me, reading means always learning something new and always thinking — because you only keep growing as long as you keep thinking.'],
+    ] },
+    { k: ['电影', 'Films'], b: [
+      ['p', '历史、文学、文艺、悬疑、恐怖，我什么类型的电影都看。', 'Historical, literary, art-house, mystery, horror — I watch films of every kind.'],
+      ['p', '历史片里，我喜欢那些把历史重新带到眼前的作品，比如很多战争片和历史题材电影，像《辛德勒的名单》《敦刻尔克》。', 'With historical films, I love the ones that bring history back before your eyes — many war films and historical dramas, like Schindler’s List and Dunkirk.'],
+      ['p', '文艺片也看得很多：《大红灯笼高高挂》《养蜂人》《花样年华》《绿皮书》《霸王别姬》《海上钢琴师》《天堂电影院》《美丽人生》《入殓师》……', 'I watch a lot of art-house films too: Raise the Red Lantern, The Beekeeper, In the Mood for Love, Green Book, Farewell My Concubine, The Legend of 1900, Cinema Paradiso, Life Is Beautiful, Departures…'],
+      ['p', '导演里，我最爱黑泽明。《罗生门》《乱》的色彩和叙事都太艺术、太精彩了，在我心里，他是非常伟大的电影导演。', 'Of all directors, I love Akira Kurosawa most. The colour and storytelling of Rashomon and Ran are so artful, so brilliant — to me he is one of the truly great filmmakers.'],
+      ['p', '不过我更偏爱的，是悬疑和恐怖。波洛系列我很喜欢，比如《尼罗河上的惨案》《东方快车谋杀案》；我也非常喜欢乔丹·皮尔，就是拍《逃出绝命镇》的那位导演，他的视听手法和故事逻辑都特别好，《我们》等几部也一样精彩。', 'Still, mystery and horror are what I love most. I’m a fan of the Poirot films, like Death on the Nile and Murder on the Orient Express, and I really love Jordan Peele, the director of Get Out — his sound and image and the logic of his stories are superb, and Us and his other films are just as good.'],
+      ['p', '我自己很多关于电影的想法，就是从这些看过的电影里长出来的。', 'Many of my own ideas about film grew out of the films I’ve watched.'],
+    ] },
+    { k: ['美食', 'Food'], b: [
+      ['h', '有一百块钱，就该拿九十块去吃饭。', 'If you have a hundred dollars, ninety should go on food.'],
+      ['p', '这是我的人生格言。吃，是很讲究的事：每个大陆、每个国家、每个地区都有自己的饮食文化，它和当地的历史、气候、物产绑在一起。吃一顿饭，就像把一个地方的底子尝了一遍。', 'That’s my motto in life. Eating is serious business: every continent, every country, every region has its own food culture, bound up with its history, climate and produce. One meal there is like tasting the whole foundation of a place.'],
+      ['p', '我说不出“最喜欢”，因为我什么都喜欢：中餐、日料、韩餐、意大利菜、法餐、土耳其菜、俄罗斯菜，连很多非洲菜我也尝过。这也是我爱旅行的原因之一——去一个地方，不把当地的东西吃透，就等于没去过。', 'I can’t name a “favourite”, because I love it all: Chinese, Japanese, Korean, Italian, French, Turkish, Russian — I’ve even tasted many African dishes. It’s one of the reasons I travel: if you go somewhere and don’t eat your way through the local food, you haven’t really been there.'],
+      ['p', '爱吃，自然也爱做。几乎每个国家的菜我都会做：尝过的味道，回家就琢磨着复刻出来。谁要跟我聊吃，我能讲一整夜；绝大多数国家的招牌美食我都熟，从来不缺话题。', 'Loving to eat, I naturally love to cook. I can make dishes from almost every country: whatever I’ve tasted, I come home and work out how to recreate it. Talk food with me and I’ll go all night — I know the signature dishes of most countries, and I never run out of things to say.'],
+      ['p', '当然，心里排第一的还是家乡的粤菜。小炒讲究“镬气”，火候差一秒，味道就不对；河鲜吃的是一个“鲜”字；还有鱼生——不是日本的 sashimi，而是广东的鱼生，鱼片切得薄而不断，配料一拌，入口爽脆；再就是早茶，一盅两件，虾饺皇、叉烧包、凤爪，从早上坐到中午都不腻。', 'Of course, first in my heart is the food of home: Cantonese. A stir-fry lives on wok hei — a second off on the heat and the flavour is gone. River fish is all about freshness. Then there’s yu sang — not Japanese sashimi but Cantonese raw fish, sliced thin without breaking, tossed with its condiments, crisp in the mouth. And morning tea: a pot of tea and two dishes — har gow, char siu bao, chicken feet — you can sit from morning till noon and never tire of it.'],
+      ['p', '只要有空，我就给自己做一顿：意大利菜、法餐、任何一个中餐菜系、日料、韩餐，或者一份美式快餐。只要是吃的，我都爱。', 'Whenever I have time, I cook myself a meal: Italian, French, any of China’s regional cuisines, Japanese, Korean, or American fast food. If it’s food, I love it.'],
+    ] },
+  ],
+  foot: [
+    ['h', '三个国家：从“融不进去”到“包容”', 'Three countries: from “not fitting in” to inclusion'],
+    ['p', '从中国到美国，文化差异比我想象的大得多。刚去美国读高中时，我很不适应，最难的一道坎，是不知道怎么交朋友。', 'Moving from China to the US, the cultural gap was far bigger than I had expected. When I first arrived for high school I struggled to adjust, and the hardest part was not knowing how to make friends.'],
+    ['p', '但这段当“局外人”的日子，后来成了我很重要的养分。它让我真正明白了包容、公平和 diversity 的分量——那不是课本上的词，而是当你格格不入时，有没有人愿意向你伸出手的区别。', 'But those days as an “outsider” became something that nourished me. They taught me the real weight of inclusion, fairness and diversity — not words in a textbook, but the difference between someone reaching out to you or not when you don’t fit in.'],
+    ['p', '这份体会一直影响着我。不管后来做什么，我都把一句话放在心里：给不一样的人留个位置。', 'That lesson has stayed with me. Whatever I do, I keep one line in mind: leave room for people who are different.'],
+    ['h', '旅行', 'Travel'],
+    ['p', '欧洲、亚洲、美洲、非洲，我都走过：摩洛哥、土耳其、俄罗斯、日本、韩国、柬埔寨、菲律宾、泰国、越南、中国台湾、香港、澳门，还有美国和加拿大。中国大陆除了新疆、西藏、青海、宁夏，其他省份我基本都去过。', 'Europe, Asia, the Americas, Africa — I’ve travelled them all: Morocco, Turkey, Russia, Japan, South Korea, Cambodia, the Philippines, Thailand, Vietnam, Taiwan, Hong Kong, Macau, and the US and Canada. In mainland China I’ve been to nearly every province except Xinjiang, Tibet, Qinghai and Ningxia.'],
+    ['p', '我最爱有历史底蕴的地方。每到一处，一定先尝当地的味道——清淡的、辣的、重口的，什么都愿意试；再去历史博物馆、古建筑和展品前站一站，看看那里的人文风景。我会细细了解当地的文化，再拿它和家乡、和去过的其他地方对照着看。', 'I love places with deep history. Wherever I go, I taste the local food first — mild, spicy or bold, I’ll try anything — then spend time in the history museums, among the old buildings and exhibits, taking in the human landscape. I get to know the local culture closely, then hold it up against my hometown and the other places I’ve been.'],
+    ['p', '我也很爱自驾。有一次从广州一路开到内蒙古，沿途的地方一个个都去了。', 'I love road trips, too. Once I drove all the way from Guangzhou to Inner Mongolia, stopping at the places along the way.'],
+  ],
+  city: {
+    gz: [
+      ['p', '我在广州长大。这里讲粤语，美食和历史都和中国其他地方很不一样，是一座很独特的城市。', 'I grew up in Guangzhou. People speak Cantonese here, and its food and history set it apart from the rest of China — a truly unique city.'],
+      ['p', '而中国各省之间的差别也很大：有的嗜辣，有的爱甜，有的偏酸，有的讲究咸鲜。广州人爱生鲜、讲究一个“鲜”字；别的省份，有人爱重辣爆炒，有人离不开面食。', 'And China’s provinces differ hugely from one another: some love heat, some sweetness, some sourness, some the savoury and salty. Guangzhou loves fresh food and prizes freshness above all; elsewhere, some love fiery quick-fries, and some can’t live without noodles and buns.'],
+      ['p', '在国内，我特别喜欢去山西，那里有非常多的中国古建筑。', 'Within China, I especially love Shanxi, home to a great many old Chinese buildings.'],
+      ['p', '这也是我爱去不同地方的原因：认识更多不一样的人，学习他们不一样的文化。', 'That’s why I love going to different places: to meet more people unlike me, and to learn their cultures.'],
+    ],
+    ind: [
+      ['p', '在美国，以前的住家带我去过很多个州。印象最深的是南方和北方的差别——饮食、人文都非常不同。我更喜欢南方：那里的文化更多元、融合感更强，西班牙裔、非裔和欧裔文化在那里交汇，留下了许多历史建筑，也带来了很棒的美食，尤其是西班牙裔的菜，我非常喜欢。', 'In the US, my former host family took me to a great many states. What struck me most was the difference between the South and the North — in food and in culture alike. I prefer the South: its culture is more diverse and more blended. Hispanic, African American and European cultures meet there, leaving many historic buildings and wonderful food behind — Hispanic food above all, which I love.'],
+    ],
+    tor: [
+      ['p', '在加拿大，我去过多伦多附近的一些地方，大瀑布非常漂亮。', 'In Canada I’ve been to places around Toronto; Niagara Falls is beautiful.'],
+    ],
+  },
+};
+// (in English the curly quotes fall back to the CJK face and come out full-width, so they are set straight)
+const essay = (blocks) => `<div class="es st">${blocks.map(([k, zh, en]) => { const s = esc(lang === 'zh' ? zh : en.replace(/[‘’]/g, "'").replace(/[“”]/g, '"')); return k === 'h' ? `<h3>${s}</h3>` : k === 's' ? `<h4>${s}</h4>` : `<p>${s}</p>`; }).join('')}</div>`;
+function hobHTML() { const i = room.hob || 0; return `<div class="hob"><div class="hob-h"><b>${lang === 'zh' ? '兴趣，细说' : 'Interests, at length'}</b></div><div class="pn-tabs hob-tabs" role="tablist">${ME.hob.map((q, n) => `<button type="button" role="tab" aria-selected="${n === i}" class="${n === i ? 'on' : ''}" data-phob="${n}">${q.k[lang === 'zh' ? 0 : 1]}</button>`).join('')}</div><div id="hobBody">${essay(ME.hob[i].b)}</div></div>`; }
 const PF = {
-  zh: { sum: '简介', edu: '教育', work: '工作', act: '课外', skills: '技能', kEdu: '教育', kWork: '工作', kAct: '课外与志愿', fluent: '流利', novice: '入门', idPhoto: '船员照', based: '所在地', degrees: '学位', speaks: '语言', now: '现在', back: '回到营地', file: '档案',
+  zh: { sum: '简介', me: '关于我', edu: '教育', work: '工作', act: '课外', skills: '技能', kEdu: '教育', kWork: '工作', kAct: '课外与志愿', fluent: '流利', novice: '入门', idPhoto: '船员照', based: '所在地', degrees: '学位', speaks: '语言', now: '现在', back: '回到营地', file: '档案',
     habCode: 'CREW FILE · HAB-01', farmCode: 'FARM · 培育架', commCode: 'COMMS · 任务时间线', flagCode: 'FLAG · 足迹', farmSub: '技能与兴趣，分槽培育', commSub: '点时间线上的任意一段，看那段经历', commHint: '共 6 段 · 2021 — 2026',
     toComm: '经历', toFarm: '技能', toFlag: '足迹', inCv: '简历里的记录', story: '旅行和生活的故事：待录入', goCity: '飞去这座城市', campus: '学校在同州的布卢明顿',
     deg: '教育学硕士 · 文学学士', spk: '普通话 · 英语 · 粤语', city: '多伦多', prev: '上一段', next: '下一段', stops: '三站', stop: '第 {n} 站' },
-  en: { sum: 'Summary', edu: 'Education', work: 'Work', act: 'Activities', skills: 'Skills', kEdu: 'Education', kWork: 'Work', kAct: 'Extracurricular & volunteer', fluent: 'Fluent', novice: 'Novice', idPhoto: 'CREW PHOTO', based: 'Based in', degrees: 'Degrees', speaks: 'Speaks', now: 'NOW', back: 'Back to the camp', file: 'FILE',
+  en: { sum: 'Summary', me: 'About me', edu: 'Education', work: 'Work', act: 'Activities', skills: 'Skills', kEdu: 'Education', kWork: 'Work', kAct: 'Extracurricular & volunteer', fluent: 'Fluent', novice: 'Novice', idPhoto: 'CREW PHOTO', based: 'Based in', degrees: 'Degrees', speaks: 'Speaks', now: 'NOW', back: 'Back to the camp', file: 'FILE',
     habCode: 'CREW FILE · HAB-01', farmCode: 'FARM · GROWING RACKS', commCode: 'COMMS · MISSION TIMELINE', flagCode: 'FLAG · FOOTPRINTS', farmSub: 'Skills and interests, one bed each', commSub: 'Choose any stretch of the timeline to read about it', commHint: '6 entries · 2021 — 2026',
     toComm: 'Timeline', toFarm: 'Skills', toFlag: 'Footprints', inCv: 'From the CV', story: 'Stories of travelling and living here: to be added', goCity: 'Fly to this city', campus: 'the campus is in Bloomington, in the same state',
     deg: 'MEd · BA', spk: 'Mandarin · English · Cantonese', city: 'Toronto', prev: 'Earlier', next: 'Later', stops: 'THREE STOPS', stop: 'Stop {n}' },
@@ -3313,13 +3395,14 @@ function timelineHTML() { const span = TL_Y1 - TL_Y0, pct = (v) => ((v - TL_Y0) 
     ${CV.all.map((q, i) => `<button type="button" class="tl-row${i === room.ent ? ' on' : ''}" data-pent="${i}" title="${esc(q.t[lang])} · ${esc(q.org[lang])} · ${esc(q.when[lang])}"><span class="tl-lab">${esc(q.short)}</span><span class="tl-trk"><i class="tl-bar st" style="--i:${i};left:${pct(q.s)}%;width:${((q.e - q.s) / span * 100).toFixed(2)}%;background:${TL_COL[q.kind]}"></i>${now > TL_Y0 && now < TL_Y1 ? `<u style="left:${pct(now)}%"></u>` : ''}</span></button>`).join('')}</div></div>`; }
 const PLACE = [{ id: 'gz', code: 'CAN' }, { id: 'ind', code: 'IND', note: 'campus' }, { id: 'tor', code: 'YYZ' }]; // the airport codes of the three cities
 function stopsHTML() { return `<div class="rt st" aria-hidden="true">${PLACE.map((p) => `<span><i></i><em>${p.code}</em></span>`).join('')}<img alt="" class="rt-p" src="${satSprite('plane0', 2, false, false).toDataURL()}"></div>` + PLACE.map((p, n) => { const c = byId[p.id], list = CV.all.filter((q) => q.at === p.id);
-  return `<div class="stop st" style="--i:${n + 1}"><div class="stop-l"><em>${pf('stop').replace('{n}', n + 1)}</em><b>${esc(name(c))}</b><span>${esc(lang === 'zh' ? c.czh : c.cen)}</span><i>${c.tlat} · ${c.tlon}</i></div><div class="stop-r"><small>${pf('inCv')}${p.note ? ` · ${pf(p.note)}` : ''}</small><ul>${list.map((q) => `<li><i style="background:${TL_COL[q.kind]}"></i><em>${esc(q.when[lang])}</em><span>${esc(q.t[lang])} · ${esc(q.org[lang])}</span></li>`).join('')}</ul><p class="todo">${pf('story')}</p><button type="button" class="pn-go" data-pgo="${p.id}">${pf('goCity')} <span aria-hidden="true">→</span></button></div></div>`; }).join(''); }
-const HAB_TABS = ['sum', 'edu', 'work', 'act', 'skills'];
+  return `<div class="stop st" style="--i:${n + 1}"><div class="stop-l"><em>${pf('stop').replace('{n}', n + 1)}</em><b>${esc(name(c))}</b><span>${esc(lang === 'zh' ? c.czh : c.cen)}</span><i>${c.tlat} · ${c.tlon}</i></div><div class="stop-r"><small>${pf('inCv')}${p.note ? ` · ${pf(p.note)}` : ''}</small><ul>${list.map((q) => `<li><i style="background:${TL_COL[q.kind]}"></i><em>${esc(q.when[lang])}</em><span>${esc(q.t[lang])} · ${esc(q.org[lang])}</span></li>`).join('')}</ul>${ME.city[p.id] ? essay(ME.city[p.id]) : `<p class="todo">${pf('story')}</p>`}<button type="button" class="pn-go" data-pgo="${p.id}">${pf('goCity')} <span aria-hidden="true">→</span></button></div></div>`; }).join(''); }
+const HAB_TABS = ['sum', 'me', 'edu', 'work', 'act', 'skills'];
 function habBody() { const tb = HAB_TABS[room.tab] || 'sum';
   if (tb === 'sum') return `<div class="pn-id"><figure class="pn-photo st"><canvas id="pnPhoto" width="450" height="600" role="img" aria-label="${esc(CV.name)}"></canvas><figcaption><span>${pf('idPhoto')}</span><i>HAB-01</i></figcaption></figure><p class="pn-lede st" style="--i:1">${esc(CV.sum[lang])}</p></div><div class="pn-jumps">${pnJump('exp', pf('toComm'))}${pnJump('skills', pf('toFarm'))}${pnJump('foot', pf('toFlag'))}</div>`;
   if (tb === 'skills') return `<div class="beds compact">${bedsHTML(true)}</div>`;
+  if (tb === 'me') return essay(ME.me);
   return `<div class="cv-list">${CV[tb].map(cvItem).join('')}</div>`; }
-function pnBody(id) { return id === 'about' ? habBody() : id === 'skills' ? `<div class="beds">${bedsHTML(false)}</div>` : id === 'exp' ? timelineHTML() + `<div id="pnEnt">${entryHTML(CV.all[room.ent])}</div>` : stopsHTML(); }
+function pnBody(id) { return id === 'about' ? habBody() : id === 'skills' ? `<div class="beds">${bedsHTML(false)}</div>` + hobHTML() : id === 'exp' ? timelineHTML() + `<div id="pnEnt">${entryHTML(CV.all[room.ent])}</div>` : essay(ME.foot) + stopsHTML(); }
 function moonPanel(f, n) { const id = f.id, k = f.card, idx = PN_ORDER.indexOf(id), nx = PN_ORDER[(idx + 1) % 4], pv = PN_ORDER[(idx + 3) % 4], nm = (q) => byIdHot(q).card.at[lang];
   const head = id === 'about' ? { code: pf('habCode'), title: CV.name, sub: CV.loc[lang] } : id === 'skills' ? { code: pf('farmCode'), title: k.title[lang], sub: pf('farmSub') } : id === 'exp' ? { code: pf('commCode'), title: k.title[lang], sub: pf('commSub') } : { code: pf('flagCode'), title: k.title[lang], sub: t('intro') };
   return `<i class="pn-c a"></i><i class="pn-c b"></i><i class="pn-c c"></i><i class="pn-c d"></i>
@@ -3331,6 +3414,7 @@ const byIdHot = (id) => ROOMS.moon.hots.find((h) => h.id === id);
 let afterSv = null; // something to do once we are back at the Earth
 function moonClick(e) { const f = room.focus; if (!f || !f.card || !f.card.pn) return false; const body = document.getElementById('pnBody');
   const tab = e.target.closest('[data-ptab]'); if (tab) { room.tab = +tab.dataset.ptab; rmCard.querySelectorAll('[data-ptab]').forEach((b, i) => { b.classList.toggle('on', i === room.tab); b.setAttribute('aria-selected', String(i === room.tab)); }); body.innerHTML = habBody(); body.scrollTop = 0; photoIn(); return true; }
+  const hob = e.target.closest('[data-phob]'); if (hob) { room.hob = +hob.dataset.phob; rmCard.querySelectorAll('[data-phob]').forEach((b, i) => { b.classList.toggle('on', i === room.hob); b.setAttribute('aria-selected', String(i === room.hob)); }); document.getElementById('hobBody').innerHTML = essay(ME.hob[room.hob].b); return true; }
   const ent = e.target.closest('[data-pent]'); if (ent) { room.ent = +ent.dataset.pent; rmCard.querySelectorAll('.tl-row').forEach((b, i) => b.classList.toggle('on', i === room.ent)); document.getElementById('pnEnt').innerHTML = entryHTML(CV.all[room.ent]); return true; }
   const jump = e.target.closest('[data-pjump]'); if (jump) { const h = byIdHot(jump.dataset.pjump); if (jump.dataset.pjump === 'about') room.tab = 0; roomFocus(null); ROOMS.moon.pick(h); return true; } // the rover drives us over, and we lean in again there
   const go = e.target.closest('[data-pgo]'); if (go) { const c = byId[go.dataset.pgo]; afterSv = () => goNode(c); roomFocus(null); closeSat(); return true; }
@@ -3714,6 +3798,7 @@ document.addEventListener('click', (e) => { if (!uiOK() || !e.target.closest) re
   if ((el = q('[data-ptab]'))) return UI.tick(+el.dataset.ptab);
   if ((el = q('[data-pent]'))) return UI.row(+el.dataset.pent);
   if ((el = q('[data-tl]'))) return UI.row(+el.dataset.tl);
+  if ((el = q('[data-phob]'))) return UI.tick(+el.dataset.phob);
   if (q('[data-pjump],[data-pgo]')) return UI.jump();
   if (q('[data-chip]')) return UI.tick(1);
   if (q('[data-chx]')) return UI.sheet(false);
