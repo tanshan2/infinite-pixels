@@ -302,6 +302,12 @@ button{font:inherit;color:inherit}
 .bp-row{flex:1;min-height:0;display:grid;grid-template-columns:calc(var(--u)*4.6) minmax(0,1fr) auto;align-items:center;gap:calc(var(--u)*1.2);margin:0;padding:0 calc(var(--u)*2);border:0;border-top:1px solid rgba(125,180,210,.2);border-radius:0;background:none;color:inherit;font:inherit;font-size:max(11px,calc(var(--u)*2.55));letter-spacing:.04em;text-align:left;cursor:pointer}
 .bp-row i{font-style:normal;color:#7DB4D2}.bp-row b{font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.bp-row span{color:#7DB4D2;font-size:.86em;white-space:nowrap}.bp-row.fig b{color:#7DB4D2}
 .bp-row:hover,.bp-row.on,.bp-row:focus-visible{background:rgba(242,166,90,.13);color:#F2A65A;outline:0}.bp-row:hover i,.bp-row.on i,.bp-row:hover b,.bp-row.on b{color:#F2A65A}
+.bp-lab.open{color:#7DB4D2}.bp-row.open b,.bp-row.open span{color:#3D7A9E}
+.tl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(74px,1fr));gap:8px}
+.tl-b{display:flex;flex-direction:column;align-items:center;gap:7px;min-width:0;margin:0;padding:10px 4px 8px;border:1px solid var(--line);border-radius:0;background:rgba(237,230,211,.03);color:var(--mute);font:inherit;font-size:12px;letter-spacing:.04em;cursor:pointer;transition:border-color .2s,color .2s,background .2s}
+.tl-b img{display:block;width:48px;height:48px;image-rendering:pixelated}.tl-b span{max-width:100%;line-height:1.3;text-align:center;overflow-wrap:anywhere}
+.tl-b:hover,.tl-b:focus-visible{color:var(--ivory);outline:0}.tl-b.on{border-color:var(--ember);color:var(--ember);background:rgba(242,166,90,.08)}
+.tl-det{display:flex;flex-direction:column;gap:10px;padding-top:14px;border-top:1px solid var(--line)}.tl-det h3{margin:0;font-family:var(--f-serif);font-size:20px;font-weight:700;line-height:1.2}
 .bp-note{position:absolute;left:0;top:0;display:flex;flex-direction:column;gap:2px;font-family:var(--f-body)}.bp-note p{margin:0;font-size:max(11px,calc(var(--u)*2.5));line-height:1.6;letter-spacing:.05em;color:#7DB4D2}.bp-note .hintline{color:#DDEEF7}
 .rm.bp .rm-cap h2,.rm.bp .rm-cap .eyebrow{text-shadow:0 0 14px #0C2D47,0 0 4px #0C2D47}.rm.bp .rm-cap{width:auto}.rm.bp .rm-cap h2{white-space:nowrap;font-size:clamp(26px,2.9vw,42px)}
 /* a console: the display's words and the keys are sized in the room's own pixels */
@@ -2127,6 +2133,7 @@ rmEl.addEventListener('click', (e) => {
   const dot = e.target.closest('[data-sec]'); if (dot) { if (ROOMS[sv.id].goTo) { ROOMS[sv.id].goTo(+dot.dataset.sec); return; } const c = ROOMS[sv.id].secs[+dot.dataset.sec][0]; room.goto = c + RM_W * Math.round((room.px - c) / RM_W); return; }
   if (room.focus && room.focus.set) { const th = e.target.closest('[data-pi]'), pn = e.target.closest('[data-pn]'); if (th) { setPoster(+th.dataset.pi); return; } if (pn) { setPoster(room.pi + +pn.dataset.pn); return; } }
   if (room.focus && moonClick(e)) return;
+  if (room.focus && room.focus.tool && toolClick(e)) return;
   if (room.focus) { if (e.target.closest('[data-rmback]') || !e.target.closest('.rm-card,.rm-shot')) roomFocus(null); return; }
   if (e.target.closest('[data-bpview]') && ROOMS[sv.id].view) { ROOMS[sv.id].view(bp.to < 0.5); return; }
   const b = e.target.closest('[data-hot]'); if (!b) return; const h = ROOMS[sv.id].hots.find((q) => q.id === b.dataset.hot); if (h.id === 'exit') closeSat(); else if (ROOMS[sv.id].pick) ROOMS[sv.id].pick(h); else if (h.kind === 'chan') { room.chan = room.chan === h ? null : h; room.lastKey = h.i; room.press = 1; room.tune = 0; if (room.chan) room.wave = 0; UI.key(h.i, !!room.chan); roomRender(); } else roomFocus(h);
@@ -2684,23 +2691,74 @@ SAT_HI.prototype = { w: 240, h: 124, build: buildPrototypeHi, cv: null, info: [1
 Object.assign(F35, { 5: '111100111001111', 6: '111100111101111', 7: '111001001001001', 8: '111101111101111', 9: '111101111001111', J: '001001001101111', Q: '111101101111001', Z: '111001010100111', '.': '000000000000010', ':': '000010000010000', '/': '001001010100100', '+': '000010111010000' });
 const BPK = { paper: '#0F3654', paper2: '#0C2D47', grid: '#154364', grid2: '#1B5279', ink: '#DDEEF7', ink2: '#7DB4D2', dim: '#3D7A9E', hot: '#F2A65A', hot2: '#B97E48' };
 const BP_SHAPE = { wing: [73, 54], mod: [32, 38], hub: [72, 32], truss: [84, 12], ant: [12, 20], pod: [12, 20] };
-const BP_CAT = { engine: { zh: '游戏引擎', en: 'Game engine' }, design: { zh: '设计与影像', en: 'Design & video' }, code: { zh: '代码', en: 'Code' }, ai: { zh: '人工智能', en: 'AI' }, media: { zh: '内容平台', en: 'Platform' }, office: { zh: '办公', en: 'Office' } };
+// the tools come in families, and each family is one part of the station; a part with no family yet is an open slot, kept for later
+const BP_GRP = {
+  adobe: { zh: 'Adobe 家族', en: 'Adobe family', kind: { zh: '图像、视频、矢量和排版软件', en: 'Software for images, video, vector art and layout' } },
+  code: { zh: '编程', en: 'Code', kind: { zh: '写网页和写程序', en: 'For building web pages and programs' } },
+  social: { zh: '社交媒体', en: 'Social media', kind: { zh: '内容平台和在线设计', en: 'Content platforms and online design' } },
+  office: { zh: '办公', en: 'Office', kind: { zh: '文档和表格', en: 'Documents and spreadsheets' } },
+  game: { zh: '游戏', en: 'Games', kind: { zh: '实时 2D / 3D 游戏引擎', en: 'Real-time 2D / 3D game engines' } },
+  ai: { zh: 'AI 专业应用', en: 'Professional AI work', kind: { zh: '把 AI 工具用在专业工作里', en: 'Putting AI tools to professional use' } },
+};
+// cv: the words the CV uses for it (null: not in the CV, added by Dave himself)
+const BP_TOOLS = [
+  { id: 'ps', g: 'adobe', zh: 'Adobe Photoshop', en: 'Adobe Photoshop', short: 'Photoshop', cv: 'Adobe PS', kind: { zh: '图像处理与合成', en: 'Image editing and compositing' } },
+  { id: 'pr', g: 'adobe', zh: 'Adobe Premiere Pro', en: 'Adobe Premiere Pro', short: 'Premiere Pro', cv: 'Pr', kind: { zh: '视频剪辑', en: 'Video editing' } },
+  { id: 'ai', g: 'adobe', zh: 'Adobe Illustrator', en: 'Adobe Illustrator', short: 'Illustrator', cv: 'AI', kind: { zh: '矢量绘图', en: 'Vector drawing' } },
+  { id: 'id', g: 'adobe', zh: 'Adobe InDesign', en: 'Adobe InDesign', short: 'InDesign', cv: 'InDesign', kind: { zh: '版面编排', en: 'Page layout' } },
+  { id: 'html', g: 'code', zh: 'HTML', en: 'HTML', short: 'HTML', cv: 'HTML', kind: { zh: '网页的结构语言', en: 'The markup language of web pages' } },
+  { id: 'vs', g: 'code', zh: 'Visual Studio', en: 'Visual Studio', short: 'Visual Studio', cv: 'Visual Studio', kind: { zh: '写代码和调试的开发环境', en: 'An environment for writing and debugging code' } },
+  { id: 'tiktok', g: 'social', zh: 'TikTok', en: 'TikTok', short: 'TikTok', cv: 'TikTok', kind: { zh: '短视频平台', en: 'A short-video platform' } },
+  { id: 'canva', g: 'social', zh: 'Canva 可画', en: 'Canva', short: 'Canva', cv: null, kind: { zh: '在线设计平台', en: 'An online design platform' } },
+  { id: 'word', g: 'office', zh: 'Microsoft Word', en: 'Microsoft Word', short: 'Word', cv: 'Microsoft Word & Excel', kind: { zh: '文字处理', en: 'Word processing' } },
+  { id: 'excel', g: 'office', zh: 'Microsoft Excel', en: 'Microsoft Excel', short: 'Excel', cv: 'Microsoft Word & Excel', kind: { zh: '电子表格', en: 'Spreadsheets' } },
+  { id: 'unity', g: 'game', zh: 'Unity', en: 'Unity', short: 'Unity', cv: 'Unity', kind: { zh: '实时 2D / 3D 游戏引擎', en: 'A real-time 2D / 3D game engine' } },
+  { id: 'ue5', g: 'game', zh: 'Unreal Engine 5', en: 'Unreal Engine 5', short: 'Unreal Engine 5', cv: 'Unreal 5', kind: { zh: '实时 3D 引擎', en: 'A real-time 3D engine' } },
+  { id: 'aiw', g: 'ai', zh: 'AI 专业应用', en: 'Professional AI work', short: 'AI', cv: 'Professional AI work', kind: { zh: '把 AI 工具用在专业工作里', en: 'Putting AI tools to professional use' } },
+];
+// each tool's badge, drawn 16 × 16 in pixels: the familiar mark, redrawn by hand at that size
+const TL_URL = {};
+function tlLogo(id) {
+  if (TL_URL[id]) return TL_URL[id];
+  const [cv, g] = bpMk(16, 16), P = (x, y, w, h, col) => { g.fillStyle = col; g.fillRect(x, y, w, h); };
+  const draw = (rows, x, y, col) => rows.forEach((r, j) => [...r].forEach((ch, i) => { if (ch === '#') P(x + i, y + j, 1, 1, col); }));
+  const tile = (bg, edge) => { P(1, 0, 14, 16, bg); P(0, 1, 16, 14, bg); if (edge) { P(1, 0, 14, 1, edge); P(1, 15, 14, 1, edge); P(0, 1, 1, 14, edge); P(15, 1, 1, 14, edge); } };
+  const disc = (cx, cy, r, col) => { for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) if (Math.hypot(x + 0.5 - cx, y + 0.5 - cy) <= r) P(x, y, 1, 1, typeof col === 'function' ? col(x, y) : col); };
+  const ln = (x0, y0, x1, y1, col, th = 1) => { const n = Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0)) || 1; for (let i = 0; i <= n; i++) P(Math.round(x0 + (x1 - x0) * i / n), Math.round(y0 + (y1 - y0) * i / n), th, th, col); };
+  const G = { P: ['###.', '#..#', '#..#', '###.', '#...', '#...'], A: ['.##.', '#..#', '#..#', '####', '#..#', '#..#'], I: ['###', '.#.', '.#.', '.#.', '.#.', '###'], s: ['...', '.##', '#..', '.#.', '..#', '##.'], r: ['...', '...', '#.#', '##.', '#..', '#..'], i: ['#', '.', '#', '#', '#', '#'], d: ['...#', '...#', '.###', '#..#', '#..#', '.###'] };
+  const adobe = (bg, fg, a, b) => { tile(bg, fg); const wa = G[a][0].length, wb = G[b][0].length, x = (16 - wa - 1 - wb) >> 1; draw(G[a], x, 5, fg); draw(G[b], x + wa + 1, 5, fg); };
+  if (id === 'ps') adobe('#001E36', '#31A8FF', 'P', 's');
+  else if (id === 'pr') adobe('#00005B', '#9999FF', 'P', 'r');
+  else if (id === 'ai') adobe('#330000', '#FF9A00', 'A', 'i');
+  else if (id === 'id') adobe('#49021F', '#FF3366', 'I', 'd');
+  else if (id === 'word') { tile('#185ABD'); P(1, 0, 14, 3, '#41A5EE'); P(0, 1, 16, 2, '#41A5EE'); P(1, 13, 14, 3, '#103F91'); P(0, 13, 16, 2, '#103F91'); draw(['#.....#', '#.....#', '#..#..#', '#..#..#', '#.#.#.#', '.#...#.'], 4, 5, '#FFFFFF'); }
+  else if (id === 'excel') { tile('#107C41'); P(1, 0, 14, 3, '#33C481'); P(0, 1, 16, 2, '#33C481'); P(1, 13, 14, 3, '#185C37'); P(0, 13, 16, 2, '#185C37'); draw(['#....#', '.#..#.', '..##..', '..##..', '.#..#.', '#....#'], 5, 5, '#FFFFFF'); }
+  else if (id === 'html') { for (let y = 1; y < 15; y++) { const k = y < 11 ? 0 : y - 10, x0 = 2 + k, x1 = 13 - k; P(x0, y, 8 - x0, 1, '#E44D26'); P(8, y, x1 - 7, 1, '#F16529'); } draw(['######', '##....', '##....', '#####.', '....##', '....##', '#...##', '.####.'], 5, 3, '#FFFFFF'); }
+  else if (id === 'vs') { P(11, 1, 3, 14, '#5C2D91'); P(11, 1, 1, 14, '#865FC5'); ln(4, 5, 10, 11, '#B180D7', 2); ln(4, 9, 10, 3, '#865FC5', 2); P(2, 5, 2, 6, '#865FC5'); }
+  else if (id === 'unity') { tile('#1B1F24'); const W = '#FFFFFF'; ln(8, 2, 13, 5, W); ln(13, 5, 13, 11, W); ln(13, 11, 8, 14, W); ln(8, 14, 3, 11, W); ln(3, 11, 3, 5, W); ln(3, 5, 8, 2, W); ln(8, 8, 3, 5, W); ln(8, 8, 13, 5, W); ln(8, 8, 8, 14, W); }
+  else if (id === 'ue5') { disc(8, 8, 8, '#FFFFFF'); disc(8, 8, 6.9, '#111317'); draw(['#...#', '#...#', '#...#', '#...#', '#...#', '.###.'], 6, 5, '#FFFFFF'); }
+  else if (id === 'tiktok') { tile('#010101'); const note = (dx, dy, col) => { P(9 + dx, 3 + dy, 2, 9, col); P(11 + dx, 4 + dy, 1, 2, col); P(12 + dx, 5 + dy, 1, 2, col); P(6 + dx, 9 + dy, 3, 1, col); P(5 + dx, 10 + dy, 4, 3, col); P(6 + dx, 13 + dy, 3, 1, col); }; note(-1, -1, '#25F4EE'); note(1, 1, '#FE2C55'); note(0, 0, '#FFFFFF'); }
+  else if (id === 'canva') { disc(8, 8, 8, (x, y) => { const k = (x + 15 - y) / 30; return `rgb(${Math.round(0 + 125 * k)},${Math.round(196 - 154 * k)},${Math.round(204 + 28 * k)})`; }); draw(['.###.', '#...#', '#....', '#....', '#...#', '.###.'], 6, 5, '#FFFFFF'); }
+  else if (id === 'aiw') { tile('#0F3654', '#7DB4D2'); for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) { const dx = Math.abs(x - 7), dy = Math.abs(y - 8); if (dx + dy <= 2 || (dx === 0 && dy <= 5) || (dy === 0 && dx <= 5) || (dx <= 1 && dy <= 3) || (dy <= 1 && dx <= 3)) P(x, y, 1, 1, dx + dy <= 1 ? '#FFF1CF' : '#F2A65A'); } P(12, 2, 1, 3, '#F3D27A'); P(11, 3, 3, 1, '#F3D27A'); }
+  return (TL_URL[id] = cv.toDataURL());
+}
 // One line per part: its shape; where it sits on the station (in the pixels of the close-up drawing); how far it is pulled out on the sheet;
 // where its numbered balloon goes (from the part's own corner), which side of the balloon the name is written on, and the spot the leader points at.
-// Then the tool: the short name written on the sheet, the full name, the words the CV uses for it, what kind of thing it is.
+// Then the family of tools it holds (none: an open slot).
 const BP_PARTS = [
-  { id: 't7', n: 7, shape: 'truss', at: [0, 56], off: [-12, 0], bal: [30, 22], lab: 'r', to: [30, 10], lb: 'HTML', zh: 'HTML', en: 'HTML', cv: 'HTML', cat: 'code', kind: { zh: '网页的结构语言', en: 'The markup language of web pages' }, part: { zh: '左桁架', en: 'Port truss' } },
-  { id: 't8', n: 8, shape: 'truss', at: [156, 56], off: [12, 0], bal: [58, 22], lab: 'l', to: [58, 10], lb: 'Visual Studio', zh: 'Visual Studio', en: 'Visual Studio', cv: 'Visual Studio', cat: 'code', kind: { zh: '写代码和调试的开发环境', en: 'An environment for writing and debugging code' }, part: { zh: '右桁架', en: 'Starboard truss' } },
-  { id: 't3', n: 3, shape: 'wing', up: true, at: [0, 2], off: [-20, -20], bal: [36, -10], lab: 'r', to: [36, 4], lb: 'Photoshop', zh: 'Adobe Photoshop', en: 'Adobe Photoshop', cv: 'Adobe PS', cat: 'design', kind: { zh: '图像处理与合成', en: 'Image editing and compositing' }, part: { zh: '太阳能翼 A', en: 'Solar wing A' } },
-  { id: 't4', n: 4, shape: 'wing', up: true, at: [167, 2], off: [20, -20], bal: [36, -10], lab: 'r', to: [36, 4], lb: 'Premiere Pro', zh: 'Adobe Premiere Pro', en: 'Adobe Premiere Pro', cv: 'Pr', cat: 'design', kind: { zh: '视频剪辑', en: 'Video editing' }, part: { zh: '太阳能翼 B', en: 'Solar wing B' } },
-  { id: 't5', n: 5, shape: 'wing', up: false, at: [0, 68], off: [-20, 20], bal: [20, 64], lab: 'r', to: [20, 50], lb: 'Illustrator', zh: 'Adobe Illustrator', en: 'Adobe Illustrator', cv: 'AI', cat: 'design', kind: { zh: '矢量绘图', en: 'Vector drawing' }, part: { zh: '太阳能翼 C', en: 'Solar wing C' } },
-  { id: 't6', n: 6, shape: 'wing', up: false, at: [167, 68], off: [20, 20], bal: [84, 16], lab: 'r', to: [70, 22], lb: 'InDesign', zh: 'Adobe InDesign', en: 'Adobe InDesign', cv: 'InDesign', cat: 'design', kind: { zh: '版面编排', en: 'Page layout' }, part: { zh: '太阳能翼 D', en: 'Solar wing D' } },
-  { id: 't1', n: 1, shape: 'mod', up: true, at: [104, 8], off: [0, -24], bal: [46, 5], lab: 'r', to: [30, 14], lb: 'Unity', zh: 'Unity', en: 'Unity', cv: 'Unity', cat: 'engine', kind: { zh: '实时 2D / 3D 游戏引擎', en: 'A real-time 2D / 3D game engine' }, part: { zh: '上舱段', en: 'Upper module' } },
-  { id: 't2', n: 2, shape: 'mod', up: false, at: [104, 78], off: [0, 24], bal: [16, 48], lab: 'r', to: [16, 36], lb: 'Unreal Engine 5', zh: 'Unreal Engine 5', en: 'Unreal Engine 5', cv: 'Unreal 5', cat: 'engine', kind: { zh: '实时 3D 引擎', en: 'A real-time 3D engine' }, part: { zh: '下舱段', en: 'Lower module' } },
-  { id: 't10', n: 10, shape: 'ant', at: [88, 26], off: [-16, -12], bal: [6, -9], lab: 't', to: [6, 2], lb: 'TikTok', zh: 'TikTok', en: 'TikTok', cv: 'TikTok', cat: 'media', kind: { zh: '短视频平台', en: 'A short-video platform' }, part: { zh: '天线杆', en: 'Antenna boom' } },
-  { id: 't11', n: 11, shape: 'pod', at: [140, 78], off: [16, 12], bal: [6, 29], lab: 'b', to: [6, 19], lb: 'Word & Excel', zh: 'Microsoft Word 与 Excel', en: 'Microsoft Word & Excel', cv: 'Microsoft Word & Excel', cat: 'office', kind: { zh: '文档与表格', en: 'Documents and spreadsheets' }, part: { zh: '仪器舱', en: 'Instrument pod' } },
-  { id: 't9', n: 9, shape: 'hub', at: [84, 46], off: [0, 0], bal: [80, -6], lab: 'r', to: [68, 4], lb: null, zh: 'AI 专业应用', en: 'Professional AI work', cv: 'Professional AI work', cat: 'ai', kind: { zh: '把 AI 工具用在专业工作里', en: 'Putting AI tools to professional use' }, part: { zh: '核心舱', en: 'Core module' } },
+  { id: 't7', n: 2, shape: 'truss', at: [0, 56], off: [-12, 0], bal: [30, 22], lab: 'r', to: [30, 10], grp: 'code', part: { zh: '左桁架', en: 'Port truss' } },
+  { id: 't8', n: 11, shape: 'truss', at: [156, 56], off: [12, 0], bal: [58, 22], lab: 'l', to: [58, 10], grp: null, part: { zh: '右桁架', en: 'Starboard truss' } },
+  { id: 't3', n: 1, shape: 'wing', up: true, at: [0, 2], off: [-20, -20], bal: [36, -10], lab: 'r', to: [36, 4], grp: 'adobe', part: { zh: '太阳能翼 A', en: 'Solar wing A' } },
+  { id: 't4', n: 7, shape: 'wing', up: true, at: [167, 2], off: [20, -20], bal: [36, -10], lab: 'r', to: [36, 4], grp: null, part: { zh: '太阳能翼 B', en: 'Solar wing B' } },
+  { id: 't5', n: 8, shape: 'wing', up: false, at: [0, 68], off: [-20, 20], bal: [20, 64], lab: 'r', to: [20, 50], grp: null, part: { zh: '太阳能翼 C', en: 'Solar wing C' } },
+  { id: 't6', n: 9, shape: 'wing', up: false, at: [167, 68], off: [20, 20], bal: [84, 16], lab: 'r', to: [70, 22], grp: null, part: { zh: '太阳能翼 D', en: 'Solar wing D' } },
+  { id: 't1', n: 5, shape: 'mod', up: true, at: [104, 8], off: [0, -24], bal: [46, 5], lab: 'r', to: [30, 14], grp: 'game', part: { zh: '上舱段', en: 'Upper module' } },
+  { id: 't2', n: 10, shape: 'mod', up: false, at: [104, 78], off: [0, 24], bal: [16, 48], lab: 'r', to: [16, 36], grp: null, part: { zh: '下舱段', en: 'Lower module' } },
+  { id: 't10', n: 3, shape: 'ant', at: [88, 26], off: [-16, -12], bal: [6, -9], lab: 't', to: [6, 2], grp: 'social', part: { zh: '天线杆', en: 'Antenna boom' } },
+  { id: 't11', n: 4, shape: 'pod', at: [140, 78], off: [16, 12], bal: [6, 29], lab: 'b', to: [6, 19], grp: 'office', part: { zh: '仪器舱', en: 'Instrument pod' } },
+  { id: 't9', n: 6, shape: 'hub', at: [84, 46], off: [0, 0], bal: [80, -6], lab: 'r', to: [68, 4], grp: 'ai', part: { zh: '核心舱', en: 'Core module' } },
 ];
+for (const p of BP_PARTS) { const k = BP_GRP[p.grp]; p.zh = k ? k.zh : '空位'; p.en = k ? k.en : 'Open slot'; p.tools = BP_TOOLS.filter((q) => q.g === p.grp); }
 const BP_BY = Object.fromEntries(BP_PARTS.map((p) => [p.id, p]));
 const BP_LIST = [...BP_PARTS].sort((a, b) => a.n - b.n);
 // the two plates pinned to the sheet: places kept for work, shown with the sample pictures for now
@@ -2813,7 +2871,7 @@ function paintTools(ox, oy, scale) {
   // the lines each part was drawn out along, from where it belongs
   if (ex > 0.02) for (const p of BP_PARTS) { const a = bpAt(p, 0), b = bpAt(p, ex), col = hov === p.id || (f && f.id === p.id) ? BPK.hot : BPK.ink2; for (const q of bpFix(p)) line(a[0] + q[0], a[1] + q[1], b[0] + q[0], b[1] + q[1], col, { n: 6, on: 3 }, -Math.floor(tt * 7)); }
   // the parts themselves
-  BP_PARTS.forEach((p, i) => { const [x, y] = bpAt(p, ex), on = hov === p.id || (f && f.id === p.id); g.drawImage(on ? p.pen.hot : f ? p.pen.dim : p.pen.ink, x, y); });
+  BP_PARTS.forEach((p, i) => { const [x, y] = bpAt(p, ex), on = hov === p.id || (f && f.id === p.id); g.drawImage(on ? p.pen.hot : f || !p.grp ? p.pen.dim : p.pen.ink, x, y); }); // an open slot stays faint
   if (!reduced && (tt * 0.4) % 1 < 0.17 && !f) { const hb = bpAt(BP_BY.t9, ex); R(hb[0] + 34, hb[1], 4, 2, '#FFF1CF'); }
   // their numbers, each on a leader
   if (!f) BP_PARTS.forEach((p, i) => { const [x, y] = bpAt(p, ex), on = hov === p.id, bx = x + p.bal[0], by = y + p.bal[1], tx = x + p.to[0], ty = y + p.to[1], d = Math.hypot(tx - bx, ty - by) || 1; line(Math.round(bx + (tx - bx) * 6 / d), Math.round(by + (ty - by) * 6 / d), tx, ty, on ? BPK.hot : BPK.ink2); R(tx - 1, ty - 1, 3, 3, on ? BPK.hot : BPK.ink); g.drawImage(bp.bal[i][on ? 1 : 0], bx - 6, by - 6); });
@@ -2832,11 +2890,12 @@ const rmBp = document.getElementById('rmBp');
 // the words that go over the sheet: a name beside each balloon, the parts list, the view switch, the notes
 function renderTools() {
   const zh = lang === 'zh', nm = (p) => (zh ? p.zh : p.en);
-  rmBp.innerHTML = BP_PARTS.map((p) => `<button class="bp-lab ${p.lab}" type="button" data-hot="${p.id}" data-bpl="${p.id}">${esc(p.lb || nm(p))}</button>`).join('')
-    + `<div class="bp-bom" id="bpBom"><div class="bp-bh"><b>${zh ? '零件表' : 'Parts list'}</b><span>${zh ? '每个零件是一件工具' : 'every part is a tool'}</span><button class="bp-view" type="button" data-bpview aria-pressed="${bp.to > 0.5}"><i></i>${bp.to > 0.5 ? (zh ? '合拢' : 'Assemble') : (zh ? '拆解' : 'Take apart')}</button></div><div class="bp-rows">`
-    + BP_LIST.map((p) => `<button class="bp-row" type="button" data-hot="${p.id}"><i>${String(p.n).padStart(2, '0')}</i><b>${esc(nm(p))}</b><span>${BP_CAT[p.cat][lang]}</span></button>`).join('')
+  const cnt = (p) => (p.grp ? (zh ? `${p.tools.length} 件` : `${p.tools.length} tool${p.tools.length > 1 ? 's' : ''}`) : t('pending'));
+  rmBp.innerHTML = BP_PARTS.map((p) => `<button class="bp-lab ${p.lab}${p.grp ? '' : ' open'}" type="button" data-hot="${p.id}" data-bpl="${p.id}">${esc(nm(p))}</button>`).join('')
+    + `<div class="bp-bom" id="bpBom"><div class="bp-bh"><b>${zh ? '零件表' : 'Parts list'}</b><span>${zh ? '每个零件是一类工具' : 'every part is a family of tools'}</span><button class="bp-view" type="button" data-bpview aria-pressed="${bp.to > 0.5}"><i></i>${bp.to > 0.5 ? (zh ? '合拢' : 'Assemble') : (zh ? '拆解' : 'Take apart')}</button></div><div class="bp-rows">`
+    + BP_LIST.map((p) => `<button class="bp-row${p.grp ? '' : ' open'}" type="button" data-hot="${p.id}"><i>${String(p.n).padStart(2, '0')}</i><b>${esc(nm(p))}</b><span>${cnt(p)}</span></button>`).join('')
     + BP_FIG.map((q) => `<button class="bp-row fig" type="button" data-hot="${q.id}"><i>${q.cap.slice(-1)}</i><b>${t('slot')} ${String(q.i).padStart(2, '0')}</b><span>${t('sample')}</span></button>`).join('') + '</div></div>'
-    + `<div class="bp-note" id="bpNote"><p>${zh ? '十一件工具取自简历的「技术技能」一栏。两张附图是作品展位的样例。' : 'Eleven tools, as listed under “Technical” in the CV. The two plates are sample slots.'}</p><p class="hintline">${zh ? '点任意一个零件，看这件工具' : 'Pick any part to read about the tool'}</p></div>`;
+    + `<div class="bp-note" id="bpNote"><p>${zh ? '工具按类别装在各个零件上；空着的零件留给以后。两张附图是作品展位的样例。' : 'Each part holds one family of tools; the empty parts are kept for later. The two plates are sample slots.'}</p><p class="hintline">${zh ? '点一个零件，看这一类里的工具' : 'Pick a part to see the tools in it'}</p></div>`;
   bp.els = { labs: [...rmBp.querySelectorAll('[data-bpl]')], rows: [...rmBp.querySelectorAll('.bp-row')], bom: rmBp.querySelector('#bpBom'), note: rmBp.querySelector('#bpNote') };
 }
 // … and where those words sit, which follows the sheet (and the parts, while they are moving)
@@ -2848,11 +2907,25 @@ function placeTools(ox, oy, sc) {
   if (narrow) { bp.els.bom.style.transform = ''; bp.els.bom.style.width = ''; bp.els.bom.style.height = ''; return; }
   put(bp.els.bom, 23, 63); bp.els.bom.style.width = (92 * u).toFixed(1) + 'px'; bp.els.bom.style.height = (140 * u).toFixed(1) + 'px'; put(bp.els.note, 124, 237); bp.els.note.style.width = (98 * u).toFixed(1) + 'px';
 }
+// a part's card: its family, a badge for every tool in it, and the one picked written out below
 function toolCard(f, n) {
   const p = f.tool, zh = lang === 'zh', todo = `<dd class="todo">${t('pending')}</dd>`, row = (k, v) => `<dt>${k}</dt><dd>${esc(v)}</dd>`;
-  return `<span class="eyebrow">${n.en} · ${zh ? '零件' : 'Item'} ${String(p.n).padStart(2, '0')}</span><h2>${esc(zh ? p.zh : p.en)}</h2><p>${esc(p.kind[lang])}</p>`
-    + `<dl>${row(zh ? '类别' : 'Kind', BP_CAT[p.cat][lang])}${row(zh ? '图上的零件' : 'Part on the drawing', `${p.part[lang]} · ${BP_SHAPE[p.shape][0]} × ${BP_SHAPE[p.shape][1]} px`)}${row(zh ? '出处' : 'Listed in', zh ? `简历 · 技术技能（原文：${p.cv}）` : `CV · Technical skills (as “${p.cv}”)`)}<dt>${zh ? '用它做什么' : 'Used for'}</dt>${todo}<dt>${zh ? '用它做的作品' : 'Works made with it'}</dt>${todo}</dl>`
-    + `<button class="sv-link" type="button" data-rmback><span aria-hidden="true">←</span> ${zh ? '回到图纸' : 'Back to the drawing'}</button>`;
+  const head = `<span class="eyebrow">${n.en} · ${zh ? '零件' : 'Item'} ${String(p.n).padStart(2, '0')}</span><h2>${esc(zh ? p.zh : p.en)}</h2>`, at = row(zh ? '图上的零件' : 'Part on the drawing', `${p.part[lang]} · ${BP_SHAPE[p.shape][0]} × ${BP_SHAPE[p.shape][1]} px`);
+  const back = `<button class="sv-link" type="button" data-rmback><span aria-hidden="true">←</span> ${zh ? '回到图纸' : 'Back to the drawing'}</button>`;
+  if (!p.grp) return head + `<p>${zh ? '这个零件还空着，留给以后要加的一类工具。' : 'This part is still empty, kept for a family of tools to come.'}</p><dl>${at}<dt>${zh ? '工具' : 'Tools'}</dt>${todo}</dl>` + back;
+  if (bp.tg !== p.id) { bp.tg = p.id; bp.tl = 0; }
+  return head + `<p>${esc(BP_GRP[p.grp].kind[lang])}</p>`
+    + `<div class="tl-grid" role="tablist">${p.tools.map((q, i) => `<button class="tl-b${i === bp.tl ? ' on' : ''}" type="button" role="tab" aria-selected="${i === bp.tl}" data-tl="${i}"><img src="${tlLogo(q.id)}" alt="" width="48" height="48"><span>${esc(q.short)}</span></button>`).join('')}</div>`
+    + `<div class="tl-det" id="tlDet">${toolDet(p.tools[bp.tl])}</div><dl>${at}</dl>` + back;
+}
+function toolDet(q) {
+  const zh = lang === 'zh', todo = `<dd class="todo">${t('pending')}</dd>`, src = q.cv ? (zh ? `简历 · 技术技能（原文：${q.cv}）` : `CV · Technical skills (as “${q.cv}”)`) : (zh ? '本人补充' : 'Added by Dave');
+  return `<h3>${esc(zh ? q.zh : q.en)}</h3><p>${esc(q.kind[lang])}</p><dl><dt>${zh ? '出处' : 'Listed in'}</dt><dd>${esc(src)}</dd><dt>${zh ? '用它做什么' : 'Used for'}</dt>${todo}<dt>${zh ? '用它做的作品' : 'Works made with it'}</dt>${todo}</dl>`;
+}
+function toolClick(e) {
+  const b = e.target.closest('[data-tl]'); if (!b) return false; const p = room.focus.tool; bp.tl = +b.dataset.tl;
+  rmCard.querySelectorAll('[data-tl]').forEach((el, i) => { el.classList.toggle('on', i === bp.tl); el.setAttribute('aria-selected', String(i === bp.tl)); });
+  document.getElementById('tlDet').innerHTML = toolDet(p.tools[bp.tl]); return true;
 }
 const bpRect = (p, ex) => { const [x, y] = bpAt(p, ex), [w, h] = BP_SHAPE[p.shape]; return [x / 1.5, y / 1.5, w / 1.5, h / 1.5]; };
 const bpScreen = (p) => { const [x, y] = bpAt(p, 1), [w, h] = BP_SHAPE[p.shape], cx = (x + w / 2) / 1.5, cy = (y + h / 2) / 1.5, hw = Math.max(w / 1.5 * 0.78, 26), hh = Math.max(h / 1.5 * 0.78, 20); return [cx - hw, cy - hh, hw * 2, hh * 2]; };
@@ -3621,6 +3694,7 @@ document.addEventListener('click', (e) => { if (!uiOK() || !e.target.closest) re
   if (q('.bp-lab,.bp-row')) return UI.bpPick();
   if ((el = q('[data-ptab]'))) return UI.tick(+el.dataset.ptab);
   if ((el = q('[data-pent]'))) return UI.row(+el.dataset.pent);
+  if ((el = q('[data-tl]'))) return UI.row(+el.dataset.tl);
   if (q('[data-pjump],[data-pgo]')) return UI.jump();
   if (q('[data-chip]')) return UI.tick(1);
   if (q('[data-chx]')) return UI.sheet(false);
