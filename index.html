@@ -2721,6 +2721,8 @@ const BP_TOOLS = [
   { id: 'codex', g: 'ai', zh: 'Codex', en: 'Codex', short: 'Codex', cv: null, kind: { zh: 'OpenAI 的编程智能体', en: 'OpenAI’s coding agent' } },
   { id: 'claude', g: 'ai', zh: 'Claude', en: 'Claude', short: 'Claude', cv: null, kind: { zh: 'Anthropic 的 AI 助手', en: 'Anthropic’s AI assistant' } },
   { id: 'seedance', g: 'ai', zh: 'Seedance', en: 'Seedance', short: 'Seedance', cv: null, kind: { zh: '字节跳动的 AI 视频生成模型', en: 'ByteDance’s AI video generation model' } },
+  { id: 'muse', g: 'ai', zh: 'Muse', en: 'Muse', short: 'Muse', cv: null, kind: { zh: 'AI 工具', en: 'An AI tool' } },
+  { id: 'mj', g: 'ai', zh: 'Midjourney', en: 'Midjourney', short: 'Midjourney', cv: null, kind: { zh: 'AI 图像生成工具', en: 'An AI image generator' } },
 ];
 // each tool's badge, drawn 16 × 16 in pixels: the familiar mark, redrawn by hand at that size
 const TL_URL = {};
@@ -2755,6 +2757,8 @@ function tlLogo(id) {
   else if (id === 'codex') { tile('#0D0D0D', '#3A3A3A'); draw(['#...', '.#..', '..#.', '.#..', '#...'], 3, 5, '#FFFFFF'); P(8, 10, 5, 1, '#FFFFFF'); }
   else if (id === 'claude') { tile('#FAF9F5'); for (let k = 0; k < 12; k++) { const a = k / 12 * TAU, L = k % 2 ? 4.5 : 6.2; ln(8, 8, Math.round(8 + Math.cos(a) * L), Math.round(8 + Math.sin(a) * L), '#D97757'); } P(7, 7, 2, 2, '#D97757'); }
   else if (id === 'seedance') { tile('#101828'); const S = ['.####', '#....', '#....', '.###.', '....#', '....#', '####.']; S.forEach((r, j) => { const k = j / 6, col = `rgb(${Math.round(79 + 89 * k)},${Math.round(195 - 110 * k)},${Math.round(247)})`; [...r].forEach((ch, i) => { if (ch === '#') P(6 + i, 4 + j, 1, 1, col); }); }); }
+  else if (id === 'muse') { tile('#2A1450', '#B48CFF'); draw(['#...#', '##.##', '#.#.#', '#...#', '#...#', '#...#'], 5, 5, '#E6D6FF'); }
+  else if (id === 'mj') { tile('#0B0B0B'); for (let y = 3; y <= 10; y++) { const w = Math.round((y - 3) * 0.62); P(8 - w, y, w + 1, 1, '#FFFFFF'); } for (let y = 6; y <= 10; y++) P(10, y, Math.round((y - 6) * 0.5) + 1, 1, '#FFFFFF'); P(3, 12, 10, 1, '#FFFFFF'); P(4, 13, 8, 1, '#FFFFFF'); }
   else if (id === 'aiw') { tile('#0F3654', '#7DB4D2'); for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) { const dx = Math.abs(x - 7), dy = Math.abs(y - 8); if (dx + dy <= 2 || (dx === 0 && dy <= 5) || (dy === 0 && dx <= 5) || (dx <= 1 && dy <= 3) || (dy <= 1 && dx <= 3)) P(x, y, 1, 1, dx + dy <= 1 ? '#FFF1CF' : '#F2A65A'); } P(12, 2, 1, 3, '#F3D27A'); P(11, 3, 3, 1, '#F3D27A'); }
   return (TL_URL[id] = cv.toDataURL());
 }
