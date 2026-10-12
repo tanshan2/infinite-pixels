@@ -3839,7 +3839,7 @@ const AU_SCENES = {
   orbit: { cut: 1500, pad: 0.9, drone: 0.8, air: 0.55, hum: 0, glint: 1, wet: 0.5, orch: 1 },
   city: { cut: 2200, pad: 1, drone: 0.55, air: 0.75, hum: 0, glint: 1.25, wet: 0.4, orch: 0.92 },
   room: { cut: 640, pad: 0.72, drone: 0.9, air: 0.1, hum: 1, glint: 0.35, wet: 0.26, orch: 0.5 },
-  moon: { cut: 1050, pad: 0.5, drone: 0.85, air: 0, hum: 0, glint: 1.7, wet: 0.8, orch: 0.85 },
+  moon: { cut: 1050, pad: 0.38, drone: 0.7, air: 0, hum: 0, glint: 1.2, wet: 0.8, orch: 0.1, moonv: 1.15 }, // on the Moon the theme is played the other way: guzheng, dizi and strings (moonv)
 };
 const AU_CHORDS = [[50, 57, 64, 69], [46, 53, 62, 65, 69], [41, 53, 57, 64, 67], [43, 50, 58, 62, 69], [48, 55, 62, 64, 69], [45, 52, 57, 62, 67]]; // Dsus2, B♭maj7, Fmaj9, Gm9, C6/9, A7sus4: every one of them sits over a D
 const AU_GLINT = [74, 76, 79, 81, 84, 86, 88], mtof = (m) => 440 * Math.pow(2, (m - 69) / 12), AU_B = 1.06; // seconds to a beat: slow and broad
@@ -3896,7 +3896,10 @@ function auBuild(ctx, rnd) {
   // the rover, silent until it moves: an electric motor's whine with its gears a hair out of tune, and wire wheels biting into the dust, tread by tread
   const rover = { g: g(0), o: osc('sawtooth', 78), o2: osc('square', 157), f: lp(420, 2.2), c: g(0.5), t: osc('sawtooth', 4), td: g(0.4) };
   { const m = g(0.34), b = g(0.2), s = loop(), cf = ctx.createBiquadFilter(), cg = g(0.55); cf.type = 'bandpass'; cf.frequency.value = 1700; cf.Q.value = 0.7; rover.o.connect(rover.f); rover.o2.connect(b); b.connect(rover.f); rover.f.connect(m); m.connect(rover.g); s.connect(cf); cf.connect(rover.c); rover.c.connect(cg); cg.connect(rover.g); rover.t.connect(rover.td); rover.td.connect(rover.c.gain); rover.g.connect(master); const w = g(0.12); rover.g.connect(w); w.connect(rv); }
-  return { ctx, ui, comp, rover, gates: [gateA, gateB], master, scene, wet, bus, padF, duck, gl, sfx, noise, orch, orchF, str, brs, perc, vib };
+  // the Moon's players: guzheng and dizi, and strings of their own, all through one door that only opens on the Moon; the guzheng has a short echo of its own
+  const moonB = g(0), zheng = g(1), di = g(1), mstr = g(3.6), mstrF = lp(2400, 0.3), mlim = ctx.createDynamicsCompressor(); mlim.threshold.value = -14; mlim.knee.value = 2; mlim.ratio.value = 14; mlim.attack.value = 0.002; mlim.release.value = 0.18; moonB.connect(mlim); mlim.connect(gateB); /* plucks pile up when a sweep meets a chord: a quick limiter keeps their onsets from clipping */ di.connect(moonB); mstr.connect(mstrF); mstrF.connect(moonB);
+  { const zd = ctx.createDelay(1), zfb = g(0.28), zf = lp(2600); zd.delayTime.value = 0.43; zheng.connect(moonB); zheng.connect(zd); zd.connect(zf); zf.connect(zfb); zfb.connect(zd); zf.connect(moonB); }
+  return { ctx, ui, comp, rover, gates: [gateA, gateB], master, scene, wet, bus, padF, duck, gl, sfx, noise, orch, orchF, str, brs, perc, vib, moonB, zheng, di, mstr };
 }
 function auChord(n, t, rnd, lastIdx) { let i; do { i = Math.floor(rnd() * AU_CHORDS.length); } while (i === lastIdx); const dur = 17 + rnd() * 9, att = 6.5, rel = 10;
   for (const m of AU_CHORDS[i]) { const v = n.ctx.createGain(), lv = 0.055 + rnd() * 0.02; v.gain.setValueAtTime(0, t); v.gain.linearRampToValueAtTime(lv, t + att + rnd() * 2); v.gain.setValueAtTime(lv, t + dur); v.gain.linearRampToValueAtTime(0, t + dur + rel); v.connect(n.padF);
@@ -3904,7 +3907,7 @@ function auChord(n, t, rnd, lastIdx) { let i; do { i = Math.floor(rnd() * AU_CHO
   return { i, next: t + dur - 1.5 }; } // the next one begins as this one starts to let go
 function auGlint(n, t, rnd) { const m = AU_GLINT[Math.floor(rnd() * AU_GLINT.length)], o = n.ctx.createOscillator(), v = n.ctx.createGain(), lv = 0.022 + rnd() * 0.018; o.type = 'sine'; o.frequency.value = mtof(m); v.gain.setValueAtTime(0, t); v.gain.linearRampToValueAtTime(lv, t + 1.6); v.gain.exponentialRampToValueAtTime(0.0004, t + 7); o.connect(v); v.connect(n.gl); o.start(t); o.stop(t + 7.2); }
 /* the players */
-function oStr(n, m, t, dur, lv, rel, quick) { const c = n.ctx, v = c.createGain(), att = quick ? Math.min(0.22, dur * 0.3) : Math.min(1.8, dur * 0.35), pk = 0.02 * lv; v.gain.setValueAtTime(0, t); v.gain.linearRampToValueAtTime(pk, t + att); v.gain.setValueAtTime(pk, t + dur); v.gain.linearRampToValueAtTime(0, t + dur + rel); v.connect(n.str);
+function oStr(n, m, t, dur, lv, rel, quick, dest) { const c = n.ctx, v = c.createGain(), att = quick ? Math.min(0.22, dur * 0.3) : Math.min(1.8, dur * 0.35), pk = 0.02 * lv; v.gain.setValueAtTime(0, t); v.gain.linearRampToValueAtTime(pk, t + att); v.gain.setValueAtTime(pk, t + dur); v.gain.linearRampToValueAtTime(0, t + dur + rel); v.connect(dest || n.str);
   for (const det of [-9, 0, 8]) { const o = c.createOscillator(); o.type = 'sawtooth'; o.frequency.value = mtof(m); o.detune.value = det; n.vib.connect(o.detune); o.onended = () => { try { n.vib.disconnect(o.detune); } catch (e) { /* already gone */ } }; o.connect(v); o.start(t); o.stop(t + dur + rel + 0.1); } }
 // brass speaks with a bright edge that mellows as the note is held; a horn (soft) keeps the edge covered
 function oBrass(n, m, t, dur, lv, soft) { const c = n.ctx, f = c.createBiquadFilter(), v = c.createGain(), pk = (soft ? 0.034 : 0.03) * lv, top = soft ? 380 + 950 * lv : 500 + 2600 * lv, at = soft ? 0.2 : 0.09; f.type = 'lowpass'; f.Q.value = soft ? 0.7 : 1.2;
@@ -3927,13 +3930,57 @@ function auStatement(n, t0, sc) { const T = (b) => t0 + b * AU_B;
   for (const [b, d, m, l0, l1] of sc.r) { const k = Math.round(d * AU_B / 0.085); for (let i = 0; i < k; i++) oTimp(n, m, T(b) + i * 0.085, l0 + (l1 - l0) * Math.pow(i / k, 1.5), true); }
   for (const [b, lv] of sc.c) oCym(n, T(b), lv);
   return sc.len * AU_B + 6; }
+/* ---------- the Moon's music: the same theme, told the other way. Dave has lived in China, the US and Canada, so on the Moon (his profile)
+   the theme moves into D major pentatonic and is played by a guzheng and a dizi, with western strings quiet underneath. Nothing is recorded:
+   a guzheng note is a pluck (a bright click, partials that die away, the tone darkening), sometimes slid up into from below and shaken as it rings (揉弦);
+   the dizi is a breathy flute. Between statements, only a few plucked notes with their echo, and now and then a sweep up the strings (刮奏). ---------- */
+const PENT = [62, 64, 66, 69, 71]; // D E F♯ A B
+const toPent = (m) => { let best = m, bd = 99; for (let o = -24; o <= 24; o += 12) for (const p of PENT) { const d = Math.abs(p + o - m); if (d < bd || (d === bd && p + o > best)) { bd = d; best = p + o; } } return best; };
+const M_B = 0.8; // seconds to a beat on the Moon: a little quicker than above, as a plucked tune wants
+function oZheng(n, m, t, lv, o) { o = o || {}; const c = n.ctx, f0 = mtof(m), len = o.long ? 4.6 : 3, v = c.createGain(), f = c.createBiquadFilter(); f.type = 'lowpass'; f.Q.value = 1.1;
+  f.frequency.setValueAtTime(Math.min(9000, f0 * 9), t); f.frequency.exponentialRampToValueAtTime(Math.max(700, f0 * 2.2), t + 0.7);
+  v.gain.setValueAtTime(0.0001, t); v.gain.linearRampToValueAtTime(0.085 * lv, t + 0.004); v.gain.exponentialRampToValueAtTime(0.032 * lv, t + 0.3); v.gain.exponentialRampToValueAtTime(0.0004, t + len); f.connect(v); v.connect(n.zheng);
+  let lfo = null, dep = null; if (o.vib) { lfo = c.createOscillator(); lfo.frequency.value = 5.6; dep = c.createGain(); dep.gain.setValueAtTime(0, t); dep.gain.setValueAtTime(0, t + 0.35); dep.gain.linearRampToValueAtTime(28, t + 1.1); lfo.connect(dep); lfo.start(t); lfo.stop(t + len + 0.05); }
+  for (const [r, a, ty] of [[1, 1, 'triangle'], [2, 0.42, 'sine'], [3, 0.2, 'sine'], [4.03, 0.1, 'sine'], [5.02, 0.05, 'sine']]) { const os = c.createOscillator(), q = c.createGain(); os.type = ty; const fr = f0 * r;
+    if (o.slide) { os.frequency.setValueAtTime(fr * Math.pow(2, -o.slide / 12), t); os.frequency.exponentialRampToValueAtTime(fr, t + 0.16); } else os.frequency.setValueAtTime(fr, t);
+    if (dep) dep.connect(os.detune); q.gain.value = a; os.connect(q); q.connect(f); os.start(t); os.stop(t + len + 0.05); }
+  const s = c.createBufferSource(), hf = c.createBiquadFilter(), q = c.createGain(); s.buffer = n.noise; hf.type = 'highpass'; hf.frequency.value = 2800; q.gain.setValueAtTime(0.05 * lv, t); q.gain.exponentialRampToValueAtTime(0.0005, t + 0.03); s.connect(hf); hf.connect(q); q.connect(n.zheng); s.start(t, (t * 13) % 3); s.stop(t + 0.04); } // the nail on the string
+function oDizi(n, m, t, dur, lv) { const c = n.ctx, f0 = mtof(m), v = c.createGain(), pk = 0.05 * lv; v.gain.setValueAtTime(0, t); v.gain.linearRampToValueAtTime(pk, t + 0.14); v.gain.linearRampToValueAtTime(pk * 0.85, t + 0.5); v.gain.setValueAtTime(pk * 0.85, t + dur); v.gain.linearRampToValueAtTime(0, t + dur + 0.35); v.connect(n.di);
+  const lfo = c.createOscillator(), dep = c.createGain(); lfo.frequency.value = 5.2; dep.gain.setValueAtTime(0, t); dep.gain.setValueAtTime(0, t + Math.min(0.6, dur * 0.4)); dep.gain.linearRampToValueAtTime(14, t + Math.min(1.4, dur * 0.8)); lfo.connect(dep); lfo.start(t); lfo.stop(t + dur + 0.4);
+  for (const [r, a, ty] of [[1, 1, 'sine'], [2, 0.18, 'triangle'], [3, 0.06, 'sine']]) { const os = c.createOscillator(), q = c.createGain(); os.type = ty; os.frequency.setValueAtTime(f0 * r * 0.985, t); os.frequency.exponentialRampToValueAtTime(f0 * r, t + 0.09); dep.connect(os.detune); q.gain.value = a; os.connect(q); q.connect(v); os.start(t); os.stop(t + dur + 0.4); }
+  const s = c.createBufferSource(), bf = c.createBiquadFilter(), q = c.createGain(); s.buffer = n.noise; s.loop = true; bf.type = 'bandpass'; bf.frequency.value = f0 * 2; bf.Q.value = 2.5; q.gain.value = 0.35; s.connect(bf); bf.connect(q); q.connect(v); s.start(t, (t * 7) % 3); s.stop(t + dur + 0.4); } // breath
+// a sweep up the strings: the pentatonic from low to high in under half a second
+function oGliss(n, t, from, count, lv) { let k = PENT.indexOf(((from - 62) % 12 + 12) % 12 + 62); if (k < 0) k = 0; let oct = Math.floor((from - 62) / 12) * 12; for (let i = 0; i < count; i++) { oZheng(n, PENT[k] + oct, t + i * 0.045, lv * (0.45 + 0.55 * i / count)); if (++k === PENT.length) { k = 0; oct += 12; } } }
+// the theme, moved into the pentatonic: [beat, beats, note]
+const M_THEME = THEME.filter((q) => q[0] < 32).map(([b, d, m]) => [b, d, toPent(m)]);
+const M_THEME2 = THEME.filter((q) => q[0] >= 32 && q[0] < 64).map(([b, d, m]) => [b - 32, d, toPent(m)]);
+// what the strings hold under it, quietly: D add9 · G add9 · D · Bm · A sus
+const M_HARM = [[0, 8, [38, 45, 50, 57, 64]], [8, 4, [43, 50, 55, 62, 64]], [12, 4, [38, 45, 50, 57, 62]], [16, 8, [35, 42, 47, 54, 59]], [24, 8, [45, 52, 57, 62, 64]]];
+// two ways of telling it, in turn. A: the guzheng plays the theme, the dizi joins it for the second phrase. B: the dizi leads, the guzheng ripples underneath, then answers with the theme's second half
+function auMoonStatement(n, t0, which) { const T = (b) => t0 + b * M_B;
+  for (const [b, d, notes] of M_HARM) for (const m of notes) oStr(n, m, T(b), d * M_B, 0.42 * (m < 48 ? 1.2 : 1), 2.2, false, n.mstr);
+  const end = T(32); for (const m of [38, 45, 50, 57, 64, 69]) oStr(n, m, end, 6, 0.36, 6, false, n.mstr); // and home, to rest
+  oTimp(n, 38, T(0), 0.28); oTimp(n, 38, T(16), 0.22); // a soft low drum at each phrase
+  const play = (tune, up, lv) => tune.forEach(([b, d, m], i) => { const prev = i ? tune[i - 1][2] : m, longN = d >= 2;
+    oZheng(n, m + up, T(b), lv * (longN ? 1 : 0.85), { vib: longN, long: d >= 3, slide: m > prev && m - prev <= 3 && (i % 3 === 1) ? 2 : 0 }); });
+  if (which === 0) { oGliss(n, T(0) - 0.5, 50, 9, 0.5); play(M_THEME, 0, 1); for (const [b, d, m] of M_THEME.filter((q) => q[0] >= 16)) oDizi(n, m + 12, T(b), d * M_B - 0.06, 0.65); oGliss(n, T(31), 62, 8, 0.4); }
+  else { M_THEME.forEach(([b, d, m]) => oDizi(n, m + 12, T(b), d * M_B - 0.06, 0.9));
+    for (const [b0, d, notes] of M_HARM.slice(0, 5)) { const tones = notes.filter((m) => m >= 50).map(toPent); for (let k = 0; k < d * 2; k++) oZheng(n, tones[[0, 1, 2, 1, 3, 2, 1, 2][k % 8] % tones.length] + 12, T(b0 + k / 2), 0.32); } // broken chords, in quavers
+    oGliss(n, T(31.5), 57, 10, 0.45); M_THEME2.slice(0, 7).forEach(([b, d, m], i) => oZheng(n, m, T(32 + b), 0.9, { vib: d >= 2, long: d >= 3, slide: i === 2 ? 2 : 0 })); }
+  return (which === 0 ? 32 : 46) * M_B + 7; }
+// the quiet between: one or two plucked notes high up, now and then a sweep
+function auZhengDrift(n, t, rnd) { if (rnd() < 0.18) { oGliss(n, t, 62 + (rnd() < 0.5 ? 0 : 12), 6 + Math.floor(rnd() * 5), 0.3); return; }
+  const m = PENT[Math.floor(rnd() * PENT.length)] + 12 * (rnd() < 0.5 ? 0 : 1); oZheng(n, m, t, 0.45, { vib: true, long: true }); if (rnd() < 0.45) oZheng(n, toPent(m - 3), t + 0.8 + rnd() * 0.4, 0.35, { vib: true }); }
+if (/[?&]stats\b/.test(location.search)) window.__auTest = { auBuild, auStatement, auMoonStatement, SCORE, AU_SCENES };
 // lay down whatever is due before `until`. S remembers where each layer has got to
 function auFill(n, S, until, rnd, sc) {
-  while (S.nextStmt < until + 6) { const t0 = S.nextStmt, len = auStatement(n, t0, SCORE[S.stmtN % SCORE.length]); S.win = [t0 + 2, t0 + len - 3]; n.duck.gain.setTargetAtTime(0.1, t0, 1.6); n.duck.gain.setTargetAtTime(1, t0 + len - 5, 3); S.stmtN++; S.nextStmt = t0 + len + 28 + rnd() * 22; } // then half a minute or so of quiet before the next
+  const moon = !!sc.moonv; // on the Moon: the theme on guzheng and dizi, in turn, and plucked notes in the quiet between
+  while (S.nextStmt < until + 6) { const t0 = S.nextStmt, len = moon ? auMoonStatement(n, t0, (S.moonN = (S.moonN || 0) + 1) % 2) : auStatement(n, t0, SCORE[S.stmtN % SCORE.length]); S.win = [t0 + 2, t0 + len - 3]; n.duck.gain.setTargetAtTime(0.1, t0, 1.6); n.duck.gain.setTargetAtTime(1, t0 + len - 5, 3); S.stmtN++; S.nextStmt = t0 + len + 28 + rnd() * 22; } // then half a minute or so of quiet before the next
   while (S.nextChord < until) { const c = auChord(n, S.nextChord, rnd, S.last); S.last = c.i; S.nextChord = c.next; }
-  while (S.nextGlint < until) { const t = S.nextGlint; if (sc.glint > 0.05 && !(S.win && t > S.win[0] - 6 && t < S.win[1])) auGlint(n, t, rnd); S.nextGlint += (8 + rnd() * 13) / Math.max(0.3, sc.glint); } }
+  while (S.nextGlint < until) { const t = S.nextGlint; if (sc.glint > 0.05 && !(S.win && t > S.win[0] - 6 && t < S.win[1])) (moon ? auZhengDrift : auGlint)(n, t, rnd); S.nextGlint += (8 + rnd() * 13) / Math.max(0.3, sc.glint); } }
 function auScene(name, now) { const n = AU.n; if (!n || name === AU.scene) return; AU.scene = name; const sc = AU_SCENES[name], t = n.ctx.currentTime, k = now ? 0.01 : 1.4;
-  n.scene.frequency.setTargetAtTime(sc.cut, t, k); n.wet.gain.setTargetAtTime(sc.wet, t, k); for (const b of ['pad', 'drone', 'air', 'hum']) n.bus[b].gain.setTargetAtTime(sc[b], t, k); n.orchF.frequency.setTargetAtTime(sc.cut * 2.5, t, k); n.orch.gain.setTargetAtTime(sc.orch, t, k); if (name !== 'moon') auRover(0, true); }
+  n.scene.frequency.setTargetAtTime(sc.cut, t, k); n.wet.gain.setTargetAtTime(sc.wet, t, k); for (const b of ['pad', 'drone', 'air', 'hum']) n.bus[b].gain.setTargetAtTime(sc[b], t, k); n.orchF.frequency.setTargetAtTime(sc.cut * 2.5, t, k); n.orch.gain.setTargetAtTime(sc.orch, t, k); n.moonB.gain.setTargetAtTime(sc.moonv || 0, t, k * 1.6); if (name !== 'moon') auRover(0, true);
+  if (name === 'moon' && AU.S && AU.S.nextStmt > t + 12) AU.S.nextStmt = t + 12; } // arriving on the Moon (once): it is not long before the theme is played there
 const auWhere = () => (sv.id && sv.k2 >= 0.5 && sv.dir > 0 ? (sv.id === 'moon' ? 'moon' : 'room') : cityMode ? 'city' : 'orbit');
 function auStart() { if (AU.ctx) { AU.ctx.resume(); return; } const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
   try { AU.ctx = new AC(); AU.n = auBuild(AU.ctx, Math.random); } catch (e) { AU.ctx = null; return; }
