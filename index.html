@@ -2704,17 +2704,23 @@ const BP_GRP = {
 const BP_TOOLS = [
   { id: 'ps', g: 'adobe', zh: 'Adobe Photoshop', en: 'Adobe Photoshop', short: 'Photoshop', cv: 'Adobe PS', kind: { zh: '图像处理与合成', en: 'Image editing and compositing' } },
   { id: 'pr', g: 'adobe', zh: 'Adobe Premiere Pro', en: 'Adobe Premiere Pro', short: 'Premiere Pro', cv: 'Pr', kind: { zh: '视频剪辑', en: 'Video editing' } },
+  { id: 'ae', g: 'adobe', zh: 'Adobe After Effects', en: 'Adobe After Effects', short: 'After Effects', cv: null, kind: { zh: '动态图形与视觉特效', en: 'Motion graphics and visual effects' } },
   { id: 'ai', g: 'adobe', zh: 'Adobe Illustrator', en: 'Adobe Illustrator', short: 'Illustrator', cv: 'AI', kind: { zh: '矢量绘图', en: 'Vector drawing' } },
   { id: 'id', g: 'adobe', zh: 'Adobe InDesign', en: 'Adobe InDesign', short: 'InDesign', cv: 'InDesign', kind: { zh: '版面编排', en: 'Page layout' } },
   { id: 'html', g: 'code', zh: 'HTML', en: 'HTML', short: 'HTML', cv: 'HTML', kind: { zh: '网页的结构语言', en: 'The markup language of web pages' } },
   { id: 'vs', g: 'code', zh: 'Visual Studio', en: 'Visual Studio', short: 'Visual Studio', cv: 'Visual Studio', kind: { zh: '写代码和调试的开发环境', en: 'An environment for writing and debugging code' } },
   { id: 'tiktok', g: 'social', zh: 'TikTok', en: 'TikTok', short: 'TikTok', cv: 'TikTok', kind: { zh: '短视频平台', en: 'A short-video platform' } },
   { id: 'canva', g: 'social', zh: 'Canva 可画', en: 'Canva', short: 'Canva', cv: null, kind: { zh: '在线设计平台', en: 'An online design platform' } },
+  { id: 'insta', g: 'social', zh: 'Instagram', en: 'Instagram', short: 'Instagram', cv: null, kind: { zh: '图片和短视频社交平台', en: 'A photo and short-video social platform' } },
+  { id: 'wechat', g: 'social', zh: '微信', en: 'WeChat', short: '微信', cv: null, kind: { zh: '即时通讯和社交平台', en: 'A messaging and social platform' } },
   { id: 'word', g: 'office', zh: 'Microsoft Word', en: 'Microsoft Word', short: 'Word', cv: 'Microsoft Word & Excel', kind: { zh: '文字处理', en: 'Word processing' } },
   { id: 'excel', g: 'office', zh: 'Microsoft Excel', en: 'Microsoft Excel', short: 'Excel', cv: 'Microsoft Word & Excel', kind: { zh: '电子表格', en: 'Spreadsheets' } },
   { id: 'unity', g: 'game', zh: 'Unity', en: 'Unity', short: 'Unity', cv: 'Unity', kind: { zh: '实时 2D / 3D 游戏引擎', en: 'A real-time 2D / 3D game engine' } },
   { id: 'ue5', g: 'game', zh: 'Unreal Engine 5', en: 'Unreal Engine 5', short: 'Unreal Engine 5', cv: 'Unreal 5', kind: { zh: '实时 3D 引擎', en: 'A real-time 3D engine' } },
-  { id: 'aiw', g: 'ai', zh: 'AI 专业应用', en: 'Professional AI work', short: 'AI', cv: 'Professional AI work', kind: { zh: '把 AI 工具用在专业工作里', en: 'Putting AI tools to professional use' } },
+  { id: 'cocos', g: 'game', zh: 'Cocos', en: 'Cocos', short: 'Cocos', cv: null, kind: { zh: '2D / 3D 游戏引擎', en: 'A 2D / 3D game engine' } },
+  { id: 'codex', g: 'ai', zh: 'Codex', en: 'Codex', short: 'Codex', cv: null, kind: { zh: 'OpenAI 的编程智能体', en: 'OpenAI’s coding agent' } },
+  { id: 'claude', g: 'ai', zh: 'Claude', en: 'Claude', short: 'Claude', cv: null, kind: { zh: 'Anthropic 的 AI 助手', en: 'Anthropic’s AI assistant' } },
+  { id: 'seedance', g: 'ai', zh: 'Seedance', en: 'Seedance', short: 'Seedance', cv: null, kind: { zh: '字节跳动的 AI 视频生成模型', en: 'ByteDance’s AI video generation model' } },
 ];
 // each tool's badge, drawn 16 × 16 in pixels: the familiar mark, redrawn by hand at that size
 const TL_URL = {};
@@ -2725,10 +2731,11 @@ function tlLogo(id) {
   const tile = (bg, edge) => { P(1, 0, 14, 16, bg); P(0, 1, 16, 14, bg); if (edge) { P(1, 0, 14, 1, edge); P(1, 15, 14, 1, edge); P(0, 1, 1, 14, edge); P(15, 1, 1, 14, edge); } };
   const disc = (cx, cy, r, col) => { for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) if (Math.hypot(x + 0.5 - cx, y + 0.5 - cy) <= r) P(x, y, 1, 1, typeof col === 'function' ? col(x, y) : col); };
   const ln = (x0, y0, x1, y1, col, th = 1) => { const n = Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0)) || 1; for (let i = 0; i <= n; i++) P(Math.round(x0 + (x1 - x0) * i / n), Math.round(y0 + (y1 - y0) * i / n), th, th, col); };
-  const G = { P: ['###.', '#..#', '#..#', '###.', '#...', '#...'], A: ['.##.', '#..#', '#..#', '####', '#..#', '#..#'], I: ['###', '.#.', '.#.', '.#.', '.#.', '###'], s: ['...', '.##', '#..', '.#.', '..#', '##.'], r: ['...', '...', '#.#', '##.', '#..', '#..'], i: ['#', '.', '#', '#', '#', '#'], d: ['...#', '...#', '.###', '#..#', '#..#', '.###'] };
+  const G = { P: ['###.', '#..#', '#..#', '###.', '#...', '#...'], A: ['.##.', '#..#', '#..#', '####', '#..#', '#..#'], I: ['###', '.#.', '.#.', '.#.', '.#.', '###'], s: ['...', '.##', '#..', '.#.', '..#', '##.'], r: ['...', '...', '#.#', '##.', '#..', '#..'], i: ['#', '.', '#', '#', '#', '#'], e: ['...', '.#.', '#.#', '###', '#..', '.##'], d: ['...#', '...#', '.###', '#..#', '#..#', '.###'] };
   const adobe = (bg, fg, a, b) => { tile(bg, fg); const wa = G[a][0].length, wb = G[b][0].length, x = (16 - wa - 1 - wb) >> 1; draw(G[a], x, 5, fg); draw(G[b], x + wa + 1, 5, fg); };
   if (id === 'ps') adobe('#001E36', '#31A8FF', 'P', 's');
   else if (id === 'pr') adobe('#00005B', '#9999FF', 'P', 'r');
+  else if (id === 'ae') adobe('#00005B', '#D291FF', 'A', 'e');
   else if (id === 'ai') adobe('#330000', '#FF9A00', 'A', 'i');
   else if (id === 'id') adobe('#49021F', '#FF3366', 'I', 'd');
   else if (id === 'word') { tile('#185ABD'); P(1, 0, 14, 3, '#41A5EE'); P(0, 1, 16, 2, '#41A5EE'); P(1, 13, 14, 3, '#103F91'); P(0, 13, 16, 2, '#103F91'); draw(['#.....#', '#.....#', '#..#..#', '#..#..#', '#.#.#.#', '.#...#.'], 4, 5, '#FFFFFF'); }
@@ -2739,6 +2746,15 @@ function tlLogo(id) {
   else if (id === 'ue5') { disc(8, 8, 8, '#FFFFFF'); disc(8, 8, 6.9, '#111317'); draw(['#...#', '#...#', '#...#', '#...#', '#...#', '.###.'], 6, 5, '#FFFFFF'); }
   else if (id === 'tiktok') { tile('#010101'); const note = (dx, dy, col) => { P(9 + dx, 3 + dy, 2, 9, col); P(11 + dx, 4 + dy, 1, 2, col); P(12 + dx, 5 + dy, 1, 2, col); P(6 + dx, 9 + dy, 3, 1, col); P(5 + dx, 10 + dy, 4, 3, col); P(6 + dx, 13 + dy, 3, 1, col); }; note(-1, -1, '#25F4EE'); note(1, 1, '#FE2C55'); note(0, 0, '#FFFFFF'); }
   else if (id === 'canva') { disc(8, 8, 8, (x, y) => { const k = (x + 15 - y) / 30; return `rgb(${Math.round(0 + 125 * k)},${Math.round(196 - 154 * k)},${Math.round(204 + 28 * k)})`; }); draw(['.###.', '#...#', '#....', '#....', '#...#', '.###.'], 6, 5, '#FFFFFF'); }
+  else if (id === 'insta') { for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) { if ((x === 0 || x === 15) && (y === 0 || y === 15)) continue; const k = (x + 15 - y) / 30, a = k < 0.5 ? [254, 218, 117, 214, 41, 118, k * 2] : [214, 41, 118, 79, 91, 213, k * 2 - 1]; P(x, y, 1, 1, `rgb(${Math.round(a[0] + (a[3] - a[0]) * a[6])},${Math.round(a[1] + (a[4] - a[1]) * a[6])},${Math.round(a[2] + (a[5] - a[2]) * a[6])})`); }
+    const W = '#FFFFFF'; P(4, 3, 8, 1, W); P(4, 12, 8, 1, W); P(3, 4, 1, 8, W); P(12, 4, 1, 8, W); for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) { const d = Math.hypot(x + 0.5 - 8, y + 0.5 - 8); if (d > 1.5 && d <= 2.9) P(x, y, 1, 1, W); } P(10, 5, 1, 1, W); }
+  else if (id === 'wechat') { tile('#07C160'); const ell = (cx, cy, rx, ry, col) => { for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) if (((x + 0.5 - cx) / rx) ** 2 + ((y + 0.5 - cy) / ry) ** 2 <= 1) P(x, y, 1, 1, col); };
+    ell(6.5, 6.5, 4.6, 3.6, '#FFFFFF'); P(3, 9, 2, 2, '#FFFFFF'); P(2, 11, 1, 1, '#FFFFFF'); ell(10.5, 10, 4.3, 3.4, '#07C160'); ell(10.5, 10, 3.5, 2.7, '#FFFFFF'); P(12, 12, 2, 1, '#FFFFFF'); P(13, 13, 1, 1, '#FFFFFF');
+    P(4, 5, 1, 1, '#07C160'); P(7, 5, 1, 1, '#07C160'); P(9, 9, 1, 1, '#07C160'); P(11, 9, 1, 1, '#07C160'); }
+  else if (id === 'cocos') { tile('#1E6FD9'); disc(8, 8, 5.6, '#FFFFFF'); disc(8, 8, 3.4, '#1E6FD9'); P(10, 6, 4, 4, '#1E6FD9'); P(9, 7, 1, 2, '#1E6FD9'); P(7, 7, 2, 2, '#FFFFFF'); }
+  else if (id === 'codex') { tile('#0D0D0D', '#3A3A3A'); draw(['#...', '.#..', '..#.', '.#..', '#...'], 3, 5, '#FFFFFF'); P(8, 10, 5, 1, '#FFFFFF'); }
+  else if (id === 'claude') { tile('#FAF9F5'); for (let k = 0; k < 12; k++) { const a = k / 12 * TAU, L = k % 2 ? 4.5 : 6.2; ln(8, 8, Math.round(8 + Math.cos(a) * L), Math.round(8 + Math.sin(a) * L), '#D97757'); } P(7, 7, 2, 2, '#D97757'); }
+  else if (id === 'seedance') { tile('#101828'); const S = ['.####', '#....', '#....', '.###.', '....#', '....#', '####.']; S.forEach((r, j) => { const k = j / 6, col = `rgb(${Math.round(79 + 89 * k)},${Math.round(195 - 110 * k)},${Math.round(247)})`; [...r].forEach((ch, i) => { if (ch === '#') P(6 + i, 4 + j, 1, 1, col); }); }); }
   else if (id === 'aiw') { tile('#0F3654', '#7DB4D2'); for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) { const dx = Math.abs(x - 7), dy = Math.abs(y - 8); if (dx + dy <= 2 || (dx === 0 && dy <= 5) || (dy === 0 && dx <= 5) || (dx <= 1 && dy <= 3) || (dy <= 1 && dx <= 3)) P(x, y, 1, 1, dx + dy <= 1 ? '#FFF1CF' : '#F2A65A'); } P(12, 2, 1, 3, '#F3D27A'); P(11, 3, 3, 1, '#F3D27A'); }
   return (TL_URL[id] = cv.toDataURL());
 }
