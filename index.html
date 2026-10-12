@@ -2939,8 +2939,7 @@ function toolCard(f, n) {
     + `<div class="tl-det" id="tlDet">${toolDet(p.tools[bp.tl])}</div><dl>${at}</dl>` + back;
 }
 function toolDet(q) {
-  const zh = lang === 'zh', todo = `<dd class="todo">${t('pending')}</dd>`, src = q.cv ? (zh ? `简历 · 技术技能（原文：${q.cv}）` : `CV · Technical skills (as “${q.cv}”)`) : (zh ? '本人补充' : 'Added by Dave');
-  return `<h3>${esc(zh ? q.zh : q.en)}</h3><p>${esc(q.kind[lang])}</p><dl><dt>${zh ? '出处' : 'Listed in'}</dt><dd>${esc(src)}</dd><dt>${zh ? '用它做什么' : 'Used for'}</dt>${todo}<dt>${zh ? '用它做的作品' : 'Works made with it'}</dt>${todo}</dl>`;
+  return `<h3>${esc(lang === 'zh' ? q.zh : q.en)}</h3><p>${esc(q.kind[lang])}</p>`;
 }
 function toolClick(e) {
   const b = e.target.closest('[data-tl]'); if (!b) return false; const p = room.focus.tool; bp.tl = +b.dataset.tl;
