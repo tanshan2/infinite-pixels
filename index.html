@@ -4437,6 +4437,47 @@ function applyLang() {
 /* ---------- film grain ---------- */
 (function grain() { const g = document.createElement('canvas'); g.width = g.height = 160; const c = g.getContext('2d'), d = c.createImageData(160, 160); for (let i = 0; i < d.data.length; i += 4) { const v = (Math.random() * 255) | 0; d.data[i] = d.data[i + 1] = d.data[i + 2] = v; d.data[i + 3] = 255; } c.putImageData(d, 0, 0); const el = $('#grain'); el.style.backgroundImage = `url(${g.toDataURL()})`; if (!reduced) el.classList.add('live'); })();
 
+/* ---------- the cat: about once a minute, a big plush cat drifts in out of space, gives the Earth a swat that sends it spinning, waves, and drifts off again ----------
+   Only on the plain globe view, while nobody is busy with it. The look is a stand-in until there is a reference picture. */
+const CAT = { next: 60, t: -1, spin: null, spr: {} };
+const CAT_DUR = 4.9, CAT_HIT = 1.75; // seconds: the whole visit, and the moment the paw lands
+if (/[?&]stats\b/.test(location.search)) window.__cat = CAT; // ?stats: set __cat.next = 0 to call it at once
+function catSprite(pose) { if (CAT.spr[pose]) return CAT.spr[pose];
+  const W = 26, H = 26, cv = document.createElement('canvas'); cv.width = W; cv.height = H; const g = cv.getContext('2d'), P = (x, y, w, h, c) => { g.fillStyle = c; g.fillRect(x, y, w, h); };
+  const ell = (cx0, cy0, rx, ry, c) => { for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (((x + 0.5 - cx0) / rx) ** 2 + ((y + 0.5 - cy0) / ry) ** 2 <= 1) P(x, y, 1, 1, c); };
+  const C = { fur: '#C9C6CF', fur2: '#A9A6B2', wh: '#F6F3EC', pk: '#F2A3B3', k: '#1B1B22', ln: '#24232B' };
+  // tail, body, belly, feet
+  P(20, 17, 2, 2, C.fur2); P(21, 15, 2, 2, C.fur2); P(22, 13, 2, 2, C.fur2); ell(13, 19.5, 6.5, 4.6, C.fur); ell(13, 20.5, 3.4, 2.8, C.wh); P(9, 23, 3, 2, C.wh); P(15, 23, 3, 2, C.wh);
+  // the paw toward the Earth (left), in each pose; and the other paw, raised to wave
+  if (pose === 'up') { P(5, 12, 2, 6, C.fur); P(4, 10, 4, 3, C.wh); } else if (pose === 'swat') { P(2, 16, 6, 2, C.fur); P(0, 15, 3, 4, C.wh); P(0, 16, 1, 1, C.pk); } else P(7, 18, 3, 3, C.wh);
+  if (pose === 'wave') { P(19, 11, 2, 6, C.fur); P(18, 8, 4, 3, C.wh); } else P(16, 18, 3, 3, C.wh);
+  // head: round, with ears, a white muzzle, eyes, nose and pink cheeks
+  ell(13, 9.5, 8.2, 6.6, C.fur); for (let k = 0; k < 4; k++) { P(6 + Math.floor(k / 2), 1 + k, 4 - k, 1, C.fur); P(16 + Math.ceil(k / 2), 1 + k, 4 - k, 1, C.fur); } P(7, 3, 1, 2, C.pk); P(18, 3, 1, 2, C.pk);
+  ell(13, 12, 4.2, 2.6, C.wh); const blink = pose === 'swat'; if (blink) { P(8, 9, 3, 1, C.k); P(15, 9, 3, 1, C.k); } else { P(8, 8, 2, 2, C.k); P(16, 8, 2, 2, C.k); P(8, 8, 1, 1, '#FFFFFF'); P(16, 8, 1, 1, '#FFFFFF'); }
+  P(12, 11, 2, 1, C.pk); P(11, 12, 1, 1, C.ln); P(14, 12, 1, 1, C.ln); P(5, 11, 2, 1, C.pk); P(19, 11, 2, 1, C.pk);
+  // a dark outline all round, so it reads against both space and the sea
+  const im = g.getImageData(0, 0, W, H), d = im.data, on = (x, y) => x >= 0 && y >= 0 && x < W && y < H && d[(y * W + x) * 4 + 3] > 0, edge = [];
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (!on(x, y) && (on(x - 1, y) || on(x + 1, y) || on(x, y - 1) || on(x, y + 1))) edge.push([x, y]);
+  for (const [x, y] of edge) P(x, y, 1, 1, C.ln); return (CAT.spr[pose] = cv); }
+function catFree() { return introDone && !reduced && !sv.id && !cityMode && !paintMode && !flight && !drag && !pinch && !launch && cam.pitch === 0 && !detailEl.classList.contains('open') && document.visibilityState === 'visible'; }
+function stepCat(dt) {
+  if (CAT.t < 0) { if (catFree()) CAT.next -= dt; if (CAT.next <= 0) { CAT.t = 0; CAT.next = 55 + Math.random() * 10; } }
+  else { if (!catFree()) { CAT.t = -1; CAT.spin = null; return; } const was = CAT.t; CAT.t += dt;
+    if (was < CAT_HIT && CAT.t >= CAT_HIT) { CAT.spin = { t: 0, dur: 3.2, total: TAU * 4, done: 0 }; const hv = unproject(cx + cam.R * 0.96, cy - cam.R * 0.06); if (hv) ripples.push({ v: hv, rad: 0, w: 0.12, k: 1, speed: 0.9, age: 0, life: 3 }); sfxTone([88, 83, 76], 0.05, 0.22, 0.05); sfxWhoosh(); }
+    if (CAT.t >= CAT_DUR) CAT.t = -1; }
+  // the spin: several whole turns, fast at first and easing to a stop where it began
+  if (CAT.spin) { const s = CAT.spin; s.t += dt / s.dur; const u = Math.min(1, s.t), e = 1 - Math.pow(1 - u, 3), d = s.total * e - s.done; cam.lon += d; s.done += d; idle = Math.min(idle, 8); if (u >= 1) CAT.spin = null; } }
+function drawCat() { if (CAT.t < 0) return; const t = CAT.t, s = clamp(Math.round(cam.R / 46), 3, 7), W = 26 * s, H = 26 * s;
+  const hx = Math.min(cx + cam.R - s, vw - W - 10), hy = cy - cam.R * 0.2 - H * 0.6, fx = vw + 30, fy = -H - 30; // where it swats from, and where it comes from
+  const ease = (u) => 1 - Math.pow(1 - clamp(u, 0, 1), 3); let x, y, a = 1;
+  if (t < 1.3) { const e = ease(t / 1.3); x = lerp(fx, hx, e); y = lerp(fy, hy, e); }
+  else if (t < 3.7) { x = hx + (t > CAT_HIT && t < CAT_HIT + 0.25 ? -s * 2 : 0); y = hy + Math.sin(t * 2.4) * s * 1.2; }
+  else { const e = clamp((t - 3.7) / 1.2, 0, 1); x = lerp(hx, fx, e * e); y = lerp(hy, fy, e * e); a = 1 - e * 0.6; }
+  const pose = t < 1.3 ? 'rest' : t < CAT_HIT - 0.05 ? (t > 1.4 ? 'up' : 'rest') : t < CAT_HIT + 0.35 ? 'swat' : t < 3.15 ? 'rest' : 'wave';
+  ctx.save(); ctx.globalAlpha = a; ctx.imageSmoothingEnabled = false; ctx.drawImage(catSprite(pose), Math.round(x), Math.round(y), W, H);
+  if (t >= CAT_HIT && t < CAT_HIT + 0.5) { const k = (t - CAT_HIT) / 0.5; ctx.globalAlpha = 1 - k; ctx.fillStyle = '#FFF1CF'; for (let i = 0; i < 6; i++) { const ang = PI * 0.6 + i * 0.32, r = s * (4 + k * 10); ctx.fillRect(Math.round(x + Math.cos(ang) * r), Math.round(y + 16 * s + Math.sin(ang) * r), s, s); } } // a little burst where the paw lands
+  ctx.restore(); }
+
 /* ---------- main loop ---------- */
 let last = performance.now(), miniTick = 0;
 function frame(now) {
@@ -4459,6 +4500,7 @@ function frame(now) {
     if (!cityMode && cam.pitch > 0) { cam.pitch = Math.max(0, cam.pitch - (0.25 + cam.pitch * 3) * dt); }
     if (!reduced && !drag && !sheetOpen && !paintMode && !cityMode && !sv.id && cam.pitch === 0 && idle > (interacted ? 9 : 0)) cam.lon -= 0.04 * Math.min(1, R0 / cam.R) * Math.min(1, (idle - (interacted ? 9 : 0)) / 2) * dt;
   }
+  stepCat(dt);
   if (!flight) clampCity();
   if (cam.yaw > PI) cam.yaw -= TAU; else if (cam.yaw < -PI) cam.yaw += TAU;
   if (!cityMode && cam.yaw) { cam.yaw *= Math.exp(-7 * dt); vYaw = 0; if (Math.abs(cam.yaw) < 0.002) cam.yaw = 0; } // away from a city, north is up again
@@ -4475,7 +4517,7 @@ function frame(now) {
   if (shown !== cityMode) { buildK -= dt * 3.2; if (buildK <= 0) { buildK = 0; shown = cityMode; } } else if (shown) buildK = Math.min(1, buildK + dt / 0.35);
   if (wave >= 0) { wave += dt * 0.9; if (wave > 1.05) wave = -1; }
   if (sv.id && sv.k2 >= 1 && sv.dir > 0) { drawSatView(dt); updateDOM(); }
-  else { drawGlobe(); drawSky(dt); drawMoon(); drawRoutes(dt); drawSats(); drawPainted(); if (G) drawCity(dt); else drawBuilding(dt); drawTitle(dt); drawLaunch(dt); drawSatView(dt); updateDOM(); }
+  else { drawGlobe(); drawSky(dt); drawMoon(); drawRoutes(dt); drawSats(); drawPainted(); if (G) drawCity(dt); else drawBuilding(dt); drawTitle(dt); drawLaunch(dt); drawCat(); drawSatView(dt); updateDOM(); }
   if (flashK > 0) { ctx.globalAlpha = flashK * flashK; ctx.fillStyle = '#EDE6D3'; ctx.fillRect(0, 0, vw, vh); ctx.globalAlpha = 1; flashK = Math.max(0, flashK - dt * 1.1); }
   if ((miniTick = (miniTick + 1) % 4) === 0) drawMini();
   requestAnimationFrame(frame);
