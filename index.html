@@ -320,6 +320,7 @@ button{font:inherit;color:inherit}
 .rm-disp .d-top{display:flex;align-items:center;gap:.8em;font-size:max(10px,calc(var(--u)*2.3));letter-spacing:.22em;color:#5FD3A2}.rm-disp .d-top i{width:.7em;height:.7em;background:#F2A65A;animation:dblink 1.2s steps(2) infinite}
 .rm-disp h3{margin:0;font-family:var(--f-serif);font-weight:700;font-size:calc(var(--u)*7.6);line-height:1.1;color:#E9FBF2}
 .rm-disp p{margin:0;font-family:var(--f-body);font-size:max(11px,calc(var(--u)*2.7));line-height:1.7;letter-spacing:.06em;color:#8FD9BD}.rm-disp .d-dim{color:#5FD3A2;letter-spacing:.14em}
+.rm-disp .d-mail{font-size:max(12px,calc(var(--u)*2.9));word-break:break-all}.rm-disp .d-mail a{color:inherit;text-decoration:none;border-bottom:1px solid rgba(242,166,90,.5);pointer-events:auto}.rm-disp .d-mail a:hover{color:#FFF1CF}
 .rm-disp .d-val{font-family:var(--f-mono);font-size:calc(var(--u)*5);letter-spacing:.1em;color:#F2A65A;text-shadow:0 0 calc(var(--u)*2) rgba(242,166,90,.5)}.rm-disp .d-val u{display:inline-block;width:.5em;height:1em;margin-left:.2em;vertical-align:-.12em;background:#F2A65A;animation:dblink 1s steps(2) infinite}
 @keyframes dblink{50%{opacity:0}}
 .rm-key{display:flex;flex-direction:column;justify-content:center;gap:calc(var(--u)*.8);padding:0 calc(var(--u)*2.6);text-align:left;color:var(--ivory);font:inherit;transition:background .2s}
@@ -2334,7 +2335,7 @@ function roomRender() {
   rmEl.classList.toggle('fixed', !!rm.visor); rmEl.classList.toggle('still', !!rm.fixed && !rm.visor);
   rmHots.innerHTML = rm.hots.map((h) => { if (h.kind === 'chan') return `<button class="rm-hot rm-key${room.chan === h ? ' sel' : ''}" type="button" data-hot="${h.id}"><i>CH-0${h.i}</i><b>${t(h.key)}</b></button><span class="rm-tag" hidden></span>`; // a key on the console carries its own name
     const lab = h.set ? `${name(h.set)} · ${h.set.items.length} ${h.set.unit[lang]}` : h.work ? name(h.work) : h.name ? h.name[lang] : h.id === 'exit' ? t('lmBack') : `${t('slot')} ${String(h.i).padStart(2, '0')} · ${t('workName')}`; return `<button class="rm-hot" type="button" data-hot="${h.id}" aria-label="${esc(lab)}"></button><span class="rm-tag">${esc(lab)}</span>`; }).join('');
-  if (rm.display) { const ch = room.chan; rmDisp.hidden = false; rmDisp.innerHTML = ch ? `<span class="d-top">CH-0${ch.i} · ${lang === 'zh' ? '已接通' : 'OPEN'}<i></i></span><h3>${t(ch.key)}</h3><p class="d-val">${t('pending')}<u></u></p><p>${lang === 'zh' ? '录入之后，这里显示具体的联系方式。' : 'Once added, the details appear here.'}</p>` : `<span class="d-top">COMM · ${lang === 'zh' ? '待机' : 'STANDBY'}<i></i></span><h3>${esc(name(n))}</h3><p>${t('contactLead')}</p><p class="d-dim">${lang === 'zh' ? '▸ 选择下面的频道' : '▸ Choose a channel below'}${narrow ? (lang === 'zh' ? '<br>◂ ▸ 左右拖动，看整个操作台' : '<br>◂ ▸ Drag sideways to see the whole console') : ''}</p>`; } else rmDisp.hidden = true;
+  if (rm.display) { const ch = room.chan; rmDisp.hidden = false; rmDisp.innerHTML = ch ? `<span class="d-top">CH-0${ch.i} · ${lang === 'zh' ? '已接通' : 'OPEN'}<i></i></span><h3>${t(ch.key)}</h3>${CONTACT_SHOW[ch.i] ? `<p class="d-val d-mail"><a href="mailto:${CONTACT_SHOW[ch.i]}" target="_blank" rel="noopener">${CONTACT_SHOW[ch.i]}</a><u></u></p><p>${lang === 'zh' ? '点上面的地址，用你的邮件软件给我写信。' : 'Click the address to write to me from your mail app.'}</p>` : `<p class="d-val">${t('pending')}<u></u></p><p>${lang === 'zh' ? '录入之后，这里显示具体的联系方式。' : 'Once added, the details appear here.'}</p>`}` : `<span class="d-top">COMM · ${lang === 'zh' ? '待机' : 'STANDBY'}<i></i></span><h3>${esc(name(n))}</h3><p>${t('contactLead')}</p><p class="d-dim">${lang === 'zh' ? '▸ 选择下面的频道' : '▸ Choose a channel below'}${narrow ? (lang === 'zh' ? '<br>◂ ▸ 左右拖动，看整个操作台' : '<br>◂ ▸ Drag sideways to see the whole console') : ''}</p>`; } else rmDisp.hidden = true;
   commSync(); rmEl.classList.toggle('bp', !!rm.paint); rmBp.hidden = !rm.render; if (rm.render) rm.render(); else rmBp.innerHTML = '';
   $('#rmExit').textContent = t('lmBack'); room.sec = -1;
   const f = room.focus; rmEl.classList.toggle('focus', !!f); rmCard.className = 'rm-card' + (f && f.card && f.card.pn ? ' pn pn-' + f.id : ''); rmCard.scrollTop = 0; rmCard.style.height = '';
@@ -2502,7 +2503,8 @@ function buildRoomVisual() {
   R(562, 24, 20, 104, '#2A1418'); for (const x of [565, 570, 575, 579]) R(x, 24, 1, 104, '#1B0C10'); R(560, 23, 24, 2, M.m3);
   R(672, 26, 16, 9, '#4A1512'); R(672, 26, 16, 1, '#7A2420'); for (let i = 0; i <= 176; i++) R(592 + i, Math.round(44 + 4 * Math.sin(PI * i / 176)), 1, 1, M.k);
   [600, 622, 644, 704, 726, 748].forEach((x, n) => { const y = Math.round(45 + 4 * Math.sin(PI * (x - 592) / 176)); R(x, y, 11, 13, '#E8E4DA'); R(x + 1, y + 1, 9, 8, ['#2B5C8A', '#3C9A68', '#8A4528', '#4A4555', '#C26A40', '#1D6A8E'][n]); R(x + 3, y + 3, 4, 3, 'rgba(237,230,211,.35)'); R(x + 5, y - 1, 2, 2, K.brass); });
-  R(596, 76, 62, 2, M.m3); for (const [x, h, col] of [[600, 12, '#5A3A22'], [608, 10, '#6B4A2A'], [616, 13, '#3A2A20'], [626, 9, '#5A3A22'], [636, 12, '#2B5C8A'], [646, 10, '#6B4A2A']]) { R(x, 76 - h, 6, h, col); R(x + 1, 76 - h - 2, 4, 2, M.m3); R(x + 1, 76 - h + 3, 4, 3, '#E8E4DA'); }
+  // two screens on the darkroom wall, for the films: a wide one and a tall one (their pictures go on after the light is baked)
+  for (const [x, y, w, h] of [[593, 59, 66, 40], [663, 59, 24, 40]]) { R(x, y, w, h, M.k); R(x, y, w, 1, M.m3); R(x + 1, y + 1, w - 2, h - 2, '#1A2127'); R(x + Math.round(w / 2) - 3, y + h, 6, 2, M.m4); }
   R(588, 104, 114, 3, M.m2); R(588, 104, 114, 1, M.m1); R(588, 107, 114, 2, M.m3); R(590, 109, 3, 29, M.m4); R(697, 109, 3, 29, M.m4); R(593, 126, 104, 2, M.m4);
   for (const [x, col, col2] of [[594, '#B23A3A', '#D8503E'], [628, '#D9DED9', '#F7F4EC'], [662, '#2B86B0', '#62BDDD']]) { R(x, 99, 30, 5, col); R(x, 99, 30, 1, col2); R(x + 2, 100, 26, 2, '#12303A'); R(x + 5, 100, 6, 1, 'rgba(237,230,211,.3)'); } R(650, 96, 8, 1, M.m1); R(657, 94, 1, 3, M.m1);
   disk(612, 118, 5, M.cream); disk(612, 118, 4, '#F7F4EC'); R(612, 118, 1, 1, M.k); R(640, 112, 14, 12, '#3A2A20'); R(641, 110, 12, 2, M.m3); R(660, 114, 20, 10, M.m4);
@@ -2515,11 +2517,12 @@ function buildRoomVisual() {
   // ---- the lamps
   kit.bake([[103, 40, 62, 0.6, 255, 236, 200], [180, 36, 60, 0.6, 255, 236, 200], [27, 84, 36, 0.36, 255, 236, 200], [240, 58, 46, 0.28, 110, 190, 230], [297, 40, 40, 0.3, 95, 211, 162], [300, 14, 90, 0.3, 255, 236, 200], 
     [371, 44, 74, 0.62, 255, 236, 200], [440, 14, 110, 0.5, 255, 236, 200], [520, 14, 90, 0.36, 255, 236, 200], [529, 90, 34, 0.3, 120, 220, 230],
-    [680, 36, 150, 0.85, 255, 50, 36, 12, 0.3], [722, 98, 20, 0.3, 255, 220, 170],
+    [680, 36, 150, 0.85, 255, 50, 36, 12, 0.3], [722, 98, 20, 0.3, 255, 220, 170], [630, 80, 40, 0.35, 150, 200, 255, 4, 0.5],
     [830, 80, 46, 0.5, 255, 110, 170, 4, 0.7], [849, 76, 46, 0.5, 90, 225, 245, 4, 0.7], [864, 84, 44, 0.45, 255, 220, 120, 4, 0.7], [928, 80, 40, 0.5, 255, 236, 200]], 0.34);
   // ---- things that give off light themselves
   for (const x of SPOTS) R(x - 1, 19, 2, 1, '#FFF1CF'); R(92, 37, 22, 1, '#FFF1CF'); R(170, 31, 20, 1, '#FFF1CF'); kit.hatchGlow(274); R(674, 28, 12, 5, '#FF4A3A'); R(676, 29, 8, 1, '#FF9A8A'); R(714, 99, 16, 1, '#C9B48A'); R(775, 80, 1, 1, '#D8503E');
   kit.screen(IMGEL.paradise, [72, 48, 62, 44]); R(162, 42, 36, 52, '#101820'); SET_TH.forEach((im, k) => { if (!(im.complete && im.naturalWidth)) return; const sw = im.naturalHeight * 18 / 26; kit.c.imageSmoothingEnabled = true; kit.c.drawImage(im, (im.naturalWidth - sw) / 2, 0, sw, im.naturalHeight, 162 + (k % 2) * 18, 42 + (k >> 1) * 26, 18, 26); }); R(179, 42, 1, 52, '#0A0E11'); R(162, 67, 36, 1, '#0A0E11'); // the second frame holds four of the posters, for the whole set
+  kit.screen(IMGEL.ad1, [595, 61, 62, 36], true); kit.screen(IMGEL.ad2, [665, 61, 20, 36], true); // the two AI ads, on the darkroom's screens
   return kit.cv;
 }
 function dynVisual(g, R, tt) {
@@ -2543,9 +2546,10 @@ function dynVisual(g, R, tt) {
   const sx = Math.round(330 + Math.cos(tt * 0.25) * 4), sy = Math.round(70 + Math.sin(tt * 0.4) * 3); R(sx, sy, 9, 11, '#E8E4DA'); R(sx + 2, sy + 2, 5, 1, '#6E7875'); R(sx + 2, sy + 4, 4, 1, '#6E7875'); R(sx + 2, sy + 6, 5, 1, '#6E7875');
   [['#D8503E', 0], ['#6FB7FF', 2], ['#F3D27A', 4]].forEach(([col, p], i) => R(Math.round(400 + i * 8 + Math.sin(tt * 0.35 + p) * 3), Math.round(84 + Math.sin(tt * 0.5 + p * 1.7) * 4), 2, 2, col));
 }
-ROOMS.visual = { build: buildRoomVisual, dyn: dynVisual, base: null, home: 172, start: 103, lead: { zh: '左边是小说《乐园》（PARADISE）的海报，点开可以试读第一章；右边是「实习海报合集」，点开可以一张张翻。', en: 'On the left, the poster for my novel PARADISE; on the right, the set of internship posters — open it to leaf through them.' },
+ROOMS.visual = { build: buildRoomVisual, dyn: dynVisual, base: null, home: 172, start: 103, lead: { zh: '展厅左边是小说《乐园》（PARADISE）的海报，点开可以试读第一章；右边是「实习海报合集」，点开可以一张张翻。往右走到暗房，两块屏幕上是我为香港一家金融公司做的两支 AI 广告，点开就能播放。', en: 'In the gallery: the poster for my novel PARADISE, and the set of internship posters to leaf through. Further on, in the darkroom, two screens show the two AI ads I made for a financial company in Hong Kong — open one to play it.' },
   secs: [[172, '展厅', 'Gallery'], [440, '画室', 'Studio'], [672, '暗房', 'Darkroom'], [884, '光影', 'Light']],
-  hots: [{ id: 'w1', i: 1, work: WORKS.paradise, rect: [64, 32, 78, 68], screen: [88, 48, 30, 44], tag: [103, 31] }, { id: 'w2', i: 2, set: SETS.intern, rect: [154, 26, 52, 76], screen: [157.5, 42, 45, 52], tag: [180, 25] }, { id: 'exit', rect: [272, 34, 50, 96], tag: [297, 33] }] };
+  hots: [{ id: 'w1', i: 1, work: WORKS.paradise, rect: [64, 32, 78, 68], screen: [88, 48, 30, 44], tag: [103, 31] }, { id: 'w2', i: 2, set: SETS.intern, rect: [154, 26, 52, 76], screen: [157.5, 42, 45, 52], tag: [180, 25] },
+    { id: 'w3', i: 3, work: WORKS.ad1, rect: [591, 57, 70, 46], screen: [595, 61, 62, 36], tag: [626, 56] }, { id: 'w4', i: 4, work: WORKS.ad2, rect: [661, 57, 28, 46], screen: [665, 61, 20, 36], tag: [675, 56] }, { id: 'exit', rect: [272, 34, 50, 96], tag: [297, 33] }] };
 // the telescope, drawn again at ten times the detail; we go in through the long window in its side
 function buildVisualHi() {
   const W = 240, H = 124, cv = document.createElement('canvas'); cv.width = W; cv.height = H; const c = cv.getContext('2d');
@@ -3696,6 +3700,8 @@ ROOMS.moon = { build: buildRoomMoon, dyn: dynMoon, base: null, dissolve: true, s
    CH-04 is a plain form. Either way the message goes out under a guarded switch, and we watch it leave for the Earth ---------- */
 // Where messages go. CONTACT_KEY is a Web3Forms access key: with one, a message is delivered straight to the inbox; without one, the visitor's own mail program is opened with the message written out.
 const CONTACT_TO = ['tant25395', 'gmail.com'], CONTACT_KEY = '2a81865e-010a-4cd8-93d8-6564aa058e1b';
+// what a channel on the console shows once Dave has given it (2026-10-12: the e-mail channel, his school address, which he asked to show)
+const CONTACT_SHOW = { 1: 'shangchong.tan@mail.utoronto.ca' };
 const rmChat = $('#rmChat'), rmForm = $('#rmForm');
 const chat = { step: 0, d: { name: '', contact: '', msg: '' }, log: [], busy: false, tx: 0, built: false, formBuilt: false, fstate: 0, last: '', res: '' };
 const CT = {
