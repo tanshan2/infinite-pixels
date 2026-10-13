@@ -580,7 +580,7 @@ const h3 = (x, y, z) => hash2(x * 73 + z * 19, y * 37 - z * 53);
 const SUN = (() => { const v = [-0.44, 0.5, 0.75], n = Math.hypot(v[0], v[1], v[2]); return [v[0] / n, v[1] / n, v[2] / n]; })();
 
 // Draw a grid to a sprite. B holds where the model's east, south and up unit steps land on screen: [x, y, toward-viewer].
-function renderSprite(g, B, u) {
+function renderSprite(g, B, u, bare) { // bare: no outline round the silhouette (the ground)
   const e = B.e, s = B.s, up = B.u, hx = g.hx, hy = g.hy, hz = g.hz, w = g.w, l = g.l, d = g.d;
   let minX = 1e9, maxX = -1e9, minY = 1e9, maxY = -1e9;
   for (const x of [-hx - 0.5, hx + 0.5]) for (const y of [-hy - 0.5, hy + 0.5]) for (const z of [0, hz]) { const px = (x * e[0] + y * s[0] + z * up[0]) * u, py = (x * e[1] + y * s[1] + z * up[1]) * u; if (px < minX) minX = px; if (px > maxX) maxX = px; if (py < minY) minY = py; if (py > maxY) maxY = py; }
@@ -617,7 +617,7 @@ function renderSprite(g, B, u) {
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
     const k = y * W + x, c = col[k];
     if (c) { let f = 1; if ((x > 0 && dep[k - 1] - dep[k] > thr) || (x < W - 1 && dep[k + 1] - dep[k] > thr) || (y > 0 && dep[k - W] - dep[k] > thr) || (y < H - 1 && dep[k + W] - dep[k] > thr)) f = 0.72; out[k] = f === 1 ? c : (255 << 24) | ((((c >> 16) & 255) * f) << 16) | ((((c >> 8) & 255) * f) << 8) | ((c & 255) * f); }
-    else if ((x > 0 && col[k - 1]) || (x < W - 1 && col[k + 1]) || (y > 0 && col[k - W]) || (y < H - 1 && col[k + W])) out[k] = (150 << 24) | (12 << 16) | (10 << 8) | 8;
+    else if (!bare && ((x > 0 && col[k - 1]) || (x < W - 1 && col[k + 1]) || (y > 0 && col[k - W]) || (y < H - 1 && col[k + W]))) out[k] = (150 << 24) | (12 << 16) | (10 << 8) | 8;
   }
   // the shadow, drawn flat on the ground
   let sx0 = 1e9, sx1 = -1e9, sy0 = 1e9, sy1 = -1e9; const cells = [];
@@ -686,7 +686,7 @@ function model(name) { let g = lmGrids[name]; if (!g) { g = lmGrids[name] = LMOD
 function groundTile(p) {
   const UG = p.ug, HX = p.hx, HY = p.hy, T0 = p.t0, LH = p.lh, g = new Grid(HX, HY, T0 + LH * 4 + 16);
   const its = p.items.map((it) => { const m = model(it.m); return { g: m, a: it.a, b: it.b, u: it.u, lv: it.lv, lm: it.lm, ha: (m.hx + 0.5) * it.u, hb: (m.hy + 0.5) * it.u }; });
-  const zones = p.zones, edge = (a, b) => { const x = a * p.cyc - b * p.cys, y = a * p.cys + b * p.cyc, w = (vnoise(a / 90, b / 90, p.seed) - 0.5) * 0.14; return (x / p.ell[0]) ** 2 + ((y - p.ell[2]) / p.ell[1]) ** 2 < 1.16 + w; };
+  const zones = p.zones, edge = (a, b) => { const x = a * p.cyc - b * p.cys, y = a * p.cys + b * p.cyc, w = (vnoise(a / 90, b / 90, p.seed) - 0.5) * 0.14; return p.shape.some((o) => ((x - o[0]) / o[2]) ** 2 + ((y - o[1]) / o[3]) ** 2 < 1.16 + w); };
   const top = new Int16Array(g.w * g.l).fill(-1), surf = new Uint8Array(g.w * g.l), lawn = new Uint8Array(g.w * g.l);
   for (let gy = -HY; gy < HY; gy++) for (let gx = -HX; gx < HX; gx++) {
     const a = p.A + gx * UG, b = p.B + gy * UG; let m = 0, lv = -1, near = false;
@@ -694,7 +694,7 @@ function groundTile(p) {
       if (da <= it.ha && db <= it.hb) { const bx = Math.round((a - it.a) / it.u), by = Math.round((b - it.b) / it.u); if (Math.abs(bx) <= it.g.hx && Math.abs(by) <= it.g.hy) { const bm = it.g.base[(by + it.g.hy) * it.g.w + bx + it.g.hx]; if (bm) m = bm; } } }
     const zone = zones.some((q) => Math.abs(a - q[0]) < q[2] && Math.abs(b - q[1]) < q[3]);
     if (!near && !zone && !edge(a, b)) continue;
-    if (lv < 0) lv = Math.round(lieOfLand(a, b, p.seed));
+    if (lv < 0) lv = Math.round(lieOfLand(a, b, p.seed, p.shape));
     // the streets: a broad one between the rows of blocks, a narrower one between the blocks of a row, a pavement either side
     const ra = Math.abs(((a / p.pa) % 1 + 1) % 1 - 0.5) * p.pa, rb = Math.abs(((b / p.pb) % 1 + 1) % 1 - 0.5) * p.pb, inA = ra < p.rwa, inB = rb < p.rwb;
     let s = 0;
@@ -717,7 +717,7 @@ function groundTile(p) {
   }
   return g;
 }
-function job(q) { const g = q.ground ? (lmGrids[q.model] || groundTile(q.ground)) : model(q.model); if (q.ground && !q.mesh) lmGrids[q.model] = g; const r = q.mesh ? buildMesh(g) : renderSprite(g, q.basis, q.u); r.id = q.id; r.hz = g.hz; r.model = q.model; return r; }
+function job(q) { const g = q.ground ? (lmGrids[q.model] || groundTile(q.ground)) : model(q.model); if (q.ground && !q.mesh) lmGrids[q.model] = g; const r = q.mesh ? buildMesh(g) : renderSprite(g, q.basis, q.u, !!q.ground); r.id = q.id; r.hz = g.hz; r.model = q.model; return r; }
 
 /* ---------- the landmarks themselves (x east, y south = the front, z up) ---------- */
 // shared bits for the ordinary buildings that fill in around the landmarks
@@ -1126,6 +1126,92 @@ const LMODEL = {
     g.box(54, 58, -2, 2, 1, 84, (x, y, z) => { const e = x === 54 || x === 58 || y === -2 || y === 2; if (!e) return 0; if (z > 80) return M.wh; if (x === 54 || x === 58) { if (y === 0 && z % 7 > 1) return 0; } return z % 7 === 0 ? M.dk : (y === 2 || x === 58) && Math.abs((y === 2 ? x - 56 : y)) <= 1 ? (h3(x, y, z) > 0.35 ? (z % 14 < 7 ? M.eW : M.eX) : M.dk) : M.as; });
     return g;
   },
+  // ---------- Bloomington: Indiana University, in its own Indiana limestone ----------
+  // Sample Gates: two limestone gatehouses either side of the drive, a footway arched through each, low walls running off to posts, a lantern on top
+  samplegates() {
+    const g = new Grid(48, 14, 44), lime = (x, y, z) => (z % 4 === 0 ? M.sn2 : (x * 3 + y * 5 + z * 7 + 900) % 13 === 0 ? M.st3 : M.sn);
+    g.box(-48, 48, -14, 14, 0, 0, (x) => (Math.abs(x) <= 12 ? M.as : M.gr1));
+    for (const s of [-1, 1]) { const cx = s * 22;
+      g.box(cx - 8, cx + 8, -6, 6, 1, 29, (x, y, z) => { const dx = x - cx; if (Math.abs(dx) <= 4 && z <= 13 + Math.round(Math.sqrt(Math.max(0, 16 - dx * dx)))) return -1;
+        if (Math.abs(dx) <= 5 && z <= 14 + Math.round(Math.sqrt(Math.max(0, 25 - dx * dx))) && Math.abs(y) === 6) return M.st3; return lime(x, y, z); });
+      g.box(cx - 9, cx + 9, -7, 7, 29, 31, (x, y, z) => (z === 31 ? M.st3 : M.sn2)); g.box(cx - 6, cx + 6, -5, 5, 32, 33, M.sn);
+      g.box(cx - 3, cx + 3, 7, 7, 19, 27, (x, y, z) => { const d = Math.abs(x - cx); if (d === 3 || z === 19 || z === 27) return M.rd3; return (z >= 24 && (d === 0 || d === 2)) || (z === 23 && d <= 2) || (z >= 20 && d === 0) ? M.wt1 : M.rd3; }); // the crimson shield with the IU trident
+      g.box(cx - 2, cx + 2, -2, 2, 34, 35, M.bz); g.box(cx - 2, cx + 2, -2, 2, 36, 39, (x, y, z) => (Math.abs(x - cx) === 2 && Math.abs(y) === 2 ? M.bz : M.eW)); g.box(cx - 1, cx + 1, -1, 1, 40, 41, M.bz); // the lantern
+      g.box(Math.min(cx + s * 9, cx + s * 22), Math.max(cx + s * 9, cx + s * 22), -3, 3, 1, 11, (x, y, z) => (z === 11 ? M.st3 : lime(x, y, z)));
+      g.box(cx + s * 23 - 2, cx + s * 23 + 2, -4, 4, 1, 15, (x, y, z) => (z >= 14 ? M.st3 : lime(x, y, z))); g.ellipsoid(cx + s * 23, 0, 17, 1.8, 1.8, 1.8, M.st3);
+    }
+    return g;
+  },
+
+  // Student Building: a Romanesque limestone range under a red tile roof, round-headed windows, and the clock tower rising from its front
+  studentbldg() {
+    const g = new Grid(56, 32, 96), lime = (x, y, z) => (z % 5 === 0 ? M.sn2 : (x * 3 + y * 5 + z * 7 + 900) % 13 === 0 ? M.st3 : M.sn), tile = (x, y, z) => ((x + y + z + 600) % 3 === 0 ? M.rd2 : M.rd1);
+    g.box(-56, 56, -32, 32, 0, 0, (x, y) => (y > 18 && Math.abs(x) > 10 ? ((x + y + 600) % 9 < 4 ? M.gn2 : M.gt1) : M.gr1));
+    const win = (t, z) => { const r = ((t % 8) + 8) % 8; for (const [z0, z1] of [[4, 9], [13, 18], [22, 26]]) if (r >= 3 && r <= 5 && z >= z0 && z <= z1 - (r === 4 ? 0 : 1)) return true; return false; };
+    g.box(-48, 48, -16, 16, 1, 29, (x, y, z) => { const ex = Math.abs(x) === 48, ey = Math.abs(y) === 16; if (!ex && !ey) return z === 29 ? M.sn2 : 0; if (z === 11 || z === 20) return M.st3; return win(ex ? y : x, z) ? M.gl : lime(x, y, z); });
+    hipRoof(g, -48, 48, -16, 16, 30, 0.8, tile);
+    // the clock tower, stepping forward from the middle of the front
+    const zt = 70;
+    g.box(-9, 9, 8, 26, 1, zt, (x, y, z) => { const ex = Math.abs(x) === 9, ey = y === 8 || y === 26; if (!ex && !ey) return z === zt ? M.sn2 : 0;
+      if (y === 26 && Math.abs(x) <= 4 && z <= 8 + Math.round(Math.sqrt(Math.max(0, 16 - x * x)))) return z === 1 ? M.gr1 : M.dk; // the doorway
+      if (z % 12 === 11) return M.st3; if (z > 14 && z < 50 && (ex ? Math.abs(y - 17) : Math.abs(x)) <= 1 && z % 12 > 2 && z % 12 < 9) return M.gl; return lime(x, y, z); });
+    for (const [fx, fy, ax] of [[0, 27, 0], [10, 17, 1], [-10, 17, 1]]) for (let a = -5; a <= 5; a++) for (let b = -5; b <= 5; b++) { const r = Math.hypot(a, b); if (r > 5.4) continue; const hand = (a === 0 && b >= 0 && b <= 4) || (b === 0 && a >= 0 && a <= 3);
+      g.set(ax ? fx : fx + a, ax ? fy + a : fy, 60 + b, r > 4.5 ? M.gd : hand ? M.dk : M.wt1); } // the clock faces
+    g.box(-10, 10, 7, 27, zt + 1, zt + 2, M.st3);
+    for (let k = 0; k <= 12; k++) g.box(-9 + Math.ceil(k * 0.7), 9 - Math.ceil(k * 0.7), 8 + Math.ceil(k * 0.7), 26 - Math.ceil(k * 0.7), zt + 3 + k, zt + 3 + k, tile); // the pyramid roof
+    g.capsule(0, 17, zt + 15, 0, 17, zt + 22, 0.9, 0.5, M.gd);
+    return g;
+  },
+
+  // Indiana Memorial Union: a long Collegiate Gothic range in limestone under slate, its tall battlemented tower in the middle, a wing reaching forward at one end
+  imu() {
+    const g = new Grid(76, 38, 82), lime = (x, y, z) => (z % 5 === 0 ? M.sn2 : (x * 5 + y * 3 + z * 7 + 900) % 13 === 0 ? M.st3 : M.sn), slate = (x, y, z) => ((x + y + z * 2 + 600) % 4 === 0 ? M.ti : M.sl);
+    g.box(-76, 76, -38, 38, 0, 0, (x, y) => (y > 16 && x < 40 ? (Math.abs(x) <= 5 ? M.gr1 : (x - y + 600) % 9 < 4 ? M.gn2 : M.gt1) : M.gr1));
+    const lancet = (t, z, zb, zt, hw) => Math.abs(t) <= hw && z >= zb && z <= zt - Math.abs(t) * 1.5;
+    const range = (x0, x1, y0, y1, h) => g.box(x0, x1, y0, y1, 1, h, (x, y, z) => { const ex = x === x0 || x === x1, ey = y === y0 || y === y1; if (!ex && !ey) return z === h ? M.sn2 : 0; const t = ex ? y : x, r = ((t % 7) + 7) % 7 - 3;
+      if (z === 12 || z === h) return M.st3; return lancet(r, z, 3, 10, 1) || lancet(r, z, 15, h - 3, 1) ? M.gl : lime(x, y, z); });
+    range(-70, 70, -14, 14, 30); gableX(g, -70, 70, -14, 14, 31, 0.9, slate, lime);
+    range(44, 66, 15, 34, 26); gableY(g, 44, 66, 15, 34, 27, 0.9, slate, lime);
+    // the tower: buttressed corners, a great Gothic window over the entrance, battlements and pinnacles
+    const zt = 66;
+    g.box(-11, 11, -16, 16, 1, zt, (x, y, z) => { const ax = Math.abs(x), ay = Math.abs(y), ex = ax === 11, ey = ay === 16; if (!ex && !ey) return z === zt ? M.sn2 : 0;
+      if (ax >= 9 && ay >= 14) return z % 5 === 0 ? M.st3 : M.sn; // the corner buttresses
+      if (y === 16 && lancet(x, z, 1, 14, 4)) return z === 1 ? M.gr1 : M.dk;
+      if (y === 16 && lancet(x, z, 20, 52, 5)) return (x + 600) % 3 === 0 || z % 6 === 0 ? M.st3 : M.gl;
+      if (ex && lancet(y, z, 34, 52, 3)) return M.gl; return lime(x, y, z); });
+    for (let x = -12; x <= 12; x++) for (let y = -17; y <= 17; y++) if (Math.abs(x) === 12 || Math.abs(y) === 17) g.box(x, x, y, y, zt + 1, zt + ((x + y + 200) % 4 < 2 ? 4 : 2), M.sn2);
+    for (const sx of [-1, 1]) for (const sy of [-1, 1]) { g.box(sx * 12 - 1, sx * 12 + 1, sy * 17 - 1, sy * 17 + 1, zt + 1, zt + 7, M.sn); g.capsule(sx * 12, sy * 17, zt + 7, sx * 12, sy * 17, zt + 13, 1.4, 0.3, M.st3); }
+    return g;
+  },
+
+  // Showalter Fountain: a round pool, the bronze Venus rising on her shell in the middle, and five leaping fish spouting toward her
+  showalter() {
+    const g = new Grid(28, 28, 26);
+    g.fill(-28, 28, -28, 28, 0, 0, (x, y) => { const r = Math.hypot(x, y); return r <= 27 ? (Math.round(r) % 6 === 0 ? M.gr2 : M.gr1) : 0; });
+    g.fill(-21, 21, -21, 21, 1, 3, (x, y, z) => { const r = Math.hypot(x, y); return r > 20.5 ? 0 : r > 18 ? (z === 3 ? M.st3 : M.sn) : z === 1 ? (r < 15 && h3(x, y, 1) > 0.8 ? M.fm : M.wa) : 0; });
+    g.fill(-4, 4, -4, 4, 2, 6, (x, y) => (Math.hypot(x, y) <= 3.5 ? M.sn2 : 0));
+    g.ellipsoid(0, 0, 8, 6, 4, 2.4, (x, y, z) => ((Math.round(Math.atan2(y, x) * 4) + 20) % 2 ? M.bz : M.gz2)); // the shell
+    g.capsule(0, 0, 9, 0, 0, 17, 1.6, 1.3, M.bz); g.ellipsoid(0, 0, 19, 1.3, 1.3, 1.6, M.bz); g.capsule(0, 0, 16, 2, 0, 20, 0.7, 0.6, M.bz);
+    for (let k = 0; k < 5; k++) { const a = k * TAU / 5 + 0.3, c = Math.cos(a), s = Math.sin(a);
+      g.capsule(c * 14, s * 14, 2, c * 12.5, s * 12.5, 5, 1.3, 0.9, M.bz); g.capsule(c * 12.5, s * 12.5, 5, c * 13.5, s * 13.5, 6.5, 0.9, 0.6, M.bz);
+      for (let t = 0; t <= 1; t += 0.12) g.set(c * (12 - 7 * t), s * (12 - 7 * t), 6 + Math.round(5 * Math.sin(t * PI)), M.fm); } // each fish's jet arcs in toward the middle
+    return g;
+  },
+
+  // Assembly Hall: the great arena, its long sides leaning in as they rise, ribbed in pale concrete, a crimson band round the top, a car park before it
+  assembly() {
+    const g = new Grid(66, 54, 46);
+    g.box(-66, 66, -54, 54, 0, 0, (x, y) => (y > 40 || y < -46 ? ((x + 300) % 8 === 0 ? M.wt1 : M.as) : M.gr1));
+    const H = 36;
+    g.box(-58, 58, -40, 40, 1, H, (x, y, z) => { const lean = Math.floor((z - 1) * 0.3), hy = 40 - lean; if (Math.abs(y) > hy) return 0; const ex = Math.abs(x) >= 57, ey = Math.abs(y) >= hy - 1;
+      if (!ex && !ey) return z === H ? M.cc2 : 0;
+      if (z >= H - 2) return M.rd3; if (ex) return z >= 3 && z <= 9 && Math.abs(y) < 24 ? ((y + 300) % 6 === 0 ? M.cc1 : M.gl) : z > 9 && z < 14 && Math.abs(y) < 16 && x > 0 ? M.rd3 : M.cc1;
+      return (x + 300) % 6 === 0 ? M.cc2 : z <= 3 ? M.gl : M.cc1; });
+    g.box(-40, 40, -12, 12, H + 1, H + 3, (x, y, z) => (z === H + 3 ? M.cc2 : M.cc1)); // the raised middle of the roof
+    for (let x = -60; x <= 60; x += 12) for (const y of [47, 50, -49]) if (h3(x, y, 2) > 0.45) g.box(x - 2, x + 2, y - 1, y + 1, 1, 2, (a, b, z) => (z === 2 ? M.gl : [M.rm, M.bt1, M.wt1, M.gk1][(h3(x, y, 3) * 4) | 0])); // a few parked cars
+    return g;
+  },
+
   // ---------- ordinary buildings, to stand around the landmarks ----------
   // a glass office tower: mullioned curtain wall, two setbacks, a mast
   towerA(top) {
@@ -1402,7 +1488,7 @@ const t = (k) => T[lang][k];
 const vec = (lon, lat) => [Math.cos(lat) * Math.sin(lon), Math.sin(lat), Math.cos(lat) * Math.cos(lon)];
 const CITIES = [
   { id: 'gz', type: 'city', zh: '广州', en: 'Guangzhou', czh: '中国', cen: 'China', lat: 23.13, lon: 113.26, tlat: '23.13°N', tlon: '113.26°E', lm: { zh: '广州塔', en: 'Canton Tower', h: '600 m', year: '2010', gzh: '广州塔 · 五羊石像 · 镇海楼 · 中山纪念堂 · 石室圣心大教堂 · 广州圆 · 培正中学大门 · 珠江', gen: 'Canton Tower · Five Rams Sculpture · Zhenhai Tower · Sun Yat-sen Memorial Hall · Sacred Heart Cathedral · Guangzhou Circle · Pui Ching Middle School Gate · Pearl River' } },
-  { id: 'ind', type: 'city', zh: '印第安纳波利斯', en: 'Indianapolis', czh: '美国', cen: 'United States', lat: 39.77, lon: -86.16, tlat: '39.77°N', tlon: '86.16°W', dy: 9, lm: { zh: '士兵和水手纪念碑', en: 'Soldiers’ and Sailors’ Monument', h: '86.72 m', year: '1902', gzh: '纪念碑圆环 · Salesforce 大厦 · OneAmerica 大厦 · 州议会大厦', gen: 'Monument Circle · Salesforce Tower · OneAmerica Tower · Indiana Statehouse' } },
+  { id: 'ind', type: 'city', zh: '印第安纳波利斯', en: 'Indianapolis', czh: '美国', cen: 'United States', lat: 39.77, lon: -86.16, tlat: '39.77°N', tlon: '86.16°W', dy: 9, lm: { zh: '士兵和水手纪念碑', en: 'Soldiers’ and Sailors’ Monument', h: '86.72 m', year: '1902', gzh: '纪念碑圆环 · Salesforce 大厦 · OneAmerica 大厦 · 州议会大厦 · 布卢明顿：印第安纳大学', gen: 'Monument Circle · Salesforce Tower · OneAmerica Tower · Indiana Statehouse · Bloomington: Indiana University' } },
   { id: 'tor', type: 'city', zh: '多伦多', en: 'Toronto', czh: '加拿大', cen: 'Canada', lat: 43.65, lon: -79.38, tlat: '43.65°N', tlon: '79.38°W', dy: -9, lm: { zh: 'CN 塔', en: 'CN Tower', h: '553.33 m', year: '1976', gzh: 'CN 塔 · 罗杰斯中心 · 金融区', gen: 'CN Tower · Rogers Centre · Financial District' } },
 ];
 CITIES.forEach((c) => { c.v = vec(rad(c.lon), rad(c.lat)); });
@@ -1483,8 +1569,8 @@ function hash2(x, y) { let n = Math.imul(x | 0, 374761393) + Math.imul(y | 0, 66
 // smooth value noise, and from it the lie of the land under a city, in levels: a few low rises, the ground climbing a little toward the back
 function vnoise(x, y, seed) { const xi = Math.floor(x), yi = Math.floor(y), fx = x - xi, fy = y - yi, sx = fx * fx * (3 - 2 * fx), sy = fy * fy * (3 - 2 * fy), k = seed * 101;
   const a = hash2(xi + k, yi - k), b = hash2(xi + 1 + k, yi - k), c = hash2(xi + k, yi + 1 - k), d = hash2(xi + 1 + k, yi + 1 - k); return a + (b - a) * sx + (c - a) * sy + (a - b - c + d) * sx * sy; }
-// it settles to nothing toward the edge of the city (the same oval as inCity, turned back from the streets' angle), so the ground there meets the globe flush
-function lieOfLand(a, b, seed) { const c = 0.8829, s = 0.4695, x = a * c - b * s, y = a * s + b * c, e = (x / 980) ** 2 + ((y + 90) / 560) ** 2, fall = Math.min(1, Math.max(0, (1 - e) / 0.4));
+// it settles to nothing toward the edge of the city (its ovals, x east and y south, turned back from the streets' angle), so the ground there meets the globe flush
+function lieOfLand(a, b, seed, shape) { const c = 0.8829, s = 0.4695, x = a * c - b * s, y = a * s + b * c; let e = 9; for (const o of shape) e = Math.min(e, ((x - o[0]) / o[2]) ** 2 + ((y - o[1]) / o[3]) ** 2); const fall = Math.min(1, Math.max(0, (1 - e) / 0.4));
   const v = 1.3 + (vnoise(a / 470, b / 470, seed) - 0.5) * 3.4 + (vnoise(a / 190 + 9, b / 190 + 4, seed) - 0.5) * 1.1 + Math.min(1, Math.max(0, (-b - 180) / 360)) * 1.4; return Math.min(4, Math.max(0, v)) * fall; }
 function vnoise(x, y) {
   const xi = Math.floor(x), yi = Math.floor(y), xf = x - xi, yf = y - yi;
@@ -1786,15 +1872,22 @@ const SITES = {
     { m: 'warmemorial', zh: '印第安纳战争纪念馆', en: 'Indiana War Memorial', x: -170, y: -230, h: 290 }, { m: 'salesforce', zh: 'Salesforce 大厦', en: 'Salesforce Tower', x: 240, y: -230, h: 450 },
     { m: 'statehouse', zh: '州议会大厦', en: 'Indiana Statehouse', x: -380, y: -30, h: 185 }, { m: 'monument', zh: '士兵和水手纪念碑', en: 'Soldiers’ and Sailors’ Monument', x: 0, y: 50, h: 360 },
     { m: 'pagoda', zh: '赛车场宝塔', en: 'Speedway Pagoda', x: 350, y: 110, h: 240 },
+    // Bloomington, off to the south-west: Indiana University
+    { m: 'studentbldg', zh: 'IU · 学生大楼', en: 'IU · Student Building', x: -460, y: 695, h: 170 }, { m: 'imu', zh: 'IU · 印第安纳纪念联合会', en: 'IU · Indiana Memorial Union', x: -766, y: 737, h: 145 },
+    { m: 'showalter', zh: 'IU · 肖沃尔特喷泉', en: 'IU · Showalter Fountain', x: -518, y: 846, h: 46 }, { m: 'samplegates', zh: 'IU · 萨姆普尔门', en: 'IU · Sample Gates', x: -580, y: 1005, h: 78 },
+    { m: 'assembly', zh: 'IU · 集会堂', en: 'IU · Assembly Hall', x: -243, y: 947, h: 97 },
   ],
 };
 // each landmark's height in blocks, and half its footprint
-const HZ = { cathedral: 160, puiching: 72, rams: 142, zhenhai: 134, memorial: 122, circle: 148, canton: 322, cn: 304, rogers: 56, monument: 170, statehouse: 78, salesforce: 232, cityhall: 132, casaloma: 100, warmemorial: 138, pagoda: 126, uc: 94, convocation: 74, harthouse: 112 };
-const LMFOOT = { cathedral: [40, 106], puiching: [70, 26], rams: [64, 56], zhenhai: [76, 46], memorial: [80, 100], circle: [72, 18], canton: [25, 25], cn: [24, 24], rogers: [58, 58], monument: [62, 62], statehouse: [54, 36], salesforce: [16, 16], cityhall: [62, 78], casaloma: [72, 46], warmemorial: [58, 68], pagoda: [68, 58], uc: [86, 40], convocation: [46, 54], harthouse: [64, 34] };
+const HZ = { samplegates: 44, studentbldg: 96, imu: 82, showalter: 26, assembly: 46, cathedral: 160, puiching: 72, rams: 142, zhenhai: 134, memorial: 122, circle: 148, canton: 322, cn: 304, rogers: 56, monument: 170, statehouse: 78, salesforce: 232, cityhall: 132, casaloma: 100, warmemorial: 138, pagoda: 126, uc: 94, convocation: 74, harthouse: 112 };
+const LMFOOT = { samplegates: [48, 14], studentbldg: [56, 32], imu: [76, 38], showalter: [28, 28], assembly: [66, 54], cathedral: [40, 106], puiching: [70, 26], rams: [64, 56], zhenhai: [76, 46], memorial: [80, 100], circle: [72, 18], canton: [25, 25], cn: [24, 24], rogers: [58, 58], monument: [62, 62], statehouse: [54, 36], salesforce: [16, 16], cityhall: [62, 78], casaloma: [72, 46], warmemorial: [58, 68], pagoda: [68, 58], uc: [86, 40], convocation: [46, 54], harthouse: [64, 34] };
 // The streets run at the angle the buildings face. A block holds two rows of lots; what goes on them depends on the city and on how far back the block stands.
 const CYAW = rad(28), CYc = Math.cos(CYAW), CYs = Math.sin(CYAW), PA = 280, PB = 252, RWA = 16, RWB = 22;
 const UG = 2, GLV = 4; // the ground's block, in site pixels, and how tall one level of the land is. Its lowest level is sunk one block so its top is flush with the globe.
 const inCity = (x, y, grow) => (x / 980) * (x / 980) + ((y + 90) / 560) * ((y + 90) / 560) < 1 + grow;
+// where each city has ground: its main oval (the one inCity tests), and for Indianapolis a small second one off to the south-west, Bloomington, with globe between them
+const SHAPE = { gz: [[0, -90, 980, 560]], tor: [[0, -90, 980, 560]], ind: [[0, -90, 980, 560], [-504, 842, 480, 290]] };
+const inShape = (sh, x, y, grow) => sh.some((o) => ((x - o[0]) / o[2]) ** 2 + ((y - o[1]) / o[3]) ** 2 < 1 + grow);
 const FILL = {
   tall: { gz: ['towerA', 'towerAt', 'towerA2', 'towerA4', 'towerB', 'towerB3', 'towerB2', 'towerA3'], tor: ['towerA', 'towerAt', 'towerA2', 'towerA3', 'towerA4', 'towerB2', 'towerB'], ind: ['towerAs', 'towerA3', 'towerB2', 'towerBs', 'towerA2'] },
   short: ['towerAs', 'towerBs', 'towerB4', 'towerA3'], wide: ['towerC', 'towerC2', 'towerC3', 'towerCs'], mid: ['midA', 'midB', 'midA2', 'midB2', 'midA3', 'midB3'],
@@ -1807,8 +1900,8 @@ function genCity(id) {
   const ss = SITES[id], seed = { gz: 11, tor: 23, ind: 37 }[id], rnd = (i, j, k) => hash2(i * 31 + k * 7 + seed, j * 17 - k * 3 + seed * 5), pick = (list, r) => list[Math.min(list.length - 1, (r * list.length) | 0)];
   const lms = ss.map((st) => { const u = st.h / (HZ[st.m] * Math.sin(ALPHA)), f = LMFOOT[st.m]; return { a: st.x * CYc + st.y * CYs, b: -st.x * CYs + st.y * CYc, ha: f[0] * u + 10, hb: f[1] * u + 10, x: st.x, y: st.y }; });
   const free = (a, b, ha, hb) => !lms.some((q) => Math.abs(a - q.a) < ha + q.ha && Math.abs(b - q.b) < hb + q.hb), out = [];
-  for (let i = -5; i <= 5; i++) for (let j = -4; j <= 4; j++) { const A = i * PA, B = j * PB, X = A * CYc - B * CYs, Y = A * CYs + B * CYc;
-    if (!inCity(X, Y, (rnd(i, j, 0) - 0.5) * 0.3)) continue;
+  for (let i = -5; i <= 5; i++) for (let j = -4; j <= 5; j++) { const A = i * PA, B = j * PB, X = A * CYc - B * CYs, Y = A * CYs + B * CYc;
+    if (!inShape(SHAPE[id], X, Y, (rnd(i, j, 0) - 0.5) * 0.3)) continue;
     const t = clamp((60 - Y) / 420, 0, 0.999), mix = MIX[id][(t * 3) | 0], r = rnd(i, j, 1); let kind = r < mix[0] ? 0 : r < mix[0] + mix[1] ? 1 : r < mix[0] + mix[1] + mix[2] ? 2 : 3;
     if (kind === 0 && lms.some((q) => Y - q.y > 0 && Y - q.y < 420 && Math.abs(X - q.x) < 240)) kind = 1; // nothing tall right in front of a landmark
     for (let row = 0; row < 2; row++) { const b = B + (row ? 52 : -52), wide = kind !== 0 || rnd(i, j, 2 + row) < 0.3, slots = kind === 2 ? [0] : wide ? [-62, 62] : [-83, 0, 83], ha = kind === 2 ? 120 : wide ? 58 : 39;
@@ -1818,14 +1911,14 @@ function genCity(id) {
   ss.push(...out); ss.sort((p, q) => p.y - q.y); ss.lms = lms; // back to front: the order they rise in
   const xs = ss.map((st) => st.x), ys = ss.map((st) => st.y); ss.box = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
   ss.forEach((st) => { st.sp = null; st.req = 0; st.rise = 0; st.sx = 0; st.sy = 0; st.vis = false; st.mesh = null;
-    st.ub = st.u || st.h / (HZ[st.m] * Math.sin(ALPHA)); st.a = st.x * CYc + st.y * CYs; st.b = -st.x * CYs + st.y * CYc; st.lv = Math.round(lieOfLand(st.a, st.b, seed)); });
+    st.ub = st.u || st.h / (HZ[st.m] * Math.sin(ALPHA)); st.a = st.x * CYc + st.y * CYs; st.b = -st.x * CYs + st.y * CYc; st.lv = Math.round(lieOfLand(st.a, st.b, seed, SHAPE[id])); });
   // the ground, one street block to a piece, each piece laid on the globe at its own middle so the curve of the Earth never shows
   const items = ss.map((st) => ({ m: st.m, a: st.a, b: st.b, u: st.ub, lv: st.lv, lm: !!st.zh })), zones = lms.map((q) => [q.a, q.b, q.ha, q.hb]), ground = [];
   for (let i = -6; i <= 6; i++) for (let j = -5; j <= 5; j++) { const A = i * PA, B = j * PB, X = A * CYc - B * CYs, Y = A * CYs + B * CYc;
     const mine = items.filter((it) => Math.abs(it.a - A) < PA / 2 + 300 && Math.abs(it.b - B) < PB / 2 + 300);
-    if (!mine.some((it) => Math.abs(it.a - A) < PA / 2 + 150 && Math.abs(it.b - B) < PB / 2 + 150) && !inCity(X, Y, 0.6)) continue;
+    if (!mine.some((it) => Math.abs(it.a - A) < PA / 2 + 150 && Math.abs(it.b - B) < PB / 2 + 150) && !inShape(SHAPE[id], X, Y, 0.6)) continue;
     ground.push({ m: `gnd:${id}:${i}:${j}`, u: UG, x: X, y: Y, sp: null, req: 0, rise: 1, mesh: null, sx: 0, sy: 0,
-      ground: { A, B, ug: UG, hx: PA / 2 / UG, hy: PB / 2 / UG, t0: 0, lh: GLV, seed, pa: PA, pb: PB, rwa: RWA, rwb: RWB, cyc: CYc, cys: CYs, ell: [980, 560, -90], items: mine, zones: zones.filter((q) => Math.abs(q[0] - A) < PA / 2 + q[2] && Math.abs(q[1] - B) < PB / 2 + q[3]) } }); }
+      ground: { A, B, ug: UG, hx: PA / 2 / UG, hy: PB / 2 / UG, t0: 0, lh: GLV, seed, pa: PA, pb: PB, rwa: RWA, rwb: RWB, cyc: CYc, cys: CYs, shape: SHAPE[id], items: mine, zones: zones.filter((q) => Math.abs(q[0] - A) < PA / 2 + q[2] && Math.abs(q[1] - B) < PB / 2 + q[3]) } }); }
   ss.ground = ground;
 }
 // a building stands on its patch of the ground: this far up from the globe, in site pixels (its own bottom layer is part of the ground now)
@@ -1862,19 +1955,21 @@ if (gl) try {
   // a block face: placed on screen from the city's three axes; its grain comes from which block the pixel falls in
   const scene = prog(`in ivec4 aPos; in vec4 aCol; uniform vec3 uO, uE, uS, uU; uniform vec2 uView; uniform float uDR; out vec3 vP; flat out int vDir; out vec4 vCol;
     void main() { vec3 p = vec3(aPos.xyz) * 0.5, s = uO + uE * p.x + uS * p.y + uU * p.z; vP = p; vDir = aPos.w; vCol = aCol; gl_Position = vec4(s.x / uView.x * 2.0 - 1.0, 1.0 - s.y / uView.y * 2.0, -s.z / uDR, 1.0); }`,
-  `in vec3 vP; flat in int vDir; in vec4 vCol; uniform float uRise, uBand, uAlpha; uniform vec3 uWave; uniform int uShadow; out vec4 o;
+  `in vec3 vP; flat in int vDir; in vec4 vCol; uniform float uRise, uBand, uAlpha, uMark; uniform vec3 uWave; uniform int uShadow; out vec4 o;
     float hash(ivec3 c) { uint n = uint(c.x + 2048) * 374761393u + uint(c.y + 2048) * 668265263u + uint(c.z + 7) * 2246822519u; n = (n ^ (n >> 13)) * 1274126177u; return float((n ^ (n >> 16)) & 0xffffu) / 65535.0; }
     void main() { if (uShadow == 1) { o = vec4(0.016, 0.03, 0.04, 1.0) * uAlpha; return; } if (vP.z > uRise) discard;
       vec3 n = vDir == 0 ? vec3(1, 0, 0) : vDir == 1 ? vec3(-1, 0, 0) : vDir == 2 ? vec3(0, 1, 0) : vDir == 3 ? vec3(0, -1, 0) : vec3(0, 0, 1), q = vP - n * 0.25;
       vec3 col = vCol.rgb * (1.0 + (hash(ivec3(floor(vec3(q.x + 0.5, q.y + 0.5, q.z)))) - 0.5) * vCol.a * 0.51);
       if (uRise - vP.z < uBand) col = mix(col, vec3(0.95, 0.65, 0.35), 0.9); float w = abs(vP.z - uWave.x); if (w < uWave.z) col += vec3(0.95, 0.65, 0.35) * uWave.y * (1.0 - w / uWave.z);
-      o = vec4(col, 1.0); }`);
+      o = vec4(col, uMark); }`);
   // then one pass over the picture: darken a pixel that sits well behind its neighbour, and outline the whole silhouette
   const post = prog(`in ivec4 aPos; void main() { gl_Position = vec4(float(aPos.x), float(aPos.y), 0.0, 1.0); }`,
   `uniform sampler2D uCol, uDep; uniform float uThr; out vec4 o;
     void main() { ivec2 p = ivec2(gl_FragCoord.xy), mx = textureSize(uCol, 0) - 1; vec4 c = texelFetch(uCol, p, 0); float d = texelFetch(uDep, p, 0).r, n = 1.0;
       n = min(n, texelFetch(uDep, min(p + ivec2(1, 0), mx), 0).r); n = min(n, texelFetch(uDep, max(p - ivec2(1, 0), ivec2(0)), 0).r); n = min(n, texelFetch(uDep, min(p + ivec2(0, 1), mx), 0).r); n = min(n, texelFetch(uDep, max(p - ivec2(0, 1), ivec2(0)), 0).r);
-      if (d < 1.0) o = vec4(c.rgb * (d - n > uThr ? 0.72 : 1.0), 1.0); else if (n < 1.0) o = vec4(vec3(0.03, 0.04, 0.05) * 0.59 + c.rgb * 0.41, 0.59 + c.a * 0.41); else o = c; }`);
+      // the outline goes round the buildings only: the ground (written with alpha 0.5) meets the globe without one
+      float b = 0.0; ivec2 q; for (int i = 0; i < 4; i++) { q = clamp(p + ivec2(i == 0 ? 1 : i == 1 ? -1 : 0, i == 2 ? 1 : i == 3 ? -1 : 0), ivec2(0), mx); if (texelFetch(uDep, q, 0).r < 1.0 && texelFetch(uCol, q, 0).a > 0.99) b = 1.0; }
+      if (d < 1.0) o = vec4(c.rgb * (d - n > uThr ? 0.72 : 1.0), 1.0); else if (b > 0.0) o = vec4(vec3(0.03, 0.04, 0.05) * 0.59 + c.rgb * 0.41, 0.59 + c.a * 0.41); else o = c; }`);
   const tri = gl.createVertexArray(); gl.bindVertexArray(tri); const tb = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, tb); gl.bufferData(gl.ARRAY_BUFFER, new Int16Array([-1, -1, 0, 0, 3, -1, 0, 0, -1, 3, 0, 0]), gl.STATIC_DRAW); gl.enableVertexAttribArray(0); gl.vertexAttribIPointer(0, 4, gl.SHORT, 8, 0); gl.bindVertexArray(null);
   G = { scene, post, tri, fbo: gl.createFramebuffer(), col: null, dep: null, w: 0, h: 0, shown: false, dirty: true, key: '', count: 0 };
   canvas.after(glc); if (/[?&]stats\b/.test(location.search)) window.__city = G;
@@ -1927,14 +2022,14 @@ function drawCity(dt) {
   const place = (st) => { const u = st.uT; gl.uniform3f(U.uO, st.sx, st.sy, st.dep); gl.uniform3f(U.uE, E1[0] * u, E1[1] * u, E1[2] * u); gl.uniform3f(U.uS, S1[0] * u, S1[1] * u, S1[2] * u); gl.uniform3f(U.uU, U1[0] * u, U1[1] * u, U1[2] * u); gl.bindVertexArray(st.mesh.vao); };
   const dirs = [E1[2] > 0 ? 0 : 1, S1[2] > 0 ? 2 : 3, 4]; G.count = 0; G.sites = live.length;
   // the ground first: the top, and whichever two sides face us
-  gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LESS); gl.depthMask(true); gl.uniform1i(U.uShadow, 0); gl.uniform1f(U.uRise, 1e6); gl.uniform1f(U.uBand, 0); gl.uniform3f(U.uWave, 0, 0, 0);
+  gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LESS); gl.depthMask(true); gl.uniform1i(U.uShadow, 0); gl.uniform1f(U.uMark, 0.5); gl.uniform1f(U.uRise, 1e6); gl.uniform1f(U.uBand, 0); gl.uniform3f(U.uWave, 0, 0, 0);
   for (const st of floor) { const m = st.mesh; place(st); for (const k of dirs) if (m.ranges[k * 2 + 1]) { G.count += m.ranges[k * 2 + 1] / 3; gl.drawElements(gl.TRIANGLES, m.ranges[k * 2 + 1], gl.UNSIGNED_INT, m.ranges[k * 2] * 4); } }
   // then the shadows, laid over it; the stencil keeps two of them from darkening the same pixel twice
   gl.disable(gl.DEPTH_TEST); gl.depthMask(false); gl.enable(gl.STENCIL_TEST); gl.stencilFunc(gl.NOTEQUAL, 1, 255); gl.stencilOp(gl.KEEP, gl.KEEP, gl.REPLACE); gl.uniform1i(U.uShadow, 1);
   gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
   for (const st of live) { place(st); gl.uniform1f(U.uAlpha, 0.47 * riseE(st.rise)); gl.drawElements(gl.TRIANGLES, st.mesh.shadow[1], gl.UNSIGNED_INT, st.mesh.shadow[0] * 4); }
   // then the buildings
-  gl.disable(gl.BLEND); gl.disable(gl.STENCIL_TEST); gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LESS); gl.depthMask(true); gl.uniform1i(U.uShadow, 0);
+  gl.disable(gl.BLEND); gl.disable(gl.STENCIL_TEST); gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LESS); gl.depthMask(true); gl.uniform1i(U.uShadow, 0); gl.uniform1f(U.uMark, 1);
   for (const st of live) { const m = st.mesh, top = m.box[4], rising = st.rise < 1; place(st);
     gl.uniform1f(U.uRise, rising ? top * riseE(st.rise) : 1e6); gl.uniform1f(U.uBand, rising ? Math.max(1.5, top * 0.035) : 0);
     if (wave >= 0 && st === waveSt) gl.uniform3f(U.uWave, top * wave, 0.6 * Math.sin(PI * Math.min(1, wave)), Math.max(3, top * 0.09)); else gl.uniform3f(U.uWave, 0, 0, 0);
