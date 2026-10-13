@@ -673,13 +673,51 @@ function buildMesh(g) {
   for (let z = 0; z < hz; z++) for (let y = -hy; y <= hy; y++) for (let x = -hx; x <= hx; x++) { if (!d[(z * l + y + hy) * w + x + hx]) continue; if (x < bx0) bx0 = x; if (x > bx1) bx1 = x; if (y < by0) by0 = y; if (y > by1) by1 = y; if (z > zt) zt = z;
     if (z > 0 && !open(x, y, z + 1) && !open(x + 1, y, z) && !open(x - 1, y, z) && !open(x, y + 1, z) && !open(x, y - 1, z)) continue; const gx = Math.round(x - (z + 1) * sx / sz), gy = Math.round(y - (z + 1) * sy / sz); cells.push(gx, gy); if (gx < gx0) gx0 = gx; if (gx > gx1) gx1 = gx; if (gy < gy0) gy0 = gy; if (gy > gy1) gy1 = gy; }
   if (cells.length) { const U = gx1 - gx0 + 1, V = gy1 - gy0 + 1, mask = new Uint32Array(U * V); for (let i = 0; i < cells.length; i += 2) mask[(cells[i + 1] - gy0) * U + cells[i] - gx0] = 0x1000001;
-    greedy(mask, U, V, (u, v, wd, ht, key) => { const x0 = 2 * (u + gx0) - 1, x1 = x0 + 2 * wd, y0 = 2 * (v + gy0) - 1, y1 = y0 + 2 * ht; quad([x0, y0, 0, x1, y0, 0, x1, y1, 0, x0, y1, 0], 5, key); }); }
+    greedy(mask, U, V, (u, v, wd, ht, key) => { const x0 = 2 * (u + gx0) - 1, x1 = x0 + 2 * wd, y0 = 2 * (v + gy0) - 1, y1 = y0 + 2 * ht; quad([x0, y0, 2, x1, y0, 2, x1, y1, 2, x0, y1, 2], 5, key); }); }
   let tx = 0, ty = 0, tn = 0; for (let y = -hy; y <= hy; y++) for (let x = -hx; x <= hx; x++) if (occ(x, y, zt) || occ(x, y, zt - 2)) { tx += x; ty += y; tn++; }
   const ib = new Uint32Array(nq * 6); for (let i = 0; i < nq; i++) { const o = i * 6, b = i * 4; ib[o] = b; ib[o + 1] = b + 1; ib[o + 2] = b + 2; ib[o + 3] = b; ib[o + 4] = b + 2; ib[o + 5] = b + 3; }
   return { vb: vb.slice(0, nq * 48), ib, ranges, shadow: [solidQuads * 6, (nq - solidQuads) * 6], nq, box: [bx0 - 0.5, bx1 + 0.5, by0 - 0.5, by1 + 0.5, zt + 1], top: [tn ? tx / tn : 0, tn ? ty / tn : 0, zt + 1] };
 }
 const lmGrids = {};
-function job(q) { const g = lmGrids[q.model] || (lmGrids[q.model] = LMODEL[q.model]()); const r = q.mesh ? buildMesh(g) : renderSprite(g, q.basis, q.u); r.id = q.id; r.hz = g.hz; r.model = q.model; return r; }
+// a model, cached; its bottom layer is its own patch of ground, which is lifted off and kept apart so the city's ground can carry it instead
+function model(name) { let g = lmGrids[name]; if (!g) { g = lmGrids[name] = LMODEL[name](); const n = g.w * g.l; g.base = g.d.slice(0, n); g.d.fill(0, 0, n); } return g; }
+// One street block of a city's ground: a slab of earth with a gentle lie of the land, roads round the block, plazas round the landmarks,
+// each building's own patch of ground under it, lawns and trees in what is left. a runs along the streets, b across them, in site pixels.
+function groundTile(p) {
+  const UG = p.ug, HX = p.hx, HY = p.hy, T0 = p.t0, LH = p.lh, g = new Grid(HX, HY, T0 + LH * 4 + 16);
+  const its = p.items.map((it) => { const m = model(it.m); return { g: m, a: it.a, b: it.b, u: it.u, lv: it.lv, lm: it.lm, ha: (m.hx + 0.5) * it.u, hb: (m.hy + 0.5) * it.u }; });
+  const zones = p.zones, edge = (a, b) => { const x = a * p.cyc - b * p.cys, y = a * p.cys + b * p.cyc, w = (vnoise(a / 90, b / 90, p.seed) - 0.5) * 0.14; return (x / p.ell[0]) ** 2 + ((y - p.ell[2]) / p.ell[1]) ** 2 < 1.16 + w; };
+  const top = new Int16Array(g.w * g.l).fill(-1), surf = new Uint8Array(g.w * g.l), lawn = new Uint8Array(g.w * g.l);
+  for (let gy = -HY; gy < HY; gy++) for (let gx = -HX; gx < HX; gx++) {
+    const a = p.A + gx * UG, b = p.B + gy * UG; let m = 0, lv = -1, near = false;
+    for (const it of its) { const da = Math.abs(a - it.a), db = Math.abs(b - it.b); if (da > it.ha + 8 || db > it.hb + 8) continue; near = true; if (it.lv > lv) lv = it.lv;
+      if (da <= it.ha && db <= it.hb) { const bx = Math.round((a - it.a) / it.u), by = Math.round((b - it.b) / it.u); if (Math.abs(bx) <= it.g.hx && Math.abs(by) <= it.g.hy) { const bm = it.g.base[(by + it.g.hy) * it.g.w + bx + it.g.hx]; if (bm) m = bm; } } }
+    const zone = zones.some((q) => Math.abs(a - q[0]) < q[2] && Math.abs(b - q[1]) < q[3]);
+    if (!near && !zone && !edge(a, b)) continue;
+    if (lv < 0) lv = Math.round(lieOfLand(a, b, p.seed));
+    // the streets: a broad one between the rows of blocks, a narrower one between the blocks of a row, a pavement either side
+    const ra = Math.abs(((a / p.pa) % 1 + 1) % 1 - 0.5) * p.pa, rb = Math.abs(((b / p.pb) % 1 + 1) % 1 - 0.5) * p.pb, inA = ra < p.rwa, inB = rb < p.rwb;
+    let s = 0;
+    if (!zone && (inA || inB)) { if (inA && inB) s = M.as; else if (inA) s = ra < 1 && ((b / UG) | 0) % 8 < 4 ? M.wt1 : M.as; else s = rb < 1 && ((a / UG) | 0) % 8 < 4 ? M.wt1 : M.as; }
+    else if (!zone && (ra < p.rwa + 6 || rb < p.rwb + 6)) s = (ra < p.rwa + 1 || rb < p.rwb + 1) ? M.gr1 : M.cc1;
+    else if (m) s = m;
+    else if (zone) s = ((a / UG) | 0) % 10 === 0 || ((b / UG) | 0) % 10 === 0 ? M.gr2 : M.gr1;
+    else { s = hash2(gx * 7 + p.A, gy * 13 + p.B) > 0.86 ? M.gt1 : M.gn2; lawn[(gy + HY) * g.w + gx + HX] = 1; }
+    const i = (gy + HY) * g.w + gx + HX, zt = T0 + LH * lv; top[i] = zt; surf[i] = s;
+    // under it: a course of dressed stone where the land steps up from one level to the next, then earth, then rock
+    for (let z = 0; z < zt; z++) g.set(gx, gy, z, z >= T0 && z >= zt - LH ? (z === zt - 1 ? M.gr2 : (gx + gy + z + 600) % 5 === 0 ? M.gr3 : M.gr1) : z === zt - 1 ? M.br2 : z < 2 ? M.rk2 : (z + ((hash2(gx >> 3, gy >> 3) * 3) | 0)) % 4 === 0 ? M.tn1 : M.tn2);
+    g.set(gx, gy, zt, s);
+  }
+  // a few trees on the lawns, kept clear of the block's edges so none is cut in two
+  for (let cy = -HY + 8; cy < HY - 8; cy += 9) for (let cx = -HX + 8; cx < HX - 8; cx += 9) {
+    const r = hash2(cx * 5 + p.A, cy * 3 + p.B); if (r > 0.55) continue; const x = cx + ((r * 40) | 0) % 5 - 2, y = cy + ((r * 400) | 0) % 5 - 2;
+    let ok = true; for (let dy = -3; dy <= 3 && ok; dy++) for (let dx = -3; dx <= 3; dx++) if (!lawn[(y + dy + HY) * g.w + x + dx + HX]) { ok = false; break; }
+    if (!ok) continue; const z0 = top[(y + HY) * g.w + x + HX], h = 4 + ((r * 1000) | 0) % 4, rr = 2.4 + r * 3;
+    g.box(x, x, y, y, z0 + 1, z0 + h, M.bz); g.ellipsoid(x, y, z0 + h + rr * 0.7, rr, rr, rr * 1.1, (a, b, c) => (h3(a, b, c) > 0.55 ? M.lf1 : M.lf2));
+  }
+  return g;
+}
+function job(q) { const g = q.ground ? (lmGrids[q.model] || groundTile(q.ground)) : model(q.model); if (q.ground && !q.mesh) lmGrids[q.model] = g; const r = q.mesh ? buildMesh(g) : renderSprite(g, q.basis, q.u); r.id = q.id; r.hz = g.hz; r.model = q.model; return r; }
 
 /* ---------- the landmarks themselves (x east, y south = the front, z up) ---------- */
 // shared bits for the ordinary buildings that fill in around the landmarks
@@ -1442,6 +1480,12 @@ const MW = 1440, MH = 720; let MAP = null, MAPG = null, MAPB = null, miniLand = 
   im.src = EARTH;
 })();
 function hash2(x, y) { let n = Math.imul(x | 0, 374761393) + Math.imul(y | 0, 668265263); n = Math.imul(n ^ (n >>> 13), 1274126177); return ((n ^ (n >>> 16)) >>> 0) / 4294967296; }
+// smooth value noise, and from it the lie of the land under a city, in levels: a few low rises, the ground climbing a little toward the back
+function vnoise(x, y, seed) { const xi = Math.floor(x), yi = Math.floor(y), fx = x - xi, fy = y - yi, sx = fx * fx * (3 - 2 * fx), sy = fy * fy * (3 - 2 * fy), k = seed * 101;
+  const a = hash2(xi + k, yi - k), b = hash2(xi + 1 + k, yi - k), c = hash2(xi + k, yi + 1 - k), d = hash2(xi + 1 + k, yi + 1 - k); return a + (b - a) * sx + (c - a) * sy + (a - b - c + d) * sx * sy; }
+// it settles to nothing toward the edge of the city (the same oval as inCity, turned back from the streets' angle), so the ground there meets the globe flush
+function lieOfLand(a, b, seed) { const c = 0.8829, s = 0.4695, x = a * c - b * s, y = a * s + b * c, e = (x / 980) ** 2 + ((y + 90) / 560) ** 2, fall = Math.min(1, Math.max(0, (1 - e) / 0.4));
+  const v = 1.3 + (vnoise(a / 470, b / 470, seed) - 0.5) * 3.4 + (vnoise(a / 190 + 9, b / 190 + 4, seed) - 0.5) * 1.1 + Math.min(1, Math.max(0, (-b - 180) / 360)) * 1.4; return Math.min(4, Math.max(0, v)) * fall; }
 function vnoise(x, y) {
   const xi = Math.floor(x), yi = Math.floor(y), xf = x - xi, yf = y - yi;
   const u = xf * xf * (3 - 2 * xf), v = yf * yf * (3 - 2 * yf);
@@ -1749,6 +1793,7 @@ const HZ = { cathedral: 160, puiching: 72, rams: 142, zhenhai: 134, memorial: 12
 const LMFOOT = { cathedral: [40, 106], puiching: [70, 26], rams: [64, 56], zhenhai: [76, 46], memorial: [80, 100], circle: [72, 18], canton: [25, 25], cn: [24, 24], rogers: [58, 58], monument: [62, 62], statehouse: [54, 36], salesforce: [16, 16], cityhall: [62, 78], casaloma: [72, 46], warmemorial: [58, 68], pagoda: [68, 58], uc: [86, 40], convocation: [46, 54], harthouse: [64, 34] };
 // The streets run at the angle the buildings face. A block holds two rows of lots; what goes on them depends on the city and on how far back the block stands.
 const CYAW = rad(28), CYc = Math.cos(CYAW), CYs = Math.sin(CYAW), PA = 280, PB = 252, RWA = 16, RWB = 22;
+const UG = 2, GLV = 4; // the ground's block, in site pixels, and how tall one level of the land is. Its lowest level is sunk one block so its top is flush with the globe.
 const inCity = (x, y, grow) => (x / 980) * (x / 980) + ((y + 90) / 560) * ((y + 90) / 560) < 1 + grow;
 const FILL = {
   tall: { gz: ['towerA', 'towerAt', 'towerA2', 'towerA4', 'towerB', 'towerB3', 'towerB2', 'towerA3'], tor: ['towerA', 'towerAt', 'towerA2', 'towerA3', 'towerA4', 'towerB2', 'towerB'], ind: ['towerAs', 'towerA3', 'towerB2', 'towerBs', 'towerA2'] },
@@ -1772,18 +1817,29 @@ function genCity(id) {
         out.push({ m, u: kind === 0 ? (wide ? 2.3 : 2.1) : kind === 1 ? 2 : kind === 2 ? 2.1 : 1.6, x: a * CYc - b * CYs, y: a * CYs + b * CYc }); }); } }
   ss.push(...out); ss.sort((p, q) => p.y - q.y); ss.lms = lms; // back to front: the order they rise in
   const xs = ss.map((st) => st.x), ys = ss.map((st) => st.y); ss.box = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
-  ss.forEach((st) => { st.sp = null; st.req = 0; st.rise = 0; st.sx = 0; st.sy = 0; st.vis = false; st.mesh = null; });
+  ss.forEach((st) => { st.sp = null; st.req = 0; st.rise = 0; st.sx = 0; st.sy = 0; st.vis = false; st.mesh = null;
+    st.ub = st.u || st.h / (HZ[st.m] * Math.sin(ALPHA)); st.a = st.x * CYc + st.y * CYs; st.b = -st.x * CYs + st.y * CYc; st.lv = Math.round(lieOfLand(st.a, st.b, seed)); });
+  // the ground, one street block to a piece, each piece laid on the globe at its own middle so the curve of the Earth never shows
+  const items = ss.map((st) => ({ m: st.m, a: st.a, b: st.b, u: st.ub, lv: st.lv, lm: !!st.zh })), zones = lms.map((q) => [q.a, q.b, q.ha, q.hb]), ground = [];
+  for (let i = -6; i <= 6; i++) for (let j = -5; j <= 5; j++) { const A = i * PA, B = j * PB, X = A * CYc - B * CYs, Y = A * CYs + B * CYc;
+    const mine = items.filter((it) => Math.abs(it.a - A) < PA / 2 + 300 && Math.abs(it.b - B) < PB / 2 + 300);
+    if (!mine.some((it) => Math.abs(it.a - A) < PA / 2 + 150 && Math.abs(it.b - B) < PB / 2 + 150) && !inCity(X, Y, 0.6)) continue;
+    ground.push({ m: `gnd:${id}:${i}:${j}`, u: UG, x: X, y: Y, sp: null, req: 0, rise: 1, mesh: null, sx: 0, sy: 0,
+      ground: { A, B, ug: UG, hx: PA / 2 / UG, hy: PB / 2 / UG, t0: 0, lh: GLV, seed, pa: PA, pb: PB, rwa: RWA, rwb: RWB, cyc: CYc, cys: CYs, ell: [980, 560, -90], items: mine, zones: zones.filter((q) => Math.abs(q[0] - A) < PA / 2 + q[2] && Math.abs(q[1] - B) < PB / 2 + q[3]) } }); }
+  ss.ground = ground;
 }
+// a building stands on its patch of the ground: this far up from the globe, in site pixels (its own bottom layer is part of the ground now)
+const liftOf = (st) => GLV * st.lv * UG - st.ub;
 for (const id in SITES) genCity(id);
 
 /* ---------- building the models off the main thread ---------- */
 // the sprites of the fallback view face the viewer at the same fixed three-quarter angle
 const LM_BASIS = (() => { const E = [1, 0, 0], S = [0, Math.cos(ALPHA), Math.sin(ALPHA)]; return { e: E.map((v, i) => v * CYc + S[i] * CYs), s: E.map((v, i) => -v * CYs + S[i] * CYc), u: [0, -Math.sin(ALPHA), Math.cos(ALPHA)] }; })();
-const LM_SRC = 'const PI = Math.PI, TAU = PI * 2;\n' + hash2.toString() + '\n' + document.getElementById('lmsrc').textContent;
+const LM_SRC = 'const PI = Math.PI, TAU = PI * 2;\n' + [hash2, vnoise, lieOfLand].map(String).join('\n') + '\n' + document.getElementById('lmsrc').textContent;
 let lmWorkers = [], lmLocal = null, lmSeq = 0; const lmWait = new Map();
 function lmDone(r) { const w = lmWait.get(r.id); lmWait.delete(r.id); if (w) w.cb(r); }
 function lmRun(q) { setTimeout(() => { try { if (!lmLocal) lmLocal = new Function(LM_SRC + '\nreturn job;')(); lmDone(lmLocal(q)); } catch (e) { lmWait.delete(q.id); } }, 0); }
-function lmRequest(model, u, cb, mesh) { const q = { id: ++lmSeq, model, u, basis: LM_BASIS, mesh: !!mesh }; lmWait.set(q.id, { q, cb }); if (lmWorkers.length) lmWorkers[q.id % lmWorkers.length].postMessage(q); else lmRun(q); }
+function lmRequest(model, u, cb, mesh, ground) { const q = { id: ++lmSeq, model, u, basis: LM_BASIS, mesh: !!mesh, ground }; lmWait.set(q.id, { q, cb }); if (lmWorkers.length) lmWorkers[q.id % lmWorkers.length].postMessage(q); else lmRun(q); }
 try {
   const url = URL.createObjectURL(new Blob([LM_SRC + '\nonmessage = (e) => { const r = job(e.data); postMessage(r, r.vb ? [r.vb, r.ib.buffer] : [r.buf.buffer, r.sbuf.buffer]); };'], { type: 'text/javascript' }));
   for (let i = clamp((navigator.hardwareConcurrency || 2) - 1, 1, 3); i > 0; i--) { const w = new Worker(url); w.onmessage = (e) => lmDone(e.data);
@@ -1830,7 +1886,7 @@ function wantMesh(st) {
     lmRequest(st.m, 0, (r) => { const vao = gl.createVertexArray(); gl.bindVertexArray(vao); const vb = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, vb); gl.bufferData(gl.ARRAY_BUFFER, r.vb, gl.STATIC_DRAW);
       gl.enableVertexAttribArray(0); gl.vertexAttribIPointer(0, 4, gl.SHORT, 12, 0); gl.enableVertexAttribArray(1); gl.vertexAttribPointer(1, 4, gl.UNSIGNED_BYTE, true, 12, 8);
       const ib = gl.createBuffer(); gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ib); gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, r.ib, gl.STATIC_DRAW); gl.bindVertexArray(null);
-      e.vao = vao; e.ranges = r.ranges; e.shadow = r.shadow; e.box = r.box; e.top = r.top; e.ready = true; G.dirty = true; }, true); }
+      e.vao = vao; e.ranges = r.ranges; e.shadow = r.shadow; e.box = r.box; e.top = r.top; e.ready = true; G.dirty = true; }, true, st.ground); }
   st.mesh = e;
 }
 function sizeGL() {
@@ -1849,7 +1905,7 @@ function drawCity(dt) {
   let moving = wave >= 0; const live = [];
   for (let i = 0; i < n; i++) { const st = sites[i];
     v[0] = c.v[0] + (Ew[0] * st.x + Sw[0] * st.y) * f; v[1] = c.v[1] + (Ew[1] * st.x + Sw[1] * st.y) * f; v[2] = c.v[2] + (Ew[2] * st.x + Sw[2] * st.y) * f;
-    const len = Math.hypot(v[0], v[1], v[2]); v[0] /= len; v[1] /= len; v[2] /= len; const pr = project(v, 1); st.sx = pr.x; st.sy = pr.y; st.dep = pr.z * cam.R - dz0; st.vis = false;
+    const len = Math.hypot(v[0], v[1], v[2]); v[0] /= len; v[1] /= len; v[2] /= len; const pr = project(v, 1), lp = liftOf(st) * siteK() * zoom; st.sx = pr.x + U1[0] * lp; st.sy = pr.y + U1[1] * lp; st.dep = pr.z * cam.R - dz0 + U1[2] * lp; st.vis = false;
     if (!st.mesh) wantMesh(st); const m = st.mesh, u = baseU(st) * zoom; st.uT = u; if (!m.ready) continue;
     if (st.rise < 1 && cityMode === shown && arriveT > 0.15 + 2.6 * i / n) { st.rise = Math.min(1, st.rise + dt / 2.1); moving = true; }
     if (st.rise <= 0) continue;
@@ -1858,20 +1914,27 @@ function drawCity(dt) {
     st.tx = st.sx + (E1[0] * m.top[0] + S1[0] * m.top[1] + U1[0] * m.top[2]) * u; st.ty = st.sy + (E1[1] * m.top[0] + S1[1] * m.top[1] + U1[1] * m.top[2]) * u - 12;
     let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9; for (let k = 0; k < 8; k++) { const bx = m.box[k & 1], by = m.box[2 + ((k >> 1) & 1)], bz = k & 4 ? m.box[4] * riseE(st.rise) : 0, X = st.sx + (E1[0] * bx + S1[0] * by + U1[0] * bz) * u, Y = st.sy + (E1[1] * bx + S1[1] * by + U1[1] * bz) * u; if (X < x0) x0 = X; if (X > x1) x1 = X; if (Y < y0) y0 = Y; if (Y > y1) y1 = Y; }
     st.bx0 = x0; st.bx1 = x1; st.by0 = y0; st.by1 = y1; st.vis = true; live.push(st); }
+  const floor = []; for (const st of sites.ground) { v[0] = c.v[0] + (Ew[0] * st.x + Sw[0] * st.y) * f; v[1] = c.v[1] + (Ew[1] * st.x + Sw[1] * st.y) * f; v[2] = c.v[2] + (Ew[2] * st.x + Sw[2] * st.y) * f;
+    const len = Math.hypot(v[0], v[1], v[2]); v[0] /= len; v[1] /= len; v[2] /= len; const pr = project(v, 1), lp = -UG * siteK() * zoom; st.sx = pr.x + U1[0] * lp; st.sy = pr.y + U1[1] * lp; st.dep = pr.z * cam.R - dz0 + U1[2] * lp;
+    if (!st.mesh) wantMesh(st); const m = st.mesh; st.uT = baseU(st) * zoom; if (!m.ready) continue; const r = (PA + PB) * st.uT / UG; if (st.sx < -r || st.sx > vw + r || st.sy < -r || st.sy > vh + r) continue; floor.push(st); }
   sizeGL(); glc.style.opacity = Math.min(1, buildK * 1.5).toFixed(2);
-  const key = [cam.R.toFixed(1), cam.lon.toFixed(6), cam.lat.toFixed(6), cam.yaw.toFixed(4), cam.pitch.toFixed(4), focusY.toFixed(1), cx.toFixed(1), live.length].join('|');
+  const key = [cam.R.toFixed(1), cam.lon.toFixed(6), cam.lat.toFixed(6), cam.yaw.toFixed(4), cam.pitch.toFixed(4), focusY.toFixed(1), cx.toFixed(1), live.length, floor.length].join('|');
   if (!moving && !G.dirty && key === G.key) return; G.key = key; G.dirty = false;
   if (!G.shown) { glc.style.visibility = 'visible'; G.shown = true; }
   const S = G.scene, U = S.u, DR = 9000 * Math.max(1, zoom);
   gl.bindFramebuffer(gl.FRAMEBUFFER, G.fbo); gl.viewport(0, 0, G.w, G.h); gl.disable(gl.BLEND); gl.disable(gl.CULL_FACE); gl.depthMask(true); gl.stencilMask(255); gl.clearColor(0, 0, 0, 0); gl.clearDepth(1); gl.clearStencil(0); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
   gl.useProgram(S.p); gl.uniform2f(U.uView, vw, vh); gl.uniform1f(U.uDR, DR);
   const place = (st) => { const u = st.uT; gl.uniform3f(U.uO, st.sx, st.sy, st.dep); gl.uniform3f(U.uE, E1[0] * u, E1[1] * u, E1[2] * u); gl.uniform3f(U.uS, S1[0] * u, S1[1] * u, S1[2] * u); gl.uniform3f(U.uU, U1[0] * u, U1[1] * u, U1[2] * u); gl.bindVertexArray(st.mesh.vao); };
-  // the shadows first, flat on the ground; the stencil keeps two of them from darkening the same pixel twice
-  gl.disable(gl.DEPTH_TEST); gl.depthMask(false); gl.enable(gl.STENCIL_TEST); gl.stencilFunc(gl.NOTEQUAL, 1, 255); gl.stencilOp(gl.KEEP, gl.KEEP, gl.REPLACE); gl.uniform1i(U.uShadow, 1);
-  for (const st of live) { place(st); gl.uniform1f(U.uAlpha, 0.47 * riseE(st.rise)); gl.drawElements(gl.TRIANGLES, st.mesh.shadow[1], gl.UNSIGNED_INT, st.mesh.shadow[0] * 4); }
-  // then the buildings: the top, and whichever two sides face us
-  gl.disable(gl.STENCIL_TEST); gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LESS); gl.depthMask(true); gl.uniform1i(U.uShadow, 0);
   const dirs = [E1[2] > 0 ? 0 : 1, S1[2] > 0 ? 2 : 3, 4]; G.count = 0; G.sites = live.length;
+  // the ground first: the top, and whichever two sides face us
+  gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LESS); gl.depthMask(true); gl.uniform1i(U.uShadow, 0); gl.uniform1f(U.uRise, 1e6); gl.uniform1f(U.uBand, 0); gl.uniform3f(U.uWave, 0, 0, 0);
+  for (const st of floor) { const m = st.mesh; place(st); for (const k of dirs) if (m.ranges[k * 2 + 1]) { G.count += m.ranges[k * 2 + 1] / 3; gl.drawElements(gl.TRIANGLES, m.ranges[k * 2 + 1], gl.UNSIGNED_INT, m.ranges[k * 2] * 4); } }
+  // then the shadows, laid over it; the stencil keeps two of them from darkening the same pixel twice
+  gl.disable(gl.DEPTH_TEST); gl.depthMask(false); gl.enable(gl.STENCIL_TEST); gl.stencilFunc(gl.NOTEQUAL, 1, 255); gl.stencilOp(gl.KEEP, gl.KEEP, gl.REPLACE); gl.uniform1i(U.uShadow, 1);
+  gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+  for (const st of live) { place(st); gl.uniform1f(U.uAlpha, 0.47 * riseE(st.rise)); gl.drawElements(gl.TRIANGLES, st.mesh.shadow[1], gl.UNSIGNED_INT, st.mesh.shadow[0] * 4); }
+  // then the buildings
+  gl.disable(gl.BLEND); gl.disable(gl.STENCIL_TEST); gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LESS); gl.depthMask(true); gl.uniform1i(U.uShadow, 0);
   for (const st of live) { const m = st.mesh, top = m.box[4], rising = st.rise < 1; place(st);
     gl.uniform1f(U.uRise, rising ? top * riseE(st.rise) : 1e6); gl.uniform1f(U.uBand, rising ? Math.max(1.5, top * 0.035) : 0);
     if (wave >= 0 && st === waveSt) gl.uniform3f(U.uWave, top * wave, 0.6 * Math.sin(PI * Math.min(1, wave)), Math.max(3, top * 0.09)); else gl.uniform3f(U.uWave, 0, 0, 0);
@@ -1886,13 +1949,13 @@ const toCanvas = (buf, W, H) => { const cv = document.createElement('canvas'); c
 function bounds(buf, W, H) { let x0 = W, y0 = H, x1 = 0, y1 = 0; for (let y = 0, i = 0; y < H; y++) for (let x = 0; x < W; x++, i++) if (buf[i] >>> 24) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; } if (x1 < x0) return [0, 0, W, H, W / 2]; let a = 0, n = 0; for (let y = y0; y < Math.min(H, y0 + 4); y++) for (let x = 0; x < W; x++) if (buf[y * W + x] >>> 24) { a += x; n++; } return [x0, y0, x1 + 1, y1 + 1, n ? a / n : (x0 + x1) / 2]; }
 const spCache = new Map(); // one picture per model and size, shared by every building that uses it
 function wantSprite(st, uT) {
-  const u = clamp(Math.round(uT * 20) / 20, 0.6, 6.5); if (st.req || (st.sp && Math.abs(st.sp.u / u - 1) < 0.08)) return;
+  const u = clamp(Math.round(uT * 20) / 20, 0.6, st.ground ? 2.5 : 6.5); if (st.req || (st.sp && Math.abs(st.sp.u / u - 1) < 0.08)) return;
   const key = st.m + '|' + u, hit = spCache.get(key); st.req = u;
   if (hit) { if (hit.sp) { st.sp = hit.sp; st.req = 0; } else hit.wait.push(st); return; }
-  const ent = { sp: null, wait: [st] }; spCache.set(key, ent); if (spCache.size > 120) spCache.delete(spCache.keys().next().value);
-  lmRequest(st.m, u, (r) => { const b = bounds(r.buf, r.W, r.H); ent.sp = { cv: toCanvas(r.buf, r.W, r.H), sh: toCanvas(r.sbuf, r.SW, r.SH), ox: r.ox, oy: r.oy, sox: r.sox, soy: r.soy, u: r.u, w: r.W, h: r.H, hz: r.hz, x0: b[0], y0: b[1], x1: b[2], y1: b[3], px: b[4] }; for (const w of ent.wait) { w.sp = ent.sp; w.req = 0; } ent.wait.length = 0; });
+  const ent = { sp: null, wait: [st] }; spCache.set(key, ent); if (spCache.size > 240) spCache.delete(spCache.keys().next().value);
+  lmRequest(st.m, u, (r) => { const b = bounds(r.buf, r.W, r.H); ent.sp = { cv: toCanvas(r.buf, r.W, r.H), sh: toCanvas(r.sbuf, r.SW, r.SH), ox: r.ox, oy: r.oy, sox: r.sox, soy: r.soy, u: r.u, w: r.W, h: r.H, hz: r.hz, x0: b[0], y0: b[1], x1: b[2], y1: b[3], px: b[4] }; for (const w of ent.wait) { w.sp = ent.sp; w.req = 0; } ent.wait.length = 0; }, false, st.ground);
 }
-function warmCity(id) { for (const st of SITES[id]) { if (G) { if (!st.mesh) wantMesh(st); } else if (!st.sp) wantSprite(st, baseU(st)); } }
+function warmCity(id) { for (const st of SITES[id].ground.concat(SITES[id])) { if (G) { if (!st.mesh) wantMesh(st); } else if (!st.sp) wantSprite(st, baseU(st)); } }
 const fx = document.createElement('canvas'), fxc = fx.getContext('2d');
 function drawBuilding(dt) {
   const key = cam.R.toFixed(0) + '|' + cam.lon.toFixed(4) + '|' + cam.lat.toFixed(4); settle = key === lastCam ? settle + dt : 0; lastCam = key;
@@ -1900,9 +1963,16 @@ function drawBuilding(dt) {
   const c = byId[shown], sites = SITES[shown], lo = rad(c.lon), la = rad(c.lat), zoom = cam.R / cityR(), f = siteK() / cityR(), n = sites.length;
   const Ew = [Math.cos(lo), 0, -Math.sin(lo)], Sw = [Math.sin(la) * Math.sin(lo), -Math.cos(la), Math.sin(la) * Math.cos(lo)], v = [0, 0, 0];
   if (cityMode === shown) arriveT += dt; else arriveT = 0;
+  const U1 = V3(c.v, 1);
+  // the ground first, far pieces before near ones
+  for (const st of sites.ground) { v[0] = c.v[0] + (Ew[0] * st.x + Sw[0] * st.y) * f; v[1] = c.v[1] + (Ew[1] * st.x + Sw[1] * st.y) * f; v[2] = c.v[2] + (Ew[2] * st.x + Sw[2] * st.y) * f;
+    const len = Math.hypot(v[0], v[1], v[2]); v[0] /= len; v[1] /= len; v[2] /= len; const pr = project(v, 1), lp = -UG * siteK() * zoom; st.sx = pr.x + U1[0] * lp; st.sy = pr.y + U1[1] * lp; st.uT = baseU(st) * zoom; if (!st.sp || settle > 0.25) wantSprite(st, st.uT); }
+  ctx.globalAlpha = Math.min(1, buildK * 1.5);
+  for (const st of sites.ground.slice().sort((p, q) => p.sy - q.sy)) { const sp = st.sp; if (!sp) continue; const k = st.uT / sp.u, w = sp.w * k, h = sp.h * k, dx = st.sx - sp.ox * k, dy = st.sy - sp.oy * k;
+    if (dx > vw || dy > vh || dx + w < 0 || dy + h < 0) continue; ctx.imageSmoothingEnabled = false; ctx.drawImage(sp.cv, dx, dy, w, h); }
   for (let i = 0; i < n; i++) { const st = sites[i];
     v[0] = c.v[0] + (Ew[0] * st.x + Sw[0] * st.y) * f; v[1] = c.v[1] + (Ew[1] * st.x + Sw[1] * st.y) * f; v[2] = c.v[2] + (Ew[2] * st.x + Sw[2] * st.y) * f;
-    const len = Math.hypot(v[0], v[1], v[2]); v[0] /= len; v[1] /= len; v[2] /= len; const pr = project(v, 1); st.sx = pr.x; st.sy = pr.y; st.dep = pr.y; st.vis = false;
+    const len = Math.hypot(v[0], v[1], v[2]); v[0] /= len; v[1] /= len; v[2] /= len; const pr = project(v, 1), lp = liftOf(st) * siteK() * zoom; st.sx = pr.x + U1[0] * lp; st.sy = pr.y + U1[1] * lp; st.dep = st.sy; st.vis = false;
     const uT = baseU(st) * zoom; if (!st.sp || settle > 0.25) wantSprite(st, uT); st.uT = uT;
     if (st.sp && cityMode === shown && arriveT > 0.15 + 2.6 * i / n) st.rise = Math.min(1, st.rise + dt / 2.1);
   }
