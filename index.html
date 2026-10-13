@@ -829,6 +829,52 @@ const LMODEL = {
     return g;
   },
 
+  // 培正中学大门: a red-brick gate under green glazed roofs — a tall arched middle bay with the gold name board, a lower door bay either side, and a low wall running off
+  puiching() {
+    const g = new Grid(70, 26, 72);
+    g.box(-68, 68, -24, 24, 0, 1, (x, y) => ((x + 200) % 8 === 0 || (y + 200) % 8 === 0 ? M.gr3 : M.gr2));
+    for (let k = 0; k < 4; k++) g.box(-16 + k, 16 - k, 9 + k, 9 + k, 2, 4 - k, M.gr1); // steps up to the middle arch
+    g.box(-62, 62, -10, 8, 2, 2, M.gr1);
+    const brick = (x, y, z) => (z % 3 === 0 ? M.rd2 : (x + y + (((z / 3) | 0) % 2) * 2 + 400) % 4 === 0 ? M.rd2 : M.rd1);
+    // a hipped roof of glazed tiles: the eaves turn up at the corners, a gold line along their edge
+    const roof = (cx, hx, hy, z0, k, over) => { const top = Math.round((hy + over) * k);
+      for (let x = cx - hx - over; x <= cx + hx + over; x++) for (let y = -hy - over; y <= hy + over; y++) {
+        const d = Math.min(hx + over - Math.abs(x - cx), hy + over - Math.abs(y)), ex = Math.abs(x - cx) - hx, ey = Math.abs(y) - hy, lift = ex > 0 && ey > 0 ? Math.round(Math.min(ex, ey) * 0.7) : 0;
+        const z = z0 + Math.min(top, Math.round(d * k)) + lift, inside = ex <= 0 && ey <= 0;
+        for (let q = inside ? z0 : z - 1; q <= z; q++) g.set(x, y, q, q === z ? (d < 1 ? M.gd : (Math.abs(x - cx) + Math.abs(y)) % 3 === 0 ? M.gt2 : M.gt1) : q === z - 1 && !inside ? M.gt2 : M.rd2);
+      }
+      const zr = z0 + top; g.box(cx - hx + hy, cx + hx - hy, -1, 1, zr + 1, zr + 2, (x, y, z) => (z === zr + 2 && (x + 200) % 4 === 0 ? M.gd : M.gt2)); // the ridge
+      return [cx - hx + hy, cx + hx - hy, zr + 2]; };
+    // the middle bay: brick piers round a round-headed arch, stone trim, red columns before it
+    const archTop = (x) => 22 + Math.round(Math.sqrt(Math.max(0, 121 - x * x)) * 0.8);
+    g.box(-22, 22, -8, 8, 2, 42, (x, y, z) => { const ax = Math.abs(x);
+      if (ax <= 11 && z <= archTop(x)) return -1;
+      if (ax <= 13 && z <= archTop(Math.min(ax, 11)) + 2 && (y === 8 || y === -8)) return M.gr1; // the arch's stone ring
+      if (z <= 5 || z >= 40) return M.gr1; if (z === 39) return M.cr; return brick(x, y, z); });
+    g.box(-11, 11, -8, 8, 2, 2, M.gr2);
+    for (const s of [-1, 1]) { g.capsule(s * 17, 11, 3, s * 17, 11, 38, 2.2, 2.2, M.rd3); g.box(s * 17 - 3, s * 17 + 3, 9, 13, 2, 3, M.gr1); }
+    g.box(-22, 22, 9, 13, 38, 40, (x, y, z) => (z === 40 ? M.gd : (x + 200) % 3 === 0 ? M.bt2 : M.gt2)); // the painted beam the columns carry
+    g.box(-10, 10, 9, 9, 29, 36, (x, y, z) => (Math.abs(x) === 10 || z === 29 || z === 36 ? M.gd : (x + z) % 3 === 0 ? M.gd : M.bt2)); // the name board, gold on blue
+    const [ra, rb, rz] = roof(0, 26, 13, 43, 0.6, 5);
+    // on each end of the ridge a dragon-headed fish rears up, its tail curling back
+    for (const s of [-1, 1]) { const x0 = s < 0 ? ra : rb; g.capsule(x0, 0, rz, x0 + s * 1, 0, rz + 5, 1.8, 1.4, M.gt2); g.capsule(x0 + s * 1, 0, rz + 5, x0 - s * 2, 0, rz + 8, 1.4, 0.8, M.gt1); g.ellipsoid(x0 + s * 2, 0, rz + 2, 1.6, 1.4, 1.6, M.gd); }
+    g.ellipsoid(0, 0, rz + 2, 1.6, 1.6, 2, M.gd); g.capsule(0, 0, rz + 3, 0, 0, rz + 6, 1, 0.5, M.gd); // a pearl on the middle of the ridge
+    // the side bays: a square doorway each, a round window above it, then their own lower roof
+    for (const s of [-1, 1]) { const cx = s * 34;
+      g.box(cx - 11, cx + 11, -6, 6, 2, 26, (x, y, z) => { const lx = Math.abs(x - cx);
+        if (lx <= 4 && z <= 15) return -1; if (lx <= 5 && z <= 16 && (y === 6 || y === -6)) return M.gr1;
+        if ((y === 6 || y === -6) && (lx - 0) ** 2 + (z - 21) ** 2 <= 5) return lx ** 2 + (z - 21) ** 2 <= 2 ? M.dk : M.gr1;
+        if (z <= 5 || z >= 25) return M.gr1; return brick(x, y, z); });
+      g.box(cx - 4, cx + 4, -6, 6, 2, 2, M.gr2);
+      const [a, b, z] = roof(cx, 12, 8, 27, 0.6, 4); for (const e of [a, b]) g.capsule(e, 0, z, e, 0, z + 3, 1.2, 0.8, M.gt2); }
+    // the low wall either side: brick on a stone foot, a little tiled coping, stone posts at the ends
+    for (const s of [-1, 1]) { g.box(s * 46, s * 64, -3, 3, 2, 13, (x, y, z) => (z <= 3 ? M.gr1 : (Math.abs(x) % 6 === 4 && y === 3 && z > 6 && z < 11 ? M.dk : brick(x, y, z))));
+      for (let x = 46; x <= 64; x++) for (let y = -5; y <= 5; y++) { const h = 3 - Math.abs(y) >> 1; g.set(s * x, y, 14 + Math.max(0, h), Math.abs(y) === 5 ? M.gd : M.gt1); if (h > 0) g.set(s * x, y, 14, M.gt2); }
+      g.box(s * 65 - 2, s * 65 + 2, -4, 4, 2, 17, (x, y, z) => (z === 17 || z === 14 ? M.cr : M.gr1));
+      tree(g, s * 55, 16, 16, 7); }
+    return g;
+  },
+
   // 五羊石像: the great ram, head high with ears of rice in its mouth, and four smaller ones pressed close around it on a granite outcrop
   rams() {
     const g = new Grid(64, 56, 142), sm = (t) => t * t * (3 - 2 * t);
@@ -1317,7 +1363,7 @@ const t = (k) => T[lang][k];
 /* ---------- places: three real cities on the surface, six satellites in orbit ---------- */
 const vec = (lon, lat) => [Math.cos(lat) * Math.sin(lon), Math.sin(lat), Math.cos(lat) * Math.cos(lon)];
 const CITIES = [
-  { id: 'gz', type: 'city', zh: '广州', en: 'Guangzhou', czh: '中国', cen: 'China', lat: 23.13, lon: 113.26, tlat: '23.13°N', tlon: '113.26°E', lm: { zh: '广州塔', en: 'Canton Tower', h: '600 m', year: '2010', gzh: '广州塔 · 五羊石像 · 镇海楼 · 中山纪念堂 · 石室圣心大教堂 · 广州圆 · 珠江', gen: 'Canton Tower · Five Rams Sculpture · Zhenhai Tower · Sun Yat-sen Memorial Hall · Sacred Heart Cathedral · Guangzhou Circle · Pearl River' } },
+  { id: 'gz', type: 'city', zh: '广州', en: 'Guangzhou', czh: '中国', cen: 'China', lat: 23.13, lon: 113.26, tlat: '23.13°N', tlon: '113.26°E', lm: { zh: '广州塔', en: 'Canton Tower', h: '600 m', year: '2010', gzh: '广州塔 · 五羊石像 · 镇海楼 · 中山纪念堂 · 石室圣心大教堂 · 广州圆 · 培正中学大门 · 珠江', gen: 'Canton Tower · Five Rams Sculpture · Zhenhai Tower · Sun Yat-sen Memorial Hall · Sacred Heart Cathedral · Guangzhou Circle · Pui Ching Middle School Gate · Pearl River' } },
   { id: 'ind', type: 'city', zh: '印第安纳波利斯', en: 'Indianapolis', czh: '美国', cen: 'United States', lat: 39.77, lon: -86.16, tlat: '39.77°N', tlon: '86.16°W', dy: 9, lm: { zh: '士兵和水手纪念碑', en: 'Soldiers’ and Sailors’ Monument', h: '86.72 m', year: '1902', gzh: '纪念碑圆环 · Salesforce 大厦 · OneAmerica 大厦 · 州议会大厦', gen: 'Monument Circle · Salesforce Tower · OneAmerica Tower · Indiana Statehouse' } },
   { id: 'tor', type: 'city', zh: '多伦多', en: 'Toronto', czh: '加拿大', cen: 'Canada', lat: 43.65, lon: -79.38, tlat: '43.65°N', tlon: '79.38°W', dy: -9, lm: { zh: 'CN 塔', en: 'CN Tower', h: '553.33 m', year: '1976', gzh: 'CN 塔 · 罗杰斯中心 · 金融区', gen: 'CN Tower · Rogers Centre · Financial District' } },
 ];
@@ -1685,6 +1731,7 @@ const SITES = {
     { m: 'cathedral', zh: '石室圣心大教堂', en: 'Sacred Heart Cathedral', x: -380, y: -150, h: 320 }, { m: 'circle', zh: '广州圆', en: 'Guangzhou Circle', x: 300, y: -210, h: 290 },
     { m: 'canton', zh: '广州塔', en: 'Canton Tower', x: -40, y: -220, h: 440 }, { m: 'zhenhai', zh: '镇海楼', en: 'Zhenhai Tower', x: -215, y: 70, h: 265 },
     { m: 'memorial', zh: '中山纪念堂', en: 'Sun Yat-sen Memorial Hall', x: 330, y: 80, h: 215 }, { m: 'rams', zh: '五羊石像', en: 'Five Rams Sculpture', x: 60, y: 165, h: 250 },
+    { m: 'puiching', zh: '培正中学大门', en: 'Pui Ching Middle School Gate', x: 600, y: -40, h: 150 },
   ],
   tor: [
     { m: 'casaloma', zh: '卡萨罗马城堡', en: 'Casa Loma', x: -340, y: -190, h: 215 }, { m: 'cityhall', zh: '多伦多市政厅', en: 'Toronto City Hall', x: 300, y: -80, h: 300 },
@@ -1698,8 +1745,8 @@ const SITES = {
   ],
 };
 // each landmark's height in blocks, and half its footprint
-const HZ = { cathedral: 160, rams: 142, zhenhai: 134, memorial: 122, circle: 148, canton: 322, cn: 304, rogers: 56, monument: 170, statehouse: 78, salesforce: 232, cityhall: 132, casaloma: 100, warmemorial: 138, pagoda: 126, uc: 94, convocation: 74, harthouse: 112 };
-const LMFOOT = { cathedral: [40, 106], rams: [64, 56], zhenhai: [76, 46], memorial: [80, 100], circle: [72, 18], canton: [25, 25], cn: [24, 24], rogers: [58, 58], monument: [62, 62], statehouse: [54, 36], salesforce: [16, 16], cityhall: [62, 78], casaloma: [72, 46], warmemorial: [58, 68], pagoda: [68, 58], uc: [86, 40], convocation: [46, 54], harthouse: [64, 34] };
+const HZ = { cathedral: 160, puiching: 72, rams: 142, zhenhai: 134, memorial: 122, circle: 148, canton: 322, cn: 304, rogers: 56, monument: 170, statehouse: 78, salesforce: 232, cityhall: 132, casaloma: 100, warmemorial: 138, pagoda: 126, uc: 94, convocation: 74, harthouse: 112 };
+const LMFOOT = { cathedral: [40, 106], puiching: [70, 26], rams: [64, 56], zhenhai: [76, 46], memorial: [80, 100], circle: [72, 18], canton: [25, 25], cn: [24, 24], rogers: [58, 58], monument: [62, 62], statehouse: [54, 36], salesforce: [16, 16], cityhall: [62, 78], casaloma: [72, 46], warmemorial: [58, 68], pagoda: [68, 58], uc: [86, 40], convocation: [46, 54], harthouse: [64, 34] };
 // The streets run at the angle the buildings face. A block holds two rows of lots; what goes on them depends on the city and on how far back the block stands.
 const CYAW = rad(28), CYc = Math.cos(CYAW), CYs = Math.sin(CYAW), PA = 280, PB = 252, RWA = 16, RWB = 22;
 const inCity = (x, y, grow) => (x / 980) * (x / 980) + ((y + 90) / 560) * ((y + 90) / 560) < 1 + grow;
