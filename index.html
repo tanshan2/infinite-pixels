@@ -446,6 +446,73 @@ button{font:inherit;color:inherit}
   .bar,.sheet,.frame img,.frame .shot,.hud,.hint{transition-duration:.01s!important}
   .hint::before{animation:none}
 }
+
+/* ---------- the bridge: a console of switches at the top, and the index as the ship's nav computer ---------- */
+:root{--cyan:#62BDDD;--hud:rgba(98,189,221,.24);--hud2:rgba(98,189,221,.12);--hudbg:rgba(6,12,15,.8)}
+.brk{position:absolute;width:10px;height:10px;border:0 solid var(--cyan);opacity:.75;pointer-events:none}
+.brk.tl{left:-1px;top:-1px;border-width:1px 0 0 1px}.brk.tr{right:-1px;top:-1px;border-width:1px 1px 0 0}.brk.bl{left:-1px;bottom:-1px;border-width:0 0 1px 1px}.brk.br{right:-1px;bottom:-1px;border-width:0 1px 1px 0}
+.btn{border-color:var(--hud);background:var(--hudbg)}
+.btn:hover{border-color:var(--cyan)}
+/* the console */
+.console{gap:0;padding:6px;border:1px solid var(--hud2);background:linear-gradient(rgba(8,15,18,.82),rgba(5,10,12,.82));-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
+.console .cs{position:relative;flex-direction:column;align-items:flex-start;justify-content:center;gap:5px;height:46px;min-width:0;padding:0 15px;border:0;border-right:1px solid var(--hud2);background:none;-webkit-backdrop-filter:none;backdrop-filter:none;letter-spacing:.16em;transition:background .25s,color .25s}
+.console .cs:last-of-type{border-right:0}
+.console .cs:hover{background:rgba(98,189,221,.07)}
+.console .cs .k{display:flex;align-items:center;gap:7px;font-family:var(--f-mono);font-size:9px;letter-spacing:.2em;color:var(--mute);line-height:1}
+.console .cs .k em{font-style:normal}
+.console .cs .v{font-size:12px;line-height:1;color:var(--ivory);white-space:nowrap}
+.led{flex:none;width:6px;height:6px;border-radius:50%;background:#26302D;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08);transition:background .25s,box-shadow .25s}
+.led.c{background:var(--cyan);box-shadow:0 0 6px var(--cyan)}
+.cs[aria-pressed="true"] .led,.cs[aria-expanded="true"] .led{background:var(--ember);box-shadow:0 0 6px var(--ember),0 0 14px rgba(242,166,90,.45)}
+.console .cs[aria-pressed="true"]{background:none;color:inherit}
+.console .cs[aria-pressed="true"] .k{color:var(--ivory)}
+.seg{display:flex;gap:2px;font-family:var(--f-mono);font-size:11px!important;letter-spacing:.06em!important}.seg b{padding:2px 6px;font-weight:400;color:var(--mute)}.seg b.on{color:var(--void);background:var(--ivory)}
+.console .cs.nav{margin-left:6px;padding:0 18px;border:1px solid rgba(242,166,90,.45);background:rgba(242,166,90,.09)}
+.console .cs.nav .k{color:var(--ember)}.console .cs.nav .v{color:var(--ember)}.console .cs.nav u{text-decoration:none;display:inline-block;transition:transform .3s}
+.console .cs.nav:hover{background:rgba(242,166,90,.18)}.console .cs.nav:hover u{transform:translateX(3px)}
+.console .cs.nav[aria-expanded="true"]{background:var(--ember)}.console .cs.nav[aria-expanded="true"] .k,.console .cs.nav[aria-expanded="true"] .v{color:var(--void)}
+/* the nav computer: a screen in the middle, the rest of the world dimmed behind it */
+#index.nc{left:50%;top:50%;right:auto;bottom:auto;width:min(1180px,calc(100% - 64px));height:min(720px,calc(100% - 120px));padding:0;gap:0;display:grid;grid-template-rows:46px 1fr 40px;overflow:visible;border:1px solid rgba(98,189,221,.22);border-left:1px solid rgba(98,189,221,.22);background:linear-gradient(rgba(6,14,18,.95),rgba(4,9,12,.97));box-shadow:0 0 0 100vmax rgba(3,6,8,.62),0 40px 120px rgba(0,0,0,.7),inset 0 0 90px rgba(98,189,221,.05);transform:translate(-50%,-48%) scale(.98);opacity:0;transition:transform .45s cubic-bezier(.2,.8,.2,1),opacity .35s,visibility 0s .45s}
+#index.nc.open{transform:translate(-50%,-50%);opacity:1;transition:transform .5s cubic-bezier(.2,.8,.2,1),opacity .35s}
+#index.nc::after{content:'';position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(255,255,255,.022) 0 1px,transparent 1px 3px)}
+.nc-hd,.nc-ft{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:0 22px;font-family:var(--f-mono);font-size:10px;letter-spacing:.22em;color:var(--cyan);white-space:nowrap;overflow:hidden}
+.nc-hd{border-bottom:1px solid var(--hud)}.nc-hd i{font-style:normal;opacity:.7}.nc-hd b{font-family:var(--f-body);font-weight:500;letter-spacing:.18em;color:var(--ivory)}
+.nc-st{display:flex;align-items:center;gap:10px}.nc-st em{font-style:normal}
+#index .x{width:auto;height:30px;margin:0 -8px 0 0;padding:0 8px;border:0;background:none;font-family:var(--f-mono);font-size:10px;letter-spacing:.2em;color:var(--ivory);display:inline-flex;align-items:center;gap:6px;cursor:pointer}
+#index .x:hover{color:var(--ember)}
+.nc-ft{border-top:1px solid var(--hud);color:var(--mute);font-size:9px}.nc-ft b{font-weight:400;color:var(--ivory)}.nc-ft em{font-style:normal;color:var(--ivory)}
+.sig{display:inline-block;width:80px;height:4px;margin:0 14px 0 8px;vertical-align:middle;background:rgba(98,189,221,.15)}.sig b{display:block;width:62%;height:100%;background:var(--cyan);transition:width .5s}
+#indexList{display:grid!important;grid-template-columns:minmax(360px,420px) 1fr;gap:22px!important;padding:18px 22px;min-height:0}
+.nc-list{min-height:0;overflow-y:auto;padding-right:6px;scrollbar-width:thin;scrollbar-color:rgba(98,189,221,.25) transparent}
+.nc-list .sec{display:flex;align-items:center;gap:10px;margin:14px 0 4px;font-family:var(--f-mono);font-size:9px;letter-spacing:.3em;color:var(--mute)}.nc-list .sec i{font-style:normal}.nc-list .sec::after{content:'';flex:1;height:1px;background:var(--hud2)}
+#index .nc-r{display:grid;grid-template-columns:64px 1fr auto;align-items:center;width:100%;min-height:31px;padding:0 10px;border:0;gap:0;font-size:14px;letter-spacing:.1em;color:rgba(237,230,211,.72);transition:background .2s,color .2s,box-shadow .2s}
+#index .nc-r:hover{padding-left:10px}
+#index .nc-r .c{font-family:var(--f-mono);font-size:10px;letter-spacing:.1em;color:var(--mute)}
+#index .nc-r .nm{font-size:14px;letter-spacing:.1em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#index .nc-r .en{margin-left:10px;font-size:10px;letter-spacing:.06em;color:var(--mute)}
+#index .nc-r .d{font-family:var(--f-mono);font-size:10px;color:var(--mute);font-variant-numeric:tabular-nums}
+#index .nc-r.on{color:var(--ivory);background:linear-gradient(90deg,rgba(242,166,90,.22),rgba(242,166,90,.02));box-shadow:inset 2px 0 0 var(--ember)}
+#index .nc-r.on .c,#index .nc-r.on .d{color:var(--ember)}
+.nc-map{position:relative;min-height:0;border:1px solid var(--hud2);overflow:hidden}
+.nc-map canvas{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated}
+.nc-map .lab{position:absolute;left:12px;top:10px;font-family:var(--f-mono);font-size:9px;letter-spacing:.2em;color:var(--mute)}.nc-map .lab.r{left:auto;right:12px}
+.nc-card{position:absolute;right:14px;bottom:14px;width:min(270px,calc(100% - 28px));padding:14px 16px;background:rgba(4,10,13,.92);border:1px solid rgba(242,166,90,.42)}
+.nc-card h4{margin:0;font-size:18px;font-weight:500;letter-spacing:.14em}.nc-card h4 span{margin-left:10px;font-family:var(--f-mono);font-size:10px;letter-spacing:.14em;color:var(--ember)}
+.nc-card p{margin:8px 0 0;font-size:11px;line-height:1.8;color:var(--mute)}
+.nc-go{display:flex;justify-content:space-between;align-items:center;width:100%;margin-top:12px;padding:8px 10px;border:0;background:var(--ember);color:var(--void);font-family:var(--f-mono);font-size:10px;letter-spacing:.2em;cursor:pointer;transition:background .2s}
+.nc-go:hover{background:#FFC183}
+/* the other panel (a city's notes, a work's details) wears the same hairline and scanlines */
+#detail{border-left-color:rgba(98,189,221,.22);background:linear-gradient(rgba(6,14,18,.96),rgba(4,9,12,.98))}
+@media (prefers-reduced-motion:reduce){#index.nc,#index.nc.open{transition:opacity .2s}}
+@media (hover:none){#keys{visibility:hidden}}
+@media (max-width:900px){#indexList{grid-template-columns:1fr;grid-template-rows:200px 1fr}.nc-map{order:-1}.nc-card{display:none}.hide-s{display:none}}
+@media (max-width:720px){
+  .console{padding:4px}.console .cs{flex-direction:row;align-items:center;gap:6px;height:38px;padding:0 9px}.console .cs .k{font-size:0;gap:0}.console .cs .v{font-size:11px;letter-spacing:.08em}
+  .console .cs.nav{margin-left:4px;padding:0 11px}.console .cs.nav .k{display:none}.console #langBtn .k{display:none}
+  #index.nc{width:calc(100% - 16px);height:calc(100% - 16px - var(--st) - var(--sb));grid-template-rows:42px 1fr 34px}
+  #indexList{padding:12px;gap:12px!important;grid-template-rows:170px 1fr}
+  .nc-hd,.nc-ft{padding:0 14px}
+}
 </style>
 </head>
 <body>
@@ -462,18 +529,13 @@ button{font:inherit;color:inherit}
   <header class="hud tl">
     <button class="brand" id="homeBtn" type="button" aria-label="Infinite Pixels，回到首页视角"><i></i><span>INFINITE PIXELS</span></button>
   </header>
-  <nav class="hud tr" aria-label="工具">
-    <button class="btn snd" id="sndBtn" type="button" aria-pressed="false"><i class="eq" aria-hidden="true"><b></b><b></b><b></b><b></b></i><span></span></button>
-    <button class="btn snd" id="fxBtn" type="button" aria-pressed="true"><i class="fxi" aria-hidden="true"></i><span></span></button>
-    <button class="btn" id="paintBtn" type="button" aria-pressed="false">
-      <svg aria-hidden="true" width="12" height="12" viewBox="0 0 12 12"><rect x="0" y="0" width="5" height="5" fill="currentColor"></rect><rect x="7" y="7" width="5" height="5" fill="currentColor"></rect><rect x="7" y="0" width="5" height="5" fill="none" stroke="currentColor"></rect></svg>
-      <span data-t="paint">画笔</span>
-    </button>
-    <button class="btn" id="langBtn" type="button" aria-label="切换语言 / Switch language">EN</button>
-    <button class="btn" id="indexBtn" type="button" aria-expanded="false" aria-controls="index">
-      <svg aria-hidden="true" width="14" height="10" viewBox="0 0 14 10" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M0 1h14M0 5h14M0 9h9"></path></svg>
-      <span data-t="index">目录</span>
-    </button>
+  <nav class="hud tr console" aria-label="工具">
+    <button class="btn cs" id="sndBtn" type="button" aria-pressed="false"><span class="k"><i class="led"></i>AUDIO</span><span class="v"></span></button>
+    <button class="btn cs" id="fxBtn" type="button" aria-pressed="true"><span class="k"><i class="led"></i>SFX</span><span class="v"></span></button>
+    <button class="btn cs" id="paintBtn" type="button" aria-pressed="false"><span class="k"><i class="led"></i>BRUSH</span><span class="v" data-t="paint">画笔</span></button>
+    <button class="btn cs" id="langBtn" type="button" aria-label="切换语言 / Switch language"><span class="k"><i class="led c"></i>LANG</span><span class="v seg"><b data-l="zh">中</b><b data-l="en">EN</b></span></button>
+    <button class="btn cs nav" id="indexBtn" type="button" aria-expanded="false" aria-controls="index"><span class="k"><i class="led"></i>NAV · <em id="navN">11</em></span><span class="v"><span data-t="index">目录</span> <u aria-hidden="true">▸</u></span></button>
+    <i class="brk tl" aria-hidden="true"></i><i class="brk tr" aria-hidden="true"></i><i class="brk bl" aria-hidden="true"></i><i class="brk br" aria-hidden="true"></i>
   </nav>
   <div class="hud bl">
     <div class="read" aria-hidden="true"><span>LAT <b id="rlat">00.0°N</b></span><span>LON <b id="rlon">000.0°E</b></span><span>ZOOM <b id="rz">1.00×</b></span></div>
@@ -529,10 +591,11 @@ button{font:inherit;color:inherit}
     <button class="btn" id="clearBtn" type="button" data-t="clear">清除</button>
   </div>
 
-  <aside class="sheet" id="index" aria-labelledby="indexTitle" inert>
-    <div class="sheet-head"><span class="eyebrow" id="indexTitle" data-t="indexEyebrow">目录 · INDEX</span><button class="x" type="button" data-close aria-label="关闭"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 14 14" stroke="currentColor" stroke-width="1.4"><path d="M1 1l12 12M13 1L1 13"></path></svg></button></div>
-    <div id="indexList" style="display:flex;flex-direction:column;gap:26px"></div>
-    <p class="keys" id="keys"></p>
+  <aside class="sheet nc" id="index" aria-labelledby="indexTitle" inert>
+    <i class="brk tl" aria-hidden="true"></i><i class="brk tr" aria-hidden="true"></i><i class="brk bl" aria-hidden="true"></i><i class="brk br" aria-hidden="true"></i>
+    <div class="nc-hd"><span>NAV-COMPUTER <i>//</i> <b id="indexTitle" data-t="ncTitle">选择目的地</b> <i class="hide-s">DESTINATION</i></span><span class="nc-st"><span class="hide-s">SYS OK · <em id="ncCount">11</em> TARGETS ·</span><button class="x" type="button" data-close aria-label="关闭">[ ESC ] <span data-t="ncClose">关闭</span> ✕</button></span></div>
+    <div id="indexList"></div>
+    <div class="nc-ft"><span id="keys"></span><span class="hide-s">SIGNAL <i class="sig"><b id="ncSig"></b></i> <em id="ncClock">T+00:00:00</em></span></div>
   </aside>
 
   <aside class="sheet" id="detail" aria-labelledby="detailTitle" inert>
@@ -1464,7 +1527,7 @@ const EARTH = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABaAAAALQCAIAAADpR0D
 const T = {
   zh: { tag: '个人与游戏工作室', intro: '记录我在中国、美国和加拿大的旅游、生活、学习和创作经历。', hintM: '拖动转动地球 · 滚轮缩放 · 点击城市看建筑群', hintT: '拖动转动 · 双指缩放 · 点城市看建筑群',
     lmNote: '', lmDragM: '按住拖动旋转 · 滚轮缩放 · 右键拖动平移', lmDragT: '单指拖动旋转 · 双指缩放和平移', lmFlatM: '按住拖动，滚轮放大', lmFlatT: '按住拖动，双指放大', lmInfo: '城市资料', lmBack: '返回地球', lmBackShort: '返回', rmInside: '舱内', rmLead: '这个分区的作品待录入。舱里的街机和电视是两个展位样例。', rmHintM: '鼠标移到屏幕两侧，可以环顾舱内一整圈', rmHintT: '左右拖动，可以环顾舱内一整圈 · 点屏幕看作品', rmBack: '回到舱内', fLandmark: '地标', fHeight: '高度', fYear: '落成',
-    paint: '画笔', index: '目录', indexEyebrow: '目录 · INDEX', clear: '清除', tipM: '在地球上按住拖动来画 · 按住空格可转动', tipT: '单指画 · 双指转动',
+    paint: '画笔', index: '目录', ncTitle: '选择目的地', ncClose: '关闭', ncGo: '前往', ncHome: '回到首页视角', ncKeys: '<b>↑ ↓</b> 选择 · <b>ENTER</b> 前往 · <b>ESC</b> 关闭', indexEyebrow: '目录 · INDEX', clear: '清除', tipM: '在地球上按住拖动来画 · 按住空格可转动', tipT: '单指画 · 双指转动',
     gHome: '首页', gCity: '城市', gWork: '作品 · 轨道上的卫星', gContact: '联系', gMoon: '个人档案 · 月球', sndOn: '音乐 · 开', sndOff: '音乐 · 关', fxOn: '音效 · 开', fxOff: '音效 · 关', workReal: '封面图和简介待录入。游戏本身可以从下面的链接打开。', fAuthor: '作者', fHost: '平台', fChat: '留言对话', fForm: '联系表', fSeries: '项目', fModes: '玩法', fCount: '数量', setWord: '合集', moonSub: '月球', rmCamp: '回到营地', home: '回到首页视角', pending: '待录入', sample: '示例图', workName: '[作品名称]', slot: '展位',
     workLead: '这是一个展位样例。录入真实资料后，这里会显示这件作品的完整档案、图片和链接。', cityLead: '在这里的经历：待录入。', contactLead: '联系方式录入后会显示在这里。',
     satLead: '这个分区的作品待录入，下面是两个展位样例。', svLead: '这个分区的作品待录入。卫星上挂着两个展位样例，点开可以看每件作品要填的信息。', backTo: '返回',
@@ -1473,7 +1536,7 @@ const T = {
     keys: '<b>拖动</b> 转动　<b>滚轮</b> 缩放　<b>双击</b> 飞过去<br><b>方向键 / WASD</b> 转动　<b>+ −</b> 缩放<br><b>0</b> 首页　<b>1–3</b> 城市　<b>4–9</b> 卫星　<b>M</b> 月球　<b>V</b> 音乐　<b>X</b> 音效　<b>B</b> 画笔　<b>I</b> 目录' },
   en: { tag: 'A personal & game studio', intro: 'A record of travelling, living, studying and making things in China, the United States and Canada.', hintM: 'Drag to turn the Earth · Scroll to zoom · Click a city for its landmark', hintT: 'Drag · Pinch · Tap a city',
     lmNote: '', lmDragM: 'drag to turn · scroll to zoom · right-drag to slide', lmDragT: 'drag to turn · two fingers to zoom and slide', lmFlatM: 'hold and drag, scroll to zoom', lmFlatT: 'hold and drag, pinch to zoom', lmInfo: 'City notes', lmBack: 'Back to Earth', lmBackShort: 'Back', rmInside: 'Inside', rmLead: 'Works in this section are still to be added. The arcade cabinet and the television are two sample slots.', rmHintM: 'Move the pointer to either side to look all the way round', rmHintT: 'Drag sideways to look all the way round · tap a screen to see the work', rmBack: 'Back to the room', fLandmark: 'Landmark', fHeight: 'Height', fYear: 'Opened',
-    paint: 'Paint', index: 'Index', indexEyebrow: 'INDEX', clear: 'Clear', tipM: 'Hold and drag on the Earth to paint · Hold Space to turn', tipT: 'One finger paints · Two fingers turn',
+    paint: 'Paint', index: 'Index', ncTitle: 'Choose a destination', ncClose: 'Close', ncGo: 'Engage', ncHome: 'Back to the opening view', ncKeys: '<b>↑ ↓</b> select · <b>ENTER</b> engage · <b>ESC</b> close', indexEyebrow: 'INDEX', clear: 'Clear', tipM: 'Hold and drag on the Earth to paint · Hold Space to turn', tipT: 'One finger paints · Two fingers turn',
     gHome: 'Home', gCity: 'Cities', gWork: 'Works · satellites in orbit', gContact: 'Contact', gMoon: 'Profile · the Moon', sndOn: 'Music · on', sndOff: 'Music · off', fxOn: 'Sounds · on', fxOff: 'Sounds · off', workReal: 'Cover art and a description are still to be added. The game itself opens from the link below.', fAuthor: 'Author', fHost: 'Platform', fChat: 'Chat', fForm: 'Form', fSeries: 'Project', fModes: 'Modes', fCount: 'Count', setWord: 'Set', moonSub: 'THE MOON', rmCamp: 'Back to the camp', home: 'Back to the opening view', pending: 'To be added', sample: 'Sample', workName: '[Work title]', slot: 'Slot',
     workLead: 'This is a sample slot. Once real material is added, the full record, images and links for this work appear here.', cityLead: 'What happened here: to be added.', contactLead: 'Contact details will appear here once added.',
     satLead: 'Works in this section are still to be added. Two sample slots are shown below.', svLead: 'Works in this section are still to be added. Two sample slots hang on the satellite; open one to see what each work will show.', backTo: 'Back to',
@@ -4307,7 +4370,7 @@ function auStart() { if (AU.ctx) { AU.ctx.resume(); return; } const AC = window.
   try { AU.ctx = new AC(); AU.n = auBuild(AU.ctx, Math.random); } catch (e) { AU.ctx = null; return; }
   auScene(auWhere(), true); AU.timer = setInterval(() => { if (AU.on && AU.ctx.state === 'running') auFill(AU.n, AU.S, AU.ctx.currentTime + 5, Math.random, AU_SCENES[AU.scene] || AU_SCENES.orbit); }, 1000); }
 const auRest = () => setTimeout(() => { if (!AU.on && !AU.fx && AU.ctx) AU.ctx.suspend(); }, 1400); // with both switched off, the whole thing sleeps
-function auBtn(id, on, k) { const b = document.getElementById(id); b.setAttribute('aria-pressed', String(on)); b.title = t(on ? k + 'On' : k + 'Off'); b.querySelector('span').textContent = t(on ? k + 'On' : k + 'Off'); }
+function auBtn(id, on, k) { const b = document.getElementById(id); b.setAttribute('aria-pressed', String(on)); b.title = t(on ? k + 'On' : k + 'Off'); b.querySelector('.v').textContent = t(on ? k + 'On' : k + 'Off').split(' · ')[0]; }
 // two switches: the music, and the sounds things make
 function setSound(on, quiet) { AU.on = on; AU.armed = false; auBtn('sndBtn', on, 'snd');
   if (!quiet) { try { localStorage.setItem('ip-sound', on ? '1' : '0'); } catch (e) { /* remembered for this visit only */ } }
@@ -4412,7 +4475,7 @@ function auRover(v, hush) { if (!AU.n) return; const r = AU.n.rover, t = AU.n.ct
   r.t.frequency.setTargetAtTime(4 + 13 * k, t, 0.1); r.c.gain.setTargetAtTime(c, t, 0.1); r.td.gain.setTargetAtTime(c * 0.8, t, 0.1);
   if (go !== was && !hush && AU.fx && uiEvery('rov' + go, 380)) (go ? UI.roverGo : UI.roverStop)(); }
 // what a click on each kind of thing sounds like, where the thing has no sound of its own made elsewhere
-const UI_OWN = '#sndBtn,#fxBtn,#indexBtn,[data-close],#paintBtn,.sw,#clearBtn,#zin,#zout,#homeBtn,#fitBtn,#langBtn,.marker,.row[data-node],.byline,#lmBack,#lmInfo,[data-rmexit],[data-svclose],[data-bpview],.rm-key,[data-pn],#rmPoster,[data-pi],[data-txcover],[data-tx],[data-chsend],[data-rmback]';
+const UI_OWN = '.nc-go,#sndBtn,#fxBtn,#indexBtn,[data-close],#paintBtn,.sw,#clearBtn,#zin,#zout,#homeBtn,#fitBtn,#langBtn,.marker,.row[data-node],.byline,#lmBack,#lmInfo,[data-rmexit],[data-svclose],[data-bpview],.rm-key,[data-pn],#rmPoster,[data-pi],[data-txcover],[data-tx],[data-chsend],[data-rmback]';
 document.addEventListener('click', (e) => { if (!uiOK() || !e.target.closest) return; const q = (sel) => e.target.closest(sel); let el;
   if (q(UI_OWN)) return;
   if ((el = q('.rm-hot'))) { const id = el.dataset.hot; if (id === 'exit') return; if (sv.id === 'game') (id === 'w1' ? UI.arcade : UI.tv)(); else if (sv.id === 'prototype') { if (!room.focus) UI.drain(); } else if (sv.id === 'moon') UI.rover(); else if (sv.id === 'tools') UI.bpPick(); else UI.click(); return; }
@@ -4658,15 +4721,80 @@ const indexEl = $('#index'), detailEl = $('#detail'), indexBtn = $('#indexBtn');
 function setSheet(el, open) {
   if (el.classList.contains('open') !== !!open) UI.sheet(open);
   el.classList.toggle('open', open); el.inert = !open;
-  if (el === indexEl) indexBtn.setAttribute('aria-expanded', String(open));
+  if (el === indexEl) { indexBtn.setAttribute('aria-expanded', String(open)); if (open && !NC.raf) { NC.last = 0; NC.raf = requestAnimationFrame(ncLoop); } }
   if (el === detailEl && !open) selSat = null;
   if (open) { const other = el === indexEl ? detailEl : indexEl; other.classList.remove('open'); other.inert = true; if (el === detailEl) indexBtn.setAttribute('aria-expanded', 'false'); else selSat = null; if (!fine) { const x = el.querySelector('.x'); if (x) x.focus({ preventScroll: true }); } }
 }
+/* ---------- the index is the ship's nav computer: the destinations listed on the left; on the right an orbital map that follows whichever is picked, and a card for it ---------- */
+const NC = { sel: 0, items: [], raf: 0, t0: performance.now(), last: 0, spin: 0, clock: '' };
+const NC_CODE = { gz: 'CAN', ind: 'IND', tor: 'YYZ' };
+const NC_DESC = { contact: { zh: '给我写信或留言：邮箱，和一段留言对话。', en: 'Write to me or leave word: e-mail, and a conversation to leave a message in.' }, tools: { zh: '一座小空间站，每个零件是一类我用的工具。', en: 'A small station; each part of it is one family of the tools I use.' } };
+function ncItems() {
+  const out = [{ id: 'home', kind: 'home', code: 'HOME' }];
+  CITIES.forEach((c, i) => out.push({ id: c.id, kind: 'city', code: `${NC_CODE[c.id] || c.id.toUpperCase()}-0${i + 1}`, n: c }));
+  SATS.filter((s) => s.type === 'sat').forEach((s, i) => out.push({ id: s.id, kind: 'sat', code: `SAT-${String(i + 1).padStart(2, '0')}`, n: s }));
+  SATS.filter((s) => s.type === 'contact').forEach((s, i) => out.push({ id: s.id, kind: 'sat', code: `COM-0${i + 1}`, n: s }));
+  out.push({ id: 'moon', kind: 'moon', code: 'LUNA', n: MOON_NODE });
+  return out;
+}
 function buildIndex() {
-  const row = (x) => `<button class="row" type="button" data-node="${x.id}" data-type="${x.type}">${SAT_TYPES[x.id] ? `<img class="sico" alt="" src="${satSprite(x.id, 2, false, false).toDataURL()}">` : '<i class="dot"></i>'}<span class="nm">${esc(name(x))}${lang === 'zh' ? `<span class="en">${esc(x.en)}</span>` : ''}</span><span class="dist" data-dist="${x.id}"></span></button>`;
-  $('#indexList').innerHTML = `<div class="group"><h3>${t('gHome')}</h3><button class="row" type="button" data-node="home"><i class="dot"></i><span class="nm">${t('home')}</span></button></div>`
-    + `<div class="group"><h3>${t('gCity')}</h3>${CITIES.map(row).join('')}</div><div class="group"><h3>${t('gWork')}</h3>${SATS.filter((s) => s.type === 'sat').map(row).join('')}</div><div class="group"><h3>${t('gContact')}</h3>${SATS.filter((s) => s.type === 'contact').map(row).join('')}</div><div class="group"><h3>${t('gMoon')}</h3>${row(MOON_NODE)}</div>`;
-  $('#keys').innerHTML = t('keys');
+  NC.items = ncItems(); const zh = lang === 'zh';
+  const row = (it, i) => `<button class="row nc-r${i === NC.sel ? ' on' : ''}" type="button" data-node="${it.id}" data-i="${i}"><span class="c">${it.code}</span><span class="nm">${esc(it.kind === 'home' ? t('ncHome') : name(it.n))}${zh && it.n ? `<span class="en">${esc(it.n.en)}</span>` : ''}</span><span class="d"${it.kind === 'city' ? ` data-dist="${it.id}"` : ''}>${it.kind === 'sat' ? it.n.rho.toFixed(2) + 'R' : it.kind === 'moon' ? '60R' : it.kind === 'home' ? '⌂' : ''}</span></button>`;
+  const sec = (a, b) => `<div class="sec">${a} <i>·</i> ${zh ? b[0] : b[1]}</div>`;
+  let html = '<div class="nc-list">';
+  NC.items.forEach((it, i) => { if (it.kind === 'city' && NC.items[i - 1].kind !== 'city') html += sec('GROUND', ['城市', 'Cities']); if (it.code === 'SAT-01') html += sec('ORBIT', ['作品卫星', 'Works in orbit']); if (it.code === 'COM-01') html += sec('COMMS', ['联系与档案', 'Contact & profile']); html += row(it, i); });
+  html += '</div><div class="nc-map"><canvas id="ncMap"></canvas><span class="lab">ORBITAL MAP · TOP VIEW</span><span class="lab r">SCALE 1:4.2</span><div class="nc-card" id="ncCard"></div></div>';
+  $('#indexList').innerHTML = html; $('#keys').innerHTML = t('ncKeys'); $('#ncCount').textContent = NC.items.length - 1; $('#navN').textContent = NC.items.length - 1;
+  ncPick(NC.sel, true);
+}
+function ncPick(i, quiet) {
+  const N = NC.items.length; i = ((i % N) + N) % N; NC.sel = i; const it = NC.items[i], zh = lang === 'zh';
+  document.querySelectorAll('#indexList .nc-r').forEach((b) => b.classList.toggle('on', +b.dataset.i === i));
+  const el = document.querySelector(`#indexList .nc-r[data-i="${i}"]`); if (el && !quiet) el.scrollIntoView({ block: 'nearest' });
+  const first = (txt) => { const m = String(txt || '').match(/^[^。！!]*[。！!]?/); return m ? m[0] : ''; }; let p = '';
+  if (it.kind === 'home') p = esc(zh ? '回到开场的视角：地球、轨道上的卫星，和远处的月球。' : 'Back to the opening view: the Earth, the satellites in orbit, and the Moon beyond.');
+  else if (it.kind === 'city') p = `${esc(zh ? it.n.czh : it.n.cen)} · ${it.n.tlat} ${it.n.tlon}<br>${esc(zh ? it.n.lm.gzh : it.n.lm.gen)}`;
+  else { const rm = ROOMS[it.id], lead = rm && rm.lead && rm.lead[lang]; p = esc(lead ? first(lead) : NC_DESC[it.id] ? NC_DESC[it.id][lang] : ''); }
+  $('#ncCard').innerHTML = `<h4>${esc(it.kind === 'home' ? t('ncHome') : name(it.n))}<span>${it.code}</span></h4>${p ? `<p>${p}</p>` : ''}<button class="nc-go" type="button" data-node="${it.id}"><span>ENGAGE · ${t('ncGo')}</span><span aria-hidden="true">↵</span></button>`;
+}
+$('#indexList').addEventListener('pointerover', (e) => { const b = e.target.closest('.nc-r'); if (b && +b.dataset.i !== NC.sel) ncPick(+b.dataset.i, true); });
+$('#indexList').addEventListener('focusin', (e) => { const b = e.target.closest('.nc-r'); if (b && +b.dataset.i !== NC.sel) ncPick(+b.dataset.i, true); });
+function ncLoop() { NC.raf = 0; if (!indexEl.classList.contains('open')) return; ncDraw(); NC.raf = requestAnimationFrame(ncLoop); }
+function ncDraw() {
+  const cv = document.getElementById('ncMap'); if (!cv) return; const box = cv.parentElement, W = box.clientWidth, H = box.clientHeight; if (!W || !H) return;
+  const dpr = Math.min(2, devicePixelRatio || 1); if (cv.width !== Math.round(W * dpr) || cv.height !== Math.round(H * dpr)) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }
+  const g = cv.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, W, H); g.imageSmoothingEnabled = false;
+  const now = performance.now() / 1000, dt = Math.min(0.1, now - (NC.last || now)); NC.last = now;
+  const it = NC.items[NC.sel] || NC.items[0], cx = Math.round(W * (W > 520 ? 0.4 : 0.5)), cy = Math.round(H * 0.5), R = Math.max(16, Math.round(Math.min(W, H) * 0.085)), RM = Math.min(W * 0.36, H * 0.7);
+  const bracket = (x, y, w, h, col) => { g.strokeStyle = col; g.lineWidth = 1; for (const [sx, sy] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) { const px = x + sx * w + 0.5, py = y + sy * h + 0.5; g.beginPath(); g.moveTo(px, py - sy * 6); g.lineTo(px, py); g.lineTo(px - sx * 6, py); g.stroke(); } };
+  const dash = (x, y) => { g.setLineDash([3, 3]); g.strokeStyle = 'rgba(242,166,90,.7)'; g.beginPath(); g.moveTo(cx, cy); g.lineTo(x, y); g.stroke(); g.setLineDash([]); };
+  g.font = '10px "JetBrains Mono", monospace'; g.textBaseline = 'middle';
+  // the grid, the range rings, the sweep
+  g.strokeStyle = 'rgba(98,189,221,.07)'; g.lineWidth = 1; g.beginPath(); for (let x = (cx % 40) + 0.5; x < W; x += 40) { g.moveTo(x, 0); g.lineTo(x, H); } for (let y = (cy % 40) + 0.5; y < H; y += 40) { g.moveTo(0, y); g.lineTo(W, y); } g.stroke();
+  g.setLineDash([2, 4]); g.strokeStyle = 'rgba(98,189,221,.16)'; for (let k = 1; k <= 4; k++) { g.beginPath(); g.arc(cx, cy, RM * k / 4, 0, TAU); g.stroke(); } g.setLineDash([]);
+  if (!reduced && g.createConicGradient) { const sw = g.createConicGradient(now * 0.8 % TAU, cx, cy); sw.addColorStop(0, 'rgba(98,189,221,0)'); sw.addColorStop(0.88, 'rgba(98,189,221,0)'); sw.addColorStop(1, 'rgba(98,189,221,.22)'); g.fillStyle = sw; g.beginPath(); g.arc(cx, cy, RM, 0, TAU); g.fill(); }
+  // the Earth, a turning disc of pixels; a city that is picked turns to face us
+  const target = it.kind === 'city' ? rad(it.n.lon) : null; if (target === null) NC.spin += dt * (reduced ? 0 : 0.18); else { const d = Math.atan2(Math.sin(target - NC.spin), Math.cos(target - NC.spin)); NC.spin += d * Math.min(1, dt * 4); }
+  const la0 = 0.42, s0 = Math.sin(la0), c0 = Math.cos(la0), cell = 3;
+  for (let y = -R; y <= R; y += cell) for (let x = -R; x <= R; x += cell) { const qx = x / R, qy = -y / R, r2 = qx * qx + qy * qy; if (r2 > 1) continue; const z = Math.sqrt(1 - r2), Y = qy * c0 + z * s0, Z = -qy * s0 + z * c0, lat = Math.asin(Y), lon = Math.atan2(qx, Z) + NC.spin; let land = false;
+    if (MAP) { const u = (((lon / TAU + 0.5) % 1 + 1) % 1 * MW) | 0; let v = ((0.5 - lat / PI) * MH) | 0; if (v >= MH) v = MH - 1; land = MAP[v * MW + u] >= 128; } const lit = qx * -0.5 + qy * 0.45 + z * 0.74;
+    g.fillStyle = Math.abs(lat) > 1.2 ? (lit > 0.4 ? '#B9BDB4' : '#7E8A8A') : land ? (lit > 0.4 ? '#3C9A68' : '#2A7350') : (lit > 0.4 ? '#115468' : '#0B3644'); g.fillRect(cx + x - 1, cy + y - 1, cell - 1, cell - 1); }
+  for (const c of CITIES) { const la = rad(c.lat), lo = rad(c.lon) - NC.spin, X = Math.cos(la) * Math.sin(lo), Y = Math.sin(la), Z = Math.cos(la) * Math.cos(lo), qy = Y * c0 - Z * s0, z = Y * s0 + Z * c0; if (z <= 0) continue;
+    const x = Math.round(cx + X * R), y = Math.round(cy - qy * R), on = it.id === c.id; g.fillStyle = '#F2A65A'; g.fillRect(x - 2, y - 2, 4, 4);
+    if (on) { bracket(x, y, 9, 9, '#F2A65A'); g.fillStyle = '#F2A65A'; g.fillText(`${name(c)}  ${c.tlat}`, x + 14, y); } }
+  if (it.kind === 'home') bracket(cx, cy, R + 8, R + 8, '#F2A65A');
+  // the orbits, then the satellites on them, where they are right now
+  const pos = SATS.map((s) => { const a = s.ph + satClock * s.w, rr = R * 1.6 + (s.rho - 1.26) / 0.26 * (RM - R * 1.6); return { s, rr, x: Math.round(cx + Math.cos(a) * rr), y: Math.round(cy + Math.sin(a) * rr * 0.58), back: Math.sin(a) < 0 }; });
+  for (const q of pos) { const on = it.id === q.s.id; g.strokeStyle = on ? 'rgba(242,166,90,.6)' : 'rgba(237,230,211,.08)'; g.beginPath(); g.ellipse(cx, cy, q.rr, q.rr * 0.58, 0, 0, TAU); g.stroke(); }
+  for (const q of pos) { const on = it.id === q.s.id; if (q.back && Math.hypot(q.x - cx, q.y - cy) < R) continue;
+    g.fillStyle = on ? '#F2A65A' : 'rgba(237,230,211,.85)'; g.fillRect(q.x - 2, q.y - 2, 5, 5); g.fillStyle = on ? '#F2A65A' : 'rgba(237,230,211,.45)'; g.fillText(name(q.s), q.x + 9, q.y + 1);
+    if (on) { dash(q.x, q.y); bracket(q.x, q.y, 12, 12, '#F2A65A'); const sp = satSprite(q.s.id, 3, false, !reduced && now % 1.4 < 0.2), sx = clamp(q.x - sp.width / 2, 6, W - sp.width - 6), sy = clamp(q.y - sp.height - 18, 26, H - sp.height - 6); g.drawImage(sp, sx, sy); } }
+  // the Moon, far off at the edge of the map
+  const mx = W - 54, my = 52, mon = it.kind === 'moon'; for (let y = -9; y <= 9; y += 3) for (let x = -9; x <= 9; x += 3) if (x * x + y * y <= 90) { g.fillStyle = x - y > 4 ? '#7E8A8A' : '#B9B5A8'; g.fillRect(mx + x, my + y, 2, 2); }
+  g.fillStyle = mon ? '#F2A65A' : 'rgba(237,230,211,.45)'; g.textAlign = 'right'; g.fillText(`${name(MOON_NODE)} · LUNA`, mx - 16, my); g.textAlign = 'left'; if (mon) { dash(mx, my); bracket(mx, my, 14, 14, '#F2A65A'); }
+  // the clock and the signal at the foot of the screen
+  const tt = Math.floor((performance.now() - NC.t0) / 1000), clk = `T+${String(Math.floor(tt / 3600)).padStart(2, '0')}:${String(Math.floor(tt / 60) % 60).padStart(2, '0')}:${String(tt % 60).padStart(2, '0')}`;
+  if (clk !== NC.clock) { NC.clock = clk; const c = document.getElementById('ncClock'); if (c) c.textContent = clk; const sg = document.getElementById('ncSig'); if (sg) sg.style.width = (58 + 22 * Math.abs(Math.sin(tt * 0.7))).toFixed(0) + '%'; }
 }
 function refreshDist() { const c = vec(cam.lon, cam.lat); document.querySelectorAll('[data-dist]').forEach((el) => { const n = byId[el.dataset.dist]; el.textContent = n.type === 'city' ? String(Math.round(deg(Math.acos(clamp(c[0] * n.v[0] + c[1] * n.v[1] + c[2] * n.v[2], -1, 1))))).padStart(3, '0') + '°' : t('orbit'); }); }
 function frameHTML(n, i, kind) { return `<button class="frame" type="button" data-work="${n.id}:${i}:${kind}" aria-label="${esc(name(n))} · ${t('slot')} ${i} · ${t('sample')}"><span class="shot"><img src="${IMG[kind]}" alt="" draggable="false"><span class="badge">${t('sample')}</span></span><span class="capline"><span>${t('workName')}</span><i>${String(i).padStart(2, '0')}</i></span></button>`; }
@@ -4762,6 +4890,7 @@ addEventListener('keydown', (e) => {
   const k = e.key.toLowerCase();
   if (e.target && /^(INPUT|TEXTAREA)$/.test(e.target.tagName || '')) { if (k === 'escape' && sv.id === 'contact' && room.chan) { e.target.blur(); room.chan = null; roomRender(); } return; } // typing in a field is not steering the ship
   if (k === 'escape' && sv.id === 'contact' && room.chan && room.chan.i >= 3 && !room.leave) { room.chan = null; roomRender(); return; }
+  if (indexEl.classList.contains('open') && (k === 'arrowdown' || k === 'arrowup' || k === 'enter')) { e.preventDefault(); if (k === 'enter') { const b = document.querySelector(`#indexList .nc-r[data-i="${NC.sel}"]`); if (b) b.click(); } else ncPick(NC.sel + (k === 'arrowdown' ? 1 : -1)); return; } // the nav computer: pick a destination and engage
   if (k === ' ') { spaceDown = true; if (e.target === document.body || stage.contains(e.target)) e.preventDefault(); return; }
   if (sv.id && ROOMS[sv.id] && ROOMS[sv.id].nav && sv.k2 >= 1 && !room.focus && (k === 'arrowleft' || k === 'arrowright' || k === 'a' || k === 'd')) { ROOMS[sv.id].nav(k === 'arrowleft' || k === 'a' ? -1 : 1); return; }
   if (sv.id && room.focus && room.focus.set && (k === 'arrowleft' || k === 'arrowright')) { setPoster(room.pi + (k === 'arrowleft' ? -1 : 1)); e.preventDefault(); return; }
@@ -4805,7 +4934,7 @@ $('#indexList').addEventListener('click', (e) => { const b = e.target.closest('[
 $('#langBtn').addEventListener('click', () => { lang = lang === 'zh' ? 'en' : 'zh'; applyLang(); UI.lang(); });
 function applyLang() {
   document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en';
-  $('#langBtn').textContent = lang === 'zh' ? 'EN' : '中文'; auBtn('sndBtn', AU.on, 'snd'); auBtn('fxBtn', AU.fx, 'fx'); $('#sndBtn').setAttribute('aria-label', lang === 'zh' ? '背景音乐' : 'Background music'); $('#fxBtn').setAttribute('aria-label', lang === 'zh' ? '操作音效' : 'Interface sounds');
+  $('#langBtn').querySelectorAll('[data-l]').forEach((el) => el.classList.toggle('on', el.dataset.l === lang)); auBtn('sndBtn', AU.on, 'snd'); auBtn('fxBtn', AU.fx, 'fx'); $('#sndBtn').setAttribute('aria-label', lang === 'zh' ? '背景音乐' : 'Background music'); $('#fxBtn').setAttribute('aria-label', lang === 'zh' ? '操作音效' : 'Interface sounds');
   document.querySelectorAll('[data-t]').forEach((el) => { el.textContent = t(el.dataset.t); });
   $('#hint').textContent = fine ? t('hintM') : t('hintT'); $('#paintTip').textContent = fine ? t('tipM') : t('tipT');
   if (sv.id) { if (ROOMS[sv.id]) roomRender(); else svRender(); }
