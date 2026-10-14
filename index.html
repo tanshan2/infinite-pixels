@@ -1499,6 +1499,7 @@ const SATS = [
   { id: 'tools', type: 'sat', zh: '技术与工具', en: 'Technology & Tools', rho: 1.3, inc: rad(78), node: rad(310), w: 0.072, ph: 4.16 },
   { id: 'visual', type: 'sat', zh: '视觉作品', en: 'Visual Works', rho: 1.52, inc: rad(10), node: rad(95), w: -0.046, ph: 2.19 },
   { id: 'contact', type: 'contact', zh: '联系', en: 'Contact', rho: 1.42, inc: rad(-66), node: rad(200), w: 0.058, ph: 2.11 },
+  { id: 'apps', type: 'sat', zh: '应用', en: 'Apps', rho: 1.33, inc: rad(-14), node: rad(60), w: -0.058, ph: 0.9 }, // last, so the number keys keep the six above
 ];
 const ALL = [...CITIES, ...SATS];
 const byId = Object.fromEntries(ALL.map((n) => [n.id, n]));
@@ -1758,6 +1759,7 @@ const SAT_TYPES = {
   prototype: ['.......................', '...............AAAAA...', '..............AWWAAAA..', '..............AWWAAAa..', '...........SSSAAAAAAa..', '....SSSSSSS...AAAAEAa..', 'SSSS.........SAAAAAaa..', '..........SSS..Aaaaa...', '.......SSS....S.S......', '....SSS.....SS..S......', '..SS.......S...S.......', '..........S...S........', '........SS....S........', '.......S.....S.........'],
   tools: ['LLL.LLL.........LLL.LLL', 'PpP.PpP...WWW...PpP.PpP', 'PpP.PpP...AAa...PpP.PpP', 'PpP.PpP.G.Aka...PpP.PpP', 'PpP.PpP.G.AAa...PpP.PpP', '.S...S..WWWWWWW..S...S.', 'SSSSSSSSAkAEAkASSSSSSSS', '.S...S..aaaaaaa..S...S.', 'LLL.LLL...AAa.G.LLL.LLL', 'PpP.PpP...Aka.G.PpP.PpP', 'PpP.PpP...AAa...PpP.PpP', 'PpP.PpP...aaa...PpP.PpP', 'PpP.PpP.........PpP.PpP'],
   visual: ['......LLLLLLL..........', '......PpPpPpP..........', '......PpPpPpP......WWW.', 'E........S........AAA..', 'S.WWWWWWWWWWWWWWWaa....', '.SGGGGGAAAAaAAAAAkL....', '..GGkGGAAAAaAAAAAkc....', '..GGkGGAAAAaAAAAAkP....', '..GGGGGAAAAaAAAAAkP....', '..gggggaaaaaaaaaaaa....', '.........S.............', '......LLLLLLL..........', '......PpPpPpP..........', '......PpPpPpP..........'],
+  apps: ['...........E...........', '...........S...........', '........AAAAAAA........', 'LLLLL...AkkkkkA...LLLLL', 'PpPpP...AkRkGkA...PpPpP', 'pppppSSSAkkkkkASSSppppp', 'PpPpP...AkckEkA...PpPpP', 'PpPpP...AkkkkkA...PpPpP', '........AkGkRkA........', '........AkkkkkA........', '........AAAWAAA........', '........aaaaaaa........'],
   contact: ['.........eeeee.........', '........e.....e........', '.......e..eee..e.......', '.........e...e.........', '.....D.....E.....D.....', '.....DD....S....DD.....', '......DDdddSdddDD......', '........DDDDDDD........', '...........S...........', 'LLLLLLL..WWWWW..LLLLLLL', 'PpPpPpP..GGGGg..PpPpPpP', 'pppppppSSGkcGgSSppppppp', 'PpPpPpP..GGGGg..PpPpPpP', 'PpPpPpP..ggggg..PpPpPpP', '...........S...........'],
 };
 // extra sprites: an airliner seen from above (pointing east, and north-east; the other six headings are turned from these), and stars
@@ -2097,6 +2099,7 @@ const SAT_VIEW = {
   prototype: { info: [13.2, 0.2, 7.6, 7.6], slots: [[5.8, -0.6, 3.4, 3.9], [9.5, -0.6, 3.4, 3.9]], round: true, plates: [[7.5, 4.9], [11.2, 4.4]], box: [5.4, -0.9, 16.6, 10.6] }, // only the ball and the start of its aerials: the rest trails off the screen
   tools: { info: [8, 3, 7, 7], slots: [[4, 0, 3, 5], [16, 0, 3, 5]] },
   visual: { info: [2, 4, 5, 6], slots: [[7.2, 4.3, 3.6, 5.4], [12.2, 4.3, 4.6, 5.4]] },
+  apps: { info: [9, 3, 5, 7], slots: [[0, 3, 5, 5], [18, 3, 5, 5]] },
   contact: { info: [8.6, 8.6, 5.8, 5.8], slots: [[0, 9, 7, 5], [16, 9, 7, 5]], box: [0, 3.4, 23, 11.8] }, // the radio waves above the dish may run off the top
 };
 /* ---------- inside a satellite: a room, drawn pixel by pixel, where the work is part of the furniture ---------- */
@@ -2800,6 +2803,106 @@ function buildVisualHi() {
   c.putImageData(im, 0, 0); return cv;
 }
 SAT_HI.visual = { w: 240, h: 124, build: buildVisualHi, cv: null, info: [100, 44, 58, 40], slots: [], lights: [[35, 2, 3, 2, '#FFF1CF', 'blink'], [208, 56, 1, 8, '#BFE8F5', 'pulse'], [29, 61, 3, 2, '#FFF1CF', 'pulse']] };
+
+/* ---------- the apps satellite: a tablet in orbit outside, an app lab inside — a showcase wall, a test bench with a tapping robot, the servers, a corner to sit ---------- */
+const APP_ICONS = ['#D8503E', '#F2A65A', '#F3D27A', '#5FD3A2', '#62BDDD', '#6FB7FF', '#B48EE0', '#FF7AA8', '#EDE6D3'];
+function buildRoomApps() {
+  const kit = roomKit(), { W, c, R, disk, line, M } = kit;
+  const K = { wall: '#22343A', wall2: '#1B2A30', seam: '#15222A', hi: '#2E4650', trim: '#47636D', ceil: '#111A1F', beam: '#1A272D', floor: '#1C2A30', fline: '#121C21', board: '#E8E4DA', board2: '#A9A59A', rack: '#141C22', unit: '#1E2830', wood: '#7A5A45', wood2: '#5A4032', sofa: '#7A4A5A', sofa2: '#5E3646', sofaHi: '#9A6274', leaf: '#3C9A68', leaf2: '#2A7350', leaf3: '#63C489', pot: '#C26A40' };
+  // a small app icon: a rounded square with a light top edge and a mark in the middle
+  const icon = (x, y, s, col, mark) => { R(x, y, s, s, col); R(x, y, s, 1, 'rgba(255,255,255,.35)'); for (const [a, b] of [[x, y], [x + s - 1, y], [x, y + s - 1], [x + s - 1, y + s - 1]]) c.clearRect(a, b, 1, 1);
+    const m = Math.floor(s / 2); if (mark === 0) R(x + m - 1, y + m - 1, 3, 3, '#F7F4EC'); else if (mark === 1) { R(x + 2, y + m, s - 4, 1, '#F7F4EC'); R(x + m, y + 2, 1, s - 4, '#F7F4EC'); } else if (mark === 2) disk(x + m, y + m, Math.max(1, m - 2), '#F7F4EC'); else R(x + 2, y + s - 3, s - 4, 1, '#F7F4EC'); };
+  // ---- the shell: a teal-grey lab, panelled below, light strips above, a floor of plates
+  R(0, 0, W, 180, K.wall); R(0, 0, W, 18, K.ceil); for (let x = 0; x < W; x += 40) R(x, 0, 3, 18, K.beam); R(0, 16, W, 2, K.beam);
+  R(0, 104, W, 24, K.wall2); R(0, 103, W, 1, K.trim); for (let x = 10; x < W; x += 30) { R(x, 107, 1, 15, K.seam); R(x + 1, 107, 1, 15, K.hi); } R(0, 124, W, 4, K.beam); R(0, 124, W, 1, K.trim);
+  R(0, 128, W, 52, K.floor); const FY = [128, 131, 135, 140, 147, 156, 167, 180]; for (let i = 0; i < 7; i++) { R(0, FY[i], W, 1, K.fline); for (let x = i % 2 ? 16 : 0; x < W; x += 32) R(x, FY[i] + 1, 1, FY[i + 1] - FY[i] - 1, K.fline); }
+  const STRIPS = [60, 160, 380, 460, 650, 720, 860, 930]; for (const x of STRIPS) { R(x - 8, 15, 16, 3, M.m4); R(x - 8, 15, 16, 1, M.m3); }
+  // ---- the showcase: a wall of app icons, a big phone on its stand, a tablet on an easel; the hatch
+  R(4, 50, 31, 9, M.k); text35(c, 'APPS', 10, 52, '#2A4650');
+  for (let i = 0; i < 21; i++) for (let j = 0; j < 2; j++) { const x = 40 + i * 9 + (j ? 4 : 0), y = 25 + j * 9; if (x > 226) continue; icon(x, y, 7, APP_ICONS[(hash2(i, j * 7 + 1) * APP_ICONS.length) | 0], (hash2(i, j + 9) * 4) | 0); }
+  R(66, 104, 4, 36, M.m3); R(66, 104, 1, 36, M.m2); R(52, 139, 32, 3, M.m3); R(52, 139, 32, 1, M.m1); R(60, 100, 16, 5, M.m4); // the stand
+  R(51, 47, 34, 60, M.k); R(52, 48, 32, 58, '#2A3036'); R(53, 49, 30, 56, M.k); R(66, 50, 4, 1, M.m4); R(65, 103, 6, 1, M.m4); // the phone: its screen goes on after the light
+  line(140, 142, 150, 60, K.wood); line(141, 142, 151, 60, K.wood2); line(178, 142, 168, 60, K.wood); line(177, 142, 167, 60, K.wood2); line(159, 62, 159, 140, K.wood2); R(108, 116, 102, 3, K.wood); R(108, 119, 102, 1, K.wood2); // the easel
+  R(110, 54, 98, 62, M.k); R(111, 55, 96, 60, '#2A3036'); R(112, 56, 94, 58, M.k); R(158, 55, 2, 1, M.m4); // the tablet
+  kit.hatch(236);
+  // ---- the test bench: a whiteboard of wireframes, a rack of phones on charge, a robot arm tapping at one held in a clamp
+  R(316, 30, 84, 44, K.board); R(316, 30, 84, 1, '#F7F4EC'); R(399, 30, 1, 44, K.board2); R(316, 73, 84, 1, K.board2); R(314, 74, 88, 2, M.m3);
+  for (const [x, y] of [[322, 36], [344, 36], [366, 36]]) { R(x, y, 16, 28, '#F7F4EC'); R(x, y, 16, 1, M.m3); R(x, y + 27, 16, 1, M.m3); R(x, y, 1, 28, M.m3); R(x + 15, y, 1, 28, M.m3); R(x + 2, y + 3, 12, 4, '#C9D6DC'); R(x + 2, y + 9, 9, 1, M.m3); R(x + 2, y + 12, 11, 1, M.m3); R(x + 2, y + 21, 12, 3, '#8FB7C9'); }
+  line(338, 50, 344, 50, '#D8503E'); line(360, 50, 366, 50, '#D8503E'); R(343, 49, 1, 3, '#D8503E'); R(365, 49, 1, 3, '#D8503E'); // arrows from one screen to the next
+  for (const [x, y, col] of [[386, 36, '#F3D27A'], [388, 50, '#FF7AA8'], [384, 62, '#5FD3A2']]) { R(x, y, 9, 8, col); R(x + 1, y + 2, 6, 1, 'rgba(0,0,0,.25)'); R(x + 1, y + 4, 4, 1, 'rgba(0,0,0,.25)'); }
+  R(306, 104, 180, 3, M.m2); R(306, 104, 180, 1, M.m1); R(306, 107, 180, 2, M.m3); R(310, 109, 3, 29, M.m4); R(479, 109, 3, 29, M.m4); R(312, 126, 168, 2, M.m4);
+  R(314, 84, 80, 20, M.m4); R(314, 84, 80, 1, M.m3); for (let i = 0; i < 6; i++) { const x = 318 + i * 12; R(x, 74, 9, 17, M.k); R(x + 1, 76, 7, 12, '#18262C'); R(x + 3, 75, 3, 1, M.m4); R(x + 4, 91, 1, 13, '#2E3A40'); }
+  R(420, 96, 18, 8, M.m3); R(420, 96, 18, 1, M.m1); disk(429, 94, 4, M.m2); // the robot arm's base
+  R(452, 98, 24, 6, M.m3); R(452, 98, 24, 1, M.m1); R(455, 60, 3, 38, M.m4); R(470, 60, 3, 38, M.m4);
+  R(455, 61, 18, 36, M.k); R(456, 62, 16, 34, '#2A3036'); R(457, 63, 14, 32, M.k); // the phone in its clamp
+  R(486, 100, 10, 4, M.m4); R(488, 96, 6, 4, '#3A444A'); line(491, 104, 496, 126, '#2E3A40');
+  // ---- the servers: three racks, a tray of cables over them, a porthole
+  R(586, 28, 132, 4, M.m4); R(586, 28, 132, 1, M.m3); [['#D8503E', 0], ['#62BDDD', 1], ['#F3D27A', 2]].forEach(([col, k]) => { for (let i = 0; i <= 120; i++) R(592 + i, Math.round(33 + k * 2 + 4 * Math.sin(PI * i / 120)), 1, 1, col); });
+  for (const x of [590, 632, 674]) { R(x, 40, 38, 88, K.rack); R(x, 40, 38, 1, M.m4); R(x, 40, 1, 88, M.m4); R(x + 37, 40, 1, 88, '#0B1014'); for (let u = 0; u < 10; u++) { R(x + 3, 44 + u * 8, 32, 6, K.unit); R(x + 3, 44 + u * 8, 32, 1, '#2A3640'); for (let v = 0; v < 6; v++) R(x + 16 + v * 3, 46 + u * 8, 2, 1, '#0B1014'); } }
+  disk(756, 60, 24, M.m3); disk(756, 60, 23, M.m2); for (let y = -23; y <= 0; y++) { const hw = Math.round(Math.sqrt(529 - y * y)); R(756 - hw, 60 + y, Math.max(1, Math.round(hw * 0.5)), 1, M.m1); } disk(756, 60, 21, M.m4); disk(756, 60, 19, M.k);
+  // ---- the corner to sit: a sofa, a low table with a tablet left on it, a poster, a floor lamp, a plant
+  R(812, 30, 40, 56, '#F2A65A'); R(812, 30, 40, 1, '#F7C890'); R(814, 32, 36, 52, '#1B2A30'); icon(824, 38, 16, '#5FD3A2', 2); text35(c, 'HELLO', 822, 62, '#EDE6D3'); text35(c, 'WORLD', 822, 70, '#F2A65A');
+  R(800, 110, 74, 16, K.sofa); R(800, 110, 74, 1, K.sofaHi); R(800, 100, 74, 10, K.sofa2); R(800, 100, 74, 1, K.sofaHi); R(796, 104, 8, 22, K.sofa2); R(870, 104, 8, 22, K.sofa2); R(804, 126, 3, 4, M.k); R(868, 126, 3, 4, M.k); R(836, 112, 1, 13, K.sofa2);
+  R(886, 132, 30, 3, K.wood); R(886, 132, 30, 1, '#9A7C64'); R(889, 135, 2, 8, K.wood2); R(911, 135, 2, 8, K.wood2); R(894, 129, 14, 3, M.k); R(895, 129, 12, 2, '#2B86B0');
+  R(930, 40, 2, 92, M.m3); R(924, 132, 14, 3, M.m4); R(924, 34, 14, 7, M.m2); R(925, 41, 12, 1, M.m3);
+  R(942, 116, 14, 12, K.pot); R(942, 116, 14, 1, '#D98458'); R(948, 88, 2, 28, K.leaf2); for (const [x, y, w, col] of [[941, 92, 7, K.leaf], [950, 86, 7, K.leaf3], [943, 100, 5, K.leaf3], [951, 96, 6, K.leaf], [946, 80, 5, K.leaf], [951, 106, 5, K.leaf2]]) R(x, y, w, 3, col);
+  // ---- the lamps
+  kit.bake([[68, 76, 54, 0.5, 200, 230, 255], [159, 84, 70, 0.5, 200, 230, 255], [134, 32, 110, 0.32, 255, 236, 200], [259, 40, 40, 0.3, 95, 211, 162], [60, 14, 80, 0.3, 255, 236, 200], [160, 14, 80, 0.3, 255, 236, 200],
+    [358, 52, 64, 0.45, 255, 236, 200], [440, 80, 70, 0.45, 255, 236, 200], [354, 96, 40, 0.3, 95, 211, 162, 3, 0.6],
+    [652, 84, 110, 0.55, 98, 190, 230, 6, 0.5], [756, 60, 46, 0.28, 110, 190, 230],
+    [931, 44, 60, 0.6, 255, 214, 160, 4, 0.8], [832, 56, 50, 0.4, 242, 166, 90, 3, 0.6], [880, 14, 90, 0.3, 255, 236, 200]], 0.36);
+  // ---- things that give off light themselves
+  for (const x of STRIPS) R(x - 7, 18, 14, 1, '#FFF1CF'); kit.hatchGlow(236); text35(c, 'APPS', 10, 52, '#5FD3A2'); R(925, 41, 12, 1, '#FFE2B0');
+  kit.screen(IMGEL.p, [54, 51, 28, 52]); kit.screen(IMGEL.l, [113, 57, 92, 56]); kit.screen(IMGEL.p, [458, 64, 12, 30]);
+  return kit.cv;
+}
+function dynApps(g, R, tt) {
+  const line = (x0, y0, x1, y1, col) => { const n = Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0)) || 1; for (let i = 0; i <= n; i++) R(Math.round(x0 + (x1 - x0) * i / n), Math.round(y0 + (y1 - y0) * i / n), 1, 1, col); };
+  portholeEarth(g, 756, 60, 19, tt);
+  // the icon wall: now and then one of them gets a red badge, and one glints
+  const k = Math.floor(tt / 2.2), bi = (hash2(k, 5) * 21) | 0, bj = hash2(k, 9) > 0.5 ? 1 : 0, bx = 40 + bi * 9 + (bj ? 4 : 0); if (bx <= 226 && !reduced) { R(bx + 5, 24 + bj * 9, 3, 3, '#D8503E'); R(bx + 6, 25 + bj * 9, 1, 1, '#F7F4EC'); }
+  const gi = Math.floor(tt * 3) % 23; if (!reduced && gi < 21) R(40 + gi * 9 + 1, 26, 2, 1, 'rgba(255,255,255,.7)');
+  // the phones on charge: their bars fill, one after another
+  for (let i = 0; i < 6; i++) { const x = 318 + i * 12, p = reduced ? 0.7 : ((tt * 0.25 + i * 0.17) % 1), h = Math.max(1, Math.round(p * 10)); R(x + 3, 87 - h, 3, h, p > 0.9 ? '#5FD3A2' : '#2A7350'); R(x + 3, 78, 3, 1, '#62BDDD'); }
+  // the robot arm: it reaches over, taps the phone in the clamp, and lifts away
+  const ph = reduced ? 0.5 : (tt * 0.45) % 1, reach = ph < 0.4 ? ph / 0.4 : ph < 0.6 ? 1 : 1 - (ph - 0.6) / 0.4, tap = ph > 0.42 && ph < 0.58;
+  const ex = Math.round(431 + reach * 12), ey = Math.round(72 - reach * 4), tx = Math.round(445 + reach * 18), ty = Math.round(78 - reach * 8 + (tap ? 4 : 0));
+  line(429, 94, ex, ey, '#9AA39E'); line(430, 94, ex + 1, ey, '#6E7875'); R(ex - 2, ey - 2, 5, 5, '#C9CFCA'); line(ex, ey, tx, ty, '#9AA39E'); line(ex, ey + 1, tx, ty + 1, '#6E7875'); R(tx - 1, ty, 3, 3, '#4A555B'); R(tx, ty + 2, 1, 2, '#F2A65A');
+  if (tap) { g.globalAlpha = 0.6; R(tx - 2, ty + 3, 5, 1, '#FFF1CF'); R(tx, ty + 1, 1, 5, '#FFF1CF'); g.globalAlpha = 1; }
+  // the servers: their lights flicker, each at its own pace
+  for (const [r, x] of [[0, 590], [1, 632], [2, 674]]) for (let u = 0; u < 10; u++) { const on = reduced ? 1 : hash2(Math.floor(tt * (4 + u % 3)) + u * 13, r * 7 + u) > 0.35; R(x + 5, 46 + u * 8, 2, 2, on ? (u % 4 === 0 ? '#F2A65A' : '#5FD3A2') : '#1F3A2E'); R(x + 9, 46 + u * 8, 2, 2, hash2(u, r) > 0.8 ? '#D8503E' : '#123044'); }
+  // adrift: a stylus, a loose cable tie, a few motes
+  const sx = Math.round(290 + Math.sin(tt * 0.3) * 5), sy = Math.round(96 + Math.sin(tt * 0.45 + 1) * 4); line(sx, sy, sx + 10, sy - 3, '#C9CFCA'); R(sx + 10, sy - 4, 2, 2, '#6E7875');
+  const cx = Math.round(540 + Math.cos(tt * 0.25) * 6), cy = Math.round(70 + Math.sin(tt * 0.4) * 4); for (let i = 0; i < 6; i++) R(cx + i, cy + Math.round(Math.sin(i + tt) * 1.5), 1, 1, '#5FD3A2');
+}
+ROOMS.apps = { build: buildRoomApps, dyn: dynApps, base: null, home: 150, start: 68,
+  lead: { zh: '这里放我做的应用，资料待录入。展台上的大手机和平板、测试台上夹着的那部手机，是三个展位样例。', en: 'The apps I have made go here; their details are still to be added. The big phone and the tablet on the showcase, and the phone held on the test bench, are three sample slots.' },
+  secs: [[150, '展台', 'Showcase'], [400, '测试台', 'Test bench'], [672, '服务器', 'Servers'], [870, '休息区', 'Lounge']],
+  hots: [{ id: 'w1', i: 1, img: 'p', rect: [48, 44, 40, 100], screen: [54, 51, 28, 52], tag: [68, 43] }, { id: 'w2', i: 2, img: 'l', rect: [106, 50, 106, 70], screen: [113, 57, 92, 56], tag: [159, 49] },
+    { id: 'w3', i: 3, img: 'p', rect: [450, 56, 28, 46], screen: [458, 64, 12, 30], tag: [464, 55] }, { id: 'exit', rect: [234, 34, 50, 96], tag: [259, 33] }] };
+// the satellite itself, at ten times the detail: a tablet, edge on to us, on a frame with two long wings; we go in through its screen
+function buildAppsHi() {
+  const W = 240, H = 124, cv = document.createElement('canvas'); cv.width = W; cv.height = H; const c = cv.getContext('2d');
+  const K = { hi: '#F2F3EE', a: '#D5DAD5', b: '#B7BFBB', d: '#8E9895', e: '#6B7573', k: '#0B0E11', bez: '#1A2127', bez2: '#2F3A42', scr: '#0A0F12', pL: '#62BDDD', p: '#2B86B0', pd: '#1D6A8E', pk: '#0E3F55', fr: '#9AA39E', frh: '#C9CFCA', frd: '#6E7875', em: '#F2A65A', btn: '#59636A' };
+  const R = (x, y, w, h, col) => { c.fillStyle = col; c.fillRect(x, y, w, h); };
+  const cell = (x, y, w, h) => { R(x, y, w, h, K.p); R(x, y, w, 1, K.pL); R(x, y + h - 1, w, 1, K.pd); for (let i = 4; i < w; i += 4) R(x + i, y + 1, 1, h - 2, K.pd); R(x, y, 1, 1, K.pk); R(x + w - 1, y, 1, 1, K.pk); R(x, y + h - 1, 1, 1, K.pk); R(x + w - 1, y + h - 1, 1, 1, K.pk); R(x + 2, y + 2, 2, 1, K.pL); };
+  const wing = (x0) => { R(x0, 44, 66, 40, K.fr); R(x0, 44, 66, 1, K.frh); R(x0, 44, 1, 40, K.frh); R(x0 + 65, 44, 1, 40, K.frd); R(x0, 83, 66, 1, K.frd); R(x0 + 2, 46, 62, 36, K.pk); for (let i = 0; i < 3; i++) for (let j = 0; j < 2; j++) cell(x0 + 3 + i * 20, 47 + j * 18, 18, 16); };
+  wing(4); wing(170); for (const x of [70, 162]) { R(x, 60, 8, 1, K.frh); R(x, 68, 8, 1, K.fr); R(x, 61, 8, 7, '#3A444A'); for (let i = 0; i < 8; i++) R(x + i, 61 + [0, 2, 4, 6, 4, 2, 0, 2][i], 1, 1, K.d); }
+  // the mast and its beacon, a small dish
+  R(119, 10, 2, 18, K.fr); R(118, 6, 4, 4, K.em); R(115, 18, 10, 1, K.frh); R(94, 18, 2, 10, K.fr); R(87, 12, 2, 1, K.hi); R(101, 12, 2, 1, K.hi); R(88, 13, 14, 1, K.a); R(90, 14, 10, 1, K.b); R(93, 15, 4, 3, K.d);
+  // the tablet: a slab of brushed metal with rounded corners, its black glass, a camera, and a dock of four app icons under the screen
+  for (let y = 28; y < 100; y++) { const t = (y - 28) / 72, ins = y < 31 ? 31 - y : y > 96 ? y - 96 : 0; R(78 + ins, y, 84 - ins * 2, 1, t < 0.05 ? K.hi : t < 0.4 ? K.a : t < 0.8 ? K.b : K.d); }
+  for (let i = 0; i < 70; i++) R(80 + ((hash2(i, 13) * 78) | 0), 30 + ((hash2(i, 17) * 66) | 0), 3, 1, hash2(i, 15) > 0.5 ? K.hi : K.d);
+  for (let j = 0; j < 62; j++) { const ins = j < 2 ? 2 - j : j > 59 ? j - 59 : 0; R(82 + ins, 32 + j, 76 - ins * 2, 1, K.bez); } R(85, 35, 70, 44, K.bez2); R(86, 36, 68, 42, K.scr); R(119, 33, 2, 1, K.btn);
+  [['#D8503E', 0], ['#F3D27A', 1], ['#5FD3A2', 2], ['#6FB7FF', 3]].forEach(([col, i]) => { const x = 98 + i * 12; R(x, 82, 8, 8, col); R(x, 82, 8, 1, 'rgba(255,255,255,.4)'); c.clearRect(x, 82, 1, 1); c.clearRect(x + 7, 82, 1, 1); c.clearRect(x, 89, 1, 1); c.clearRect(x + 7, 89, 1, 1); R(x, 82, 1, 1, K.bez); R(x + 7, 82, 1, 1, K.bez); R(x, 89, 1, 1, K.bez); R(x + 7, 89, 1, 1, K.bez); R(x + 3, 85, 2, 2, '#F7F4EC'); });
+  // the name plate, and the thruster underneath
+  R(104, 101, 32, 7, K.bez); text35(c, 'APPS', 113, 102, K.frh);
+  R(110, 108, 20, 3, K.d); R(110, 108, 20, 1, K.fr); for (let k = 0; k < 5; k++) R(115 - k, 111 + k, 10 + k * 2, 1, k % 2 ? '#4A555B' : '#3A444A'); R(112, 116, 16, 1, K.em);
+  const im = c.getImageData(0, 0, W, H), d = im.data, src = new Uint8Array(W * H); for (let i = 0; i < W * H; i++) src[i] = d[i * 4 + 3] > 0 ? 1 : 0;
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const i = y * W + x; if (src[i]) continue; if ((x > 0 && src[i - 1]) || (x < W - 1 && src[i + 1]) || (y > 0 && src[i - W]) || (y < H - 1 && src[i + W])) { d[i * 4] = 11; d[i * 4 + 1] = 14; d[i * 4 + 2] = 17; d[i * 4 + 3] = 240; } }
+  c.putImageData(im, 0, 0); return cv;
+}
+SAT_HI.apps = { w: 240, h: 124, build: buildAppsHi, cv: null, info: [86, 36, 68, 42], slots: [], lights: [[118, 6, 4, 4, '#FFF1CF', 'blink'], [98, 82, 8, 8, '#FF8A7A', 'pulse'], [112, 116, 16, 1, '#F2A65A', 'flick']] };
 
 /* ---------- the contact satellite: a relay with a pilot aboard — and the pilot is us. One fixed view, straight down at the console, which is the interface ---------- */
 function buildRoomContact() {
@@ -4275,6 +4378,7 @@ const UI = {
   roomIn(id) { uiNoise(0.42, { type: 'highpass', f0: 1400, f1: 6000, vol: 0.028, att: 0.03 }); uiTone(120, 0.24, { to: 58, vol: 0.07, at: 0.36 }); // the airlock: a hiss, a thud — then whatever that room sounds like
     if (id === 'game') uiSeq([74, 78, 81, 86], 0.06, 0.07, { type: 'square', vol: 0.022, at: 0.6 });
     else if (id === 'visual') uiSeq([81, 86, 90], 0.14, 0.7, { vol: 0.022, at: 0.6, att: 0.02 });
+    else if (id === 'apps') uiSeq([86, 91, 95, 98], 0.07, 0.22, { vol: 0.02, at: 0.6, att: 0.01 }); // an app opening: a quick bright chime
     else if (id === 'featured') { uiTone(mtof(93), 0.9, { vol: 0.02, at: 0.6 }); uiTone(mtof(100), 0.7, { vol: 0.01, at: 0.66 }); }
     else if (id === 'prototype') for (let i = 0; i < 4; i++) { const f = 320 + Math.random() * 500; uiTone(f, 0.07, { to: f * 1.7, vol: 0.03, at: 0.6 + i * 0.11 }); }
     else if (id === 'contact') { uiSeq([88, 88], 0.16, 0.07, { type: 'square', vol: 0.02, at: 0.6 }); uiNoise(0.25, { f0: 2600, q: 0.4, vol: 0.014, at: 0.95 }); }
