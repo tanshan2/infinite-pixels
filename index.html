@@ -403,13 +403,10 @@ button{font:inherit;color:inherit}
 /* custom cursor */
 #cursor{position:fixed;left:0;top:0;z-index:9;width:0;height:0;pointer-events:none;opacity:0;transition:opacity .3s}
 #cursor.on{opacity:1}
-#cursor i{position:absolute;left:-7px;top:-7px;width:14px;height:14px;border:1px solid var(--ivory);transition:transform .35s cubic-bezier(.2,.8,.2,1),background .2s,border-color .2s}
-#cursor span{position:absolute;left:22px;top:-8px;font-size:10px;letter-spacing:.24em;white-space:nowrap;color:var(--ivory);opacity:0;transition:opacity .25s;text-shadow:0 0 10px var(--void)}
-#cursor.down i{transform:scale(.45);background:var(--ivory)}
-#cursor.hot i{transform:scale(2.6) rotate(45deg);border-color:var(--ember)}
-#cursor.hot span{opacity:1;left:30px}
-#cursor.paint i{background:var(--pc,var(--ivory));border-color:var(--pc,var(--ivory));transform:scale(.8)}
-@media not ((hover:hover) and (pointer:fine)){#cursor{display:none}}
+#meteor{position:fixed;inset:0;z-index:9;width:100%;height:100%;pointer-events:none;image-rendering:pixelated}
+#cursor span{position:absolute;left:26px;top:-7px;font-size:10px;letter-spacing:.24em;white-space:nowrap;color:var(--ivory);opacity:0;transition:opacity .25s;text-shadow:0 0 10px var(--void)}
+#cursor.hot span{opacity:1;left:34px}
+@media not ((hover:hover) and (pointer:fine)){#cursor,#meteor{display:none}}
 
 @media (max-width:720px){
   .brand{font-size:9px;letter-spacing:.26em;gap:9px}
@@ -604,7 +601,7 @@ button{font:inherit;color:inherit}
     <div id="detailBody" style="display:flex;flex-direction:column;gap:22px"></div>
   </aside>
 
-  <div id="cursor" aria-hidden="true"><i></i><span></span></div>
+  <canvas id="meteor" aria-hidden="true"></canvas><div id="cursor" aria-hidden="true"><span></span></div>
 </div>
 
 <script type="text/plain" id="lmsrc">
@@ -4909,10 +4906,42 @@ addEventListener('blur', () => { keys.clear(); spaceDown = false; });
 
 /* ---------- custom cursor ---------- */
 const cursorEl = $('#cursor'), cursorLabel = cursorEl.querySelector('span');
+
+/* ---------- the pointer is a small meteor: a tumbling rock of pixels, its leading edge glowing, a trail of embers burning out behind it ---------- */
+const MET = { x: -99, y: -99, vx: 0, vy: 0, rot: 0, parts: [], raf: 0, cv: $('#meteor'), w: 0, h: 0, sq: 0, hotK: 0 };
+const MET_ROCK = ['..XXXX...', '.XXXXXX..', 'XXXoXXXX.', 'XXXXXXXXX', 'XXXXXXoXX', '.XoXXXXXX', '.XXXXXXX.', '..XXXXX..', '...XX....'];
+function metSpark(x, y, n, sp) { for (let i = 0; i < n; i++) { const a = Math.random() * TAU, v = sp * (0.4 + Math.random() * 0.8); MET.parts.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 0, max: 0.35 + Math.random() * 0.4, s: Math.random() > 0.6 ? 3 : 2 }); } metGo(); }
+function metGo() { if (!MET.raf && fine) MET.raf = requestAnimationFrame(metLoop); }
+function metLoop(now) {
+  MET.raf = 0; const cv = MET.cv, dpr = 1, W = innerWidth, H = innerHeight; if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; }
+  const g = cv.getContext('2d'), dt = Math.min(0.05, (now - (MET.last || now)) / 1000); MET.last = now; g.clearRect(0, 0, W, H);
+  const on = cursorEl.classList.contains('on'), hot = cursorEl.classList.contains('hot'), down = cursorEl.classList.contains('down'), paint = cursorEl.classList.contains('paint');
+  // the embers: each drifts, slows, and cools from white through amber and red to nothing
+  const P = MET.parts; for (let i = P.length - 1; i >= 0; i--) { const q = P[i]; q.life += dt; if (q.life >= q.max) { P.splice(i, 1); continue; } q.x += q.vx * dt; q.y += q.vy * dt; q.vx *= 0.92; q.vy *= 0.92;
+    const k = q.life / q.max; g.globalAlpha = 1 - k * 0.6; g.fillStyle = k < 0.15 ? '#FFF1CF' : k < 0.4 ? '#F2A65A' : k < 0.7 ? '#D8503E' : '#6A2A20'; const s = q.s * (1 - k * 0.5); g.fillRect(Math.round(q.x / 2) * 2, Math.round(q.y / 2) * 2, Math.max(1, Math.round(s)), Math.max(1, Math.round(s))); } g.globalAlpha = 1;
+  if (on) {
+    const sp = Math.hypot(MET.vx, MET.vy), heat = clamp(sp / 900, 0, 1), ux = sp > 1 ? MET.vx / sp : 0.7, uy = sp > 1 ? MET.vy / sp : 0.7; MET.vx *= 0.85; MET.vy *= 0.85;
+    if (!reduced) MET.rot += dt * (0.8 + heat * 4); MET.sq += ((down ? 1 : 0) - MET.sq) * Math.min(1, dt * 18); MET.hotK += ((hot ? 1 : 0) - MET.hotK) * Math.min(1, dt * 10);
+    const px = 2, sc = 1 - MET.sq * 0.25, ca = Math.cos(MET.rot), sa = Math.sin(MET.rot), cx = MET.x, cy = MET.y;
+    if (paint || MET.hotK > 0.01) { g.globalAlpha = paint ? 0.35 : 0.22 * MET.hotK; g.fillStyle = paint ? getComputedStyle(cursorEl).getPropertyValue('--pc').trim() || '#EDE6D3' : '#F2A65A'; for (let y = -7; y <= 7; y++) { const hw = Math.round(Math.sqrt(Math.max(0, 50 - y * y))); g.fillRect(cx - hw * px, cy + y * px, hw * 2 * px, px); } g.globalAlpha = 1; }
+    // the rock, turned: each of its pixels sampled back from the unturned shape; the side it is flying into glows with the heat
+    for (let oy = -6; oy <= 6; oy++) for (let ox = -6; ox <= 6; ox++) { const sx = (ox * ca + oy * sa) / sc + 4, sy = (-ox * sa + oy * ca) / sc + 4, ix = Math.round(sx), iy = Math.round(sy); if (iy < 0 || iy > 8 || ix < 0 || ix > 8) continue; const ch = MET_ROCK[iy][ix]; if (ch === '.') continue;
+      const lx = ox / 5, ly = oy / 5, lit = -lx * 0.6 - ly * 0.7, front = ux * lx + uy * ly; let col = ch === 'o' ? '#3A302A' : lit > 0.35 ? '#B3A08C' : lit > -0.15 ? '#85735F' : '#54473C';
+      if (front > 0.35 && heat > 0.15) col = heat > 0.6 && front > 0.6 ? '#FFD9A0' : '#F2A65A'; else if (front > 0.15 && heat > 0.4) col = '#D8503E';
+      g.fillStyle = col; g.fillRect(Math.round(cx + ox * px) - 1, Math.round(cy + oy * px) - 1, px, px); }
+    // over something to press: four amber corners close in round it
+    if (MET.hotK > 0.01) { const r = Math.round(18 - 4 * MET.hotK), L = 5; g.fillStyle = '#F2A65A'; g.globalAlpha = MET.hotK; for (const [qx, qy] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) { const bx = cx + qx * r, by = cy + qy * r; g.fillRect(qx < 0 ? bx : bx - L + 1, by, L, 1); g.fillRect(bx, qy < 0 ? by : by - L + 1, 1, L); } g.globalAlpha = 1; }
+  }
+  if (on || P.length) metGo();
+}
+addEventListener('pointerdown', (e) => { if (fine && e.pointerType === 'mouse' && cursorEl.classList.contains('on') && !reduced) metSpark(e.clientX, e.clientY, 12, 160); });
 function moveCursor(e) {
   if (!fine || e.pointerType !== 'mouse') return;
   const inStage = e.target.nodeType === 1 && stage.contains(e.target); cursorEl.classList.toggle('on', inStage);
   cursorEl.style.transform = `translate3d(${e.clientX}px,${e.clientY}px,0)`;
+  { const dx = e.clientX - MET.x, dy = e.clientY - MET.y, d = Math.hypot(dx, dy); if (d < 400 && d > 0) { MET.vx = MET.vx * 0.5 + dx * 30; MET.vy = MET.vy * 0.5 + dy * 30; // the trail: embers shed along the way, more the faster it goes
+      if (!reduced && inStage) for (let k = 0; k < d; k += 4) { const f = k / d; MET.parts.push({ x: MET.x + dx * f + (Math.random() - 0.5) * 4, y: MET.y + dy * f + (Math.random() - 0.5) * 4, vx: -dx * 2 + (Math.random() - 0.5) * 30, vy: -dy * 2 + (Math.random() - 0.5) * 30, life: 0, max: 0.25 + Math.random() * 0.35 + Math.min(0.3, d / 300), s: Math.random() > 0.7 ? 3 : 2 }); } }
+    MET.x = e.clientX; MET.y = e.clientY; if (MET.parts.length > 400) MET.parts.splice(0, MET.parts.length - 400); metGo(); }
   const hot = inStage && e.target.closest('[data-cur]'); cursorEl.classList.toggle('hot', !!hot && !drag); pointer.dim = !!hot && !drag;
   if (hot) cursorLabel.textContent = t(hot.dataset.cur);
   cursorEl.classList.toggle('paint', paintMode && !hot);
