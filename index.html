@@ -4909,17 +4909,21 @@ addEventListener('blur', () => { keys.clear(); spaceDown = false; });
 const cursorEl = $('#cursor'), cursorLabel = cursorEl.querySelector('span');
 
 /* ---------- the pointer is a small meteor: a tumbling rock of pixels, its leading edge glowing, a trail of embers burning out behind it ---------- */
-const MET = { x: -99, y: -99, vx: 0, vy: 0, rot: 0, parts: [], raf: 0, cv: $('#meteor'), w: 0, h: 0, sq: 0, hotK: 0, boomT: 9, rings: [], down: null };
+const MET = { x: -99, y: -99, vx: 0, vy: 0, rot: 0, parts: [], raf: 0, cv: $('#meteor'), w: 0, h: 0, sq: 0, hotK: 0, boomT: 9, rings: [], down: null, away: false };
 const MET_HOT = 'button,a,label,summary,[role="button"],[data-cur],[data-node],[data-hot],[data-work],#mini,video'; // things to press: the meteor locks on to them
 const MET_UI = MET_HOT + ',input,textarea,select,.sheet,.hud,.paintbar,.rm-card,.rm-shot,.rm-chat,.rm-bp,.rm-disp,.rm-btns,.lm'; // anywhere a click means something: no explosion there
 // a click on nothing: the meteor strikes. A flash, a shock ring, chunks of rock and embers thrown out, a puff of smoke; then a new one fades in
-function metBoom(x, y) {
+function metBoom(x, y, quiet) {
   MET.boomT = 0; MET.rings.push({ x, y, t: 0 }); const R = ['#B3A08C', '#85735F', '#54473C', '#3A302A'];
   for (let i = 0; i < 22; i++) { const a = Math.random() * TAU, v = 70 + Math.random() * 230; MET.parts.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 40, life: 0, max: 0.6 + Math.random() * 0.5, s: Math.random() > 0.5 ? 3 : 2, kind: 'rock', c: R[(Math.random() * 4) | 0] }); }
   for (let i = 0; i < 30; i++) { const a = Math.random() * TAU, v = 60 + Math.random() * 320; MET.parts.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 0, max: 0.3 + Math.random() * 0.45, s: Math.random() > 0.6 ? 3 : 2 }); }
   for (let i = 0; i < 9; i++) { const a = Math.random() * TAU, v = 10 + Math.random() * 40; MET.parts.push({ x: x + Math.cos(a) * 4, y: y + Math.sin(a) * 4, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 14, life: 0, max: 0.9 + Math.random() * 0.6, s: 5 + Math.random() * 4, kind: 'smoke' }); }
-  UI.boom(); metGo();
+  if (!quiet) UI.boom(); metGo();
 }
+// leaving the page, the meteor bursts where it was; coming back, its pieces fly in from round about and gather into a new one under the pointer
+function metGather() { const R = ['#B3A08C', '#85735F', '#54473C', '#3A302A']; MET.boomT = 0;
+  for (let i = 0; i < 26; i++) { const a = Math.random() * TAU, d = 34 + Math.random() * 46; MET.parts.push({ kind: 'gather', ox: Math.cos(a) * d, oy: Math.sin(a) * d, x: 0, y: 0, vx: 0, vy: 0, life: Math.random() * -0.12, max: 0.4, s: Math.random() > 0.5 ? 3 : 2, c: R[(Math.random() * 4) | 0] }); } metGo(); }
+document.addEventListener('mouseout', (e) => { if (e.relatedTarget || !fine || MET.away || !cursorEl.classList.contains('on')) return; MET.away = true; cursorEl.classList.remove('on', 'hot'); if (!reduced) metBoom(MET.x, MET.y, true); else metGo(); });
 const MET_ROCK = ['..XXXX...', '.XXXXXX..', 'XXXoXXXX.', 'XXXXXXXXX', 'XXXXXXoXX', '.XoXXXXXX', '.XXXXXXX.', '..XXXXX..', '...XX....'];
 function metSpark(x, y, n, sp) { for (let i = 0; i < n; i++) { const a = Math.random() * TAU, v = sp * (0.4 + Math.random() * 0.8); MET.parts.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 0, max: 0.35 + Math.random() * 0.4, s: Math.random() > 0.6 ? 3 : 2 }); } metGo(); }
 function metGo() { if (!MET.raf && fine) MET.raf = requestAnimationFrame(metLoop); }
@@ -4930,6 +4934,7 @@ function metLoop(now) {
   // the embers: each drifts, slows, and cools from white through amber and red to nothing
   const P = MET.parts; for (let i = P.length - 1; i >= 0; i--) { const q = P[i]; q.life += dt; if (q.life >= q.max) { P.splice(i, 1); continue; } q.x += q.vx * dt; q.y += q.vy * dt; q.vx *= 0.92; q.vy *= 0.92;
     const k = q.life / q.max;
+    if (q.kind === 'gather') { if (q.life < 0) continue; const e = k * k * (3 - 2 * k); g.globalAlpha = 0.4 + 0.6 * k; g.fillStyle = k > 0.85 ? '#F2A65A' : q.c; g.fillRect(Math.round((MET.x + q.ox * (1 - e)) / 2) * 2, Math.round((MET.y + q.oy * (1 - e)) / 2) * 2, q.s, q.s); continue; }
     if (q.kind === 'smoke') { q.s += dt * 14; g.globalAlpha = 0.42 * (1 - k); g.fillStyle = '#4A4440'; const s = Math.round(q.s / 2) * 2; g.fillRect(Math.round((q.x - s / 2) / 2) * 2, Math.round((q.y - s / 2) / 2) * 2, s, s); continue; }
     if (q.kind === 'rock') { q.vy += 260 * dt; g.globalAlpha = k < 0.7 ? 1 : (1 - k) / 0.3; g.fillStyle = k < 0.12 ? '#F2A65A' : q.c; g.fillRect(Math.round(q.x / 2) * 2, Math.round(q.y / 2) * 2, q.s, q.s); continue; }
     g.globalAlpha = 1 - k * 0.6; g.fillStyle = k < 0.15 ? '#FFF1CF' : k < 0.4 ? '#F2A65A' : k < 0.7 ? '#D8503E' : '#6A2A20'; const s = q.s * (1 - k * 0.5); g.fillRect(Math.round(q.x / 2) * 2, Math.round(q.y / 2) * 2, Math.max(1, Math.round(s)), Math.max(1, Math.round(s))); } g.globalAlpha = 1;
@@ -4962,6 +4967,7 @@ function moveCursor(e) {
   if (!fine || e.pointerType !== 'mouse') return;
   const tg = e.target, inStage = tg.nodeType === 1 && app.contains(tg) && !tg.closest('input,textarea,select,[contenteditable]'); cursorEl.classList.toggle('on', inStage); // the whole site, the satellites and the Moon too; a text field keeps its caret
   cursorEl.style.transform = `translate3d(${e.clientX}px,${e.clientY}px,0)`;
+  if (MET.away && inStage) { MET.away = false; MET.x = e.clientX; MET.y = e.clientY; MET.vx = MET.vy = 0; if (!reduced) metGather(); }
   { const dx = e.clientX - MET.x, dy = e.clientY - MET.y, d = Math.hypot(dx, dy); if (d < 400 && d > 0) { MET.vx = MET.vx * 0.5 + dx * 30; MET.vy = MET.vy * 0.5 + dy * 30; // the trail: embers shed along the way, more the faster it goes
       if (!reduced && inStage) for (let k = 0; k < d; k += 4) { const f = k / d; MET.parts.push({ x: MET.x + dx * f + (Math.random() - 0.5) * 4, y: MET.y + dy * f + (Math.random() - 0.5) * 4, vx: -dx * 2 + (Math.random() - 0.5) * 30, vy: -dy * 2 + (Math.random() - 0.5) * 30, life: 0, max: 0.25 + Math.random() * 0.35 + Math.min(0.3, d / 300), s: Math.random() > 0.7 ? 3 : 2 }); } }
     MET.x = e.clientX; MET.y = e.clientY; if (MET.parts.length > 400) MET.parts.splice(0, MET.parts.length - 400); metGo(); }
