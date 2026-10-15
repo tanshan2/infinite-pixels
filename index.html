@@ -1647,8 +1647,7 @@ const pack = (c) => (255 << 24) | ((c[2] | 0) << 16) | ((c[1] | 0) << 8) | (c[0]
 function ramp(stops, v) { for (let i = 1; i < stops.length; i++) if (v <= stops[i][0]) { const [a, ca] = stops[i - 1], [b, cb] = stops[i]; return mix3(ca, cb, (v - a) / (b - a || 1)); } return stops[stops.length - 1][1]; }
 const DARK = [[0, hex('#070A0D')], [0.4, hex('#090D11')], [0.495, hex('#0C1216')], [0.5, hex('#1C252B')], [0.53, hex('#141B20')], [0.75, hex('#1A2227')], [1, hex('#262F35')]];
 const LIT = [[0, hex('#082530')], [0.3, hex('#0B3644')], [0.44, hex('#115468')], [0.495, hex('#1B7C97')], [0.5, hex('#E6CF98')], [0.522, hex('#D9BE82')], [0.53, hex('#63C489')], [0.64, hex('#3C9A68')], [0.75, hex('#2A7350')], [0.85, hex('#5A7A69')], [0.93, hex('#A9B5AA')], [1, hex('#E4E2D4')]];
-const STEPS = 5, LUT = new Uint32Array((STEPS + 1) * 256), ROAD = new Uint32Array(STEPS + 1);
-for (let q = 0; q <= STEPS; q++) ROAD[q] = pack(mix3(hex('#0B0F12'), hex(q === STEPS ? '#8A949A' : '#56606A'), Math.pow(Math.min(1, q / (STEPS - 1)), 1.15)));
+const STEPS = 5, LUT = new Uint32Array((STEPS + 1) * 256);
 for (let q = 0; q < STEPS; q++) for (let i = 0; i < 256; i++) { const v = i / 255; LUT[q * 256 + i] = pack(mix3(ramp(DARK, v), ramp(LIT, v), Math.pow(q / (STEPS - 1), 1.15))); }
 for (let i = 0; i < 256; i++) LUT[STEPS * 256 + i] = pack(mix3(ramp(LIT, i / 255), hex('#F4EEDC'), 0.5));
 // the land, by what grows on it: 0 rainforest · 1 forest · 2 woodland · 3 grassland · 4 savanna · 5 scrub · 6 desert · 7 dunes and beaches · 8 taiga · 9 tundra · 10 barren cold ground · 11 highland · 12 rock · 13 high rock · 14 snow and ice · 15, 16 the ground under a city
@@ -1699,12 +1698,10 @@ function drawGlobe() {
       if (big) { lon += (vnoise(lon * 170 + 3.1, lat * 170 - 7.7) - 0.5) * 0.0052; lat += (vnoise(lon * 170 + 41.3, lat * 170 + 19.9) - 0.5) * 0.0052; }
       let h = 0, land = false, u = 0, v = 0, mi = 0, cls = -1;
       if (map) { u = ((lon / TAU + 0.5) * MW) | 0; if (u >= MW) u = MW - 1; v = ((0.5 - lat / PI) * MH) | 0; if (v >= MH) v = MH - 1; mi = v * MW + u; h = map[mi]; land = h >= 128; }
-      let hv, gk = 0, gpx = 0, gpy = 0, road = false;
+      let hv, gk = 0, gpx = 0, gpy = 0;
       if (gE) { gpx = (X * gE[0] + Z * gE[2]) * gInv; gpy = (X * gS[0] + Y * gS[1] + Z * gS[2]) * gInv; const ax = gpx < gx0 ? gx0 - gpx : gpx > gx1 ? gpx - gx1 : 0, ay = gpy < gy0 ? gy0 - gpy : gpy > gy1 ? gpy - gy1 : 0;
         if (ax < 420 && ay < 420) { const d = Math.sqrt(ax * ax + ay * ay) + (vnoise(gpx * 0.011 + 3.3, gpy * 0.011 + 8.1) - 0.5) * 240; gk = d < 0 ? 1 : d < 200 ? 1 - d / 200 : 0; if (gk > 0.45) land = true; }
-        if (gk > 0.45 && inCity(gpx, gpy, 0.14)) { // streets between the blocks, except where a landmark stands
-          const a = gpx * CYc + gpy * CYs, b = -gpx * CYs + gpy * CYc, da = ((a % PA) + PA) % PA - PA / 2, db = ((b % PB) + PB) % PB - PB / 2;
-          if ((da < RWA && da > -RWA) || (db < RWB && db > -RWB)) { road = true; for (let k = 0; k < gL.length; k++) { const q = gL[k], qa = a - q.a, qb = b - q.b; if (qa < q.ha && qa > -q.ha && qb < q.hb && qb > -q.hb) { road = false; break; } } } } }
+        } // (the streets are the city ground's own now: the globe under a city stays plain land)
       const al = lat < 0 ? -lat : lat;
       if (land) { // what the ground is here: desert, forest, rock, snow… from the map's own layers, the edges broken up by noise so no border is a straight line
         const gd = map ? MAPG[mi] : 96, bh = map ? MAPB[mi] : 0, n1 = vnoise(lon * 46 + 13.7, lat * 46 + 5.1), n2 = vnoise(lon * 310 + 3.1, lat * 310 + 47.3);
@@ -1728,7 +1725,7 @@ function drawGlobe() {
       if (L > 0) { q = (L * 1.5 * (STEPS - 1) + 0.5) | 0; if (q > STEPS - 1) q = STEPS - 1; }
       if (z < 0.11 && q > 0) q--;
       if (crest) q = STEPS;
-      buf[p++] = road ? ROAD[q] : cls >= 0 ? LUTB[q * NB + cls] : LUT[q * 256 + ((hv * 255) | 0)];
+      buf[p++] = cls >= 0 ? LUTB[q * NB + cls] : LUT[q * 256 + ((hv * 255) | 0)];
     }
   }
   octx.putImageData(img, 0, 0);
@@ -1946,8 +1943,7 @@ const LMFOOT = { samplegates: [48, 14], studentbldg: [56, 32], imu: [76, 38], sh
 // The streets run at the angle the buildings face. A block holds two rows of lots; what goes on them depends on the city and on how far back the block stands.
 const CYAW = rad(28), CYc = Math.cos(CYAW), CYs = Math.sin(CYAW), PA = 280, PB = 252, RWA = 16, RWB = 22;
 const UG = 2, GLV = 4; // the ground's block, in site pixels, and how tall one level of the land is. Its lowest level is sunk one block so its top is flush with the globe.
-const inCity = (x, y, grow) => (x / 980) * (x / 980) + ((y + 90) / 560) * ((y + 90) / 560) < 1 + grow;
-// where each city has ground: its main oval (the one inCity tests), and for Indianapolis a small second one off to the south-west, Bloomington, with globe between them
+// where each city has ground: its main oval, and for Indianapolis a small second one off to the south-west, Bloomington, with globe between them
 const SHAPE = { gz: [[0, -90, 980, 560]], tor: [[0, -90, 980, 560]], ind: [[0, -90, 980, 560], [-504, 842, 480, 290]] };
 const inShape = (sh, x, y, grow) => sh.some((o) => ((x - o[0]) / o[2]) ** 2 + ((y - o[1]) / o[3]) ** 2 < 1 + grow);
 const FILL = {
