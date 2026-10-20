@@ -1,4 +1,5 @@
-import { createHashRouter, RouterProvider } from 'react-router-dom';
+import { createHashRouter, createMemoryRouter, RouterProvider, type RouteObject } from 'react-router-dom';
+import { EMBED } from './env';
 import { Layout } from './components/Layout';
 import { AppStateProvider } from './state/AppState';
 import { HomePage } from './pages/HomePage';
@@ -10,8 +11,8 @@ import { NewsPage } from './pages/NewsPage';
 import { ExpertsPage } from './pages/ExpertsPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 
-// Hash 路由：构建产物可直接作为静态文件打开，无需服务端路由配置
-const router = createHashRouter([
+// Hash 路由：构建产物可直接作为静态文件打开，无需服务端路由配置；嵌入模式用内存路由
+const routes: RouteObject[] = [
   {
     element: <Layout />,
     children: [
@@ -25,7 +26,8 @@ const router = createHashRouter([
       { path: '*', element: <NotFoundPage /> },
     ],
   },
-]);
+];
+const router = EMBED ? createMemoryRouter(routes) : createHashRouter(routes);
 
 export function App() {
   return (

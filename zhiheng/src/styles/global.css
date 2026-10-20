@@ -108,14 +108,15 @@ table th.n {
   width: 100%;
   max-width: var(--maxw);
   margin: 0 auto;
-  padding: 0 var(--gutter);
+  padding-left: max(var(--gutter), env(safe-area-inset-left, 0px));
+  padding-right: max(var(--gutter), env(safe-area-inset-right, 0px));
 }
 
 .site-header {
   background: var(--ink);
   color: #f2efe7;
   position: sticky;
-  top: 0;
+  top: env(safe-area-inset-top, 0px);
   z-index: 20;
 }
 .site-header .bar {

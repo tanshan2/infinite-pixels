@@ -7,6 +7,7 @@ import { computePlan } from '../lib/finance/planning';
 import { money } from '../lib/format';
 import { SAMPLE_BONDS } from '../data/sampleBonds';
 import { StatusBadge } from '../components/Badges';
+import { EMBED } from '../env';
 
 const LANGS = ['普通话', '粤语', '英语'];
 const SHARE_ITEMS = [
@@ -85,6 +86,7 @@ export function ExpertsPage() {
     e.preventDefault();
     if (!validate(false)) return;
     setSheet(buildSheet());
+    setCopied(null);
     requestAnimationFrame(() => document.getElementById('prep-sheet')?.focus());
   };
 
@@ -112,6 +114,24 @@ export function ExpertsPage() {
     a.download = `知衡-咨询准备单-${new Date().toISOString().slice(0, 10)}.txt`;
     a.click();
     URL.revokeObjectURL(url);
+  };
+
+  const [copied, setCopied] = useState<string | null>(null);
+  const copy = async () => {
+    if (!sheet) return;
+    try {
+      await navigator.clipboard.writeText(sheet);
+      setCopied('已复制到剪贴板。');
+    } catch {
+      const range = document.createRange();
+      const el = document.getElementById('prep-sheet');
+      if (el) {
+        range.selectNodeContents(el);
+        window.getSelection()?.removeAllRanges();
+        window.getSelection()?.addRange(range);
+      }
+      setCopied('无法直接复制，已选中全文，请手动复制。');
+    }
   };
 
   const toggle = (list: string[], v: string) => (list.includes(v) ? list.filter((x) => x !== v) : [...list, v]);
@@ -267,10 +287,12 @@ export function ExpertsPage() {
             <div className="btn-row" style={{ justifyContent: 'space-between', marginBottom: 8 }}>
               <h3 style={{ margin: 0 }}>咨询准备单 <StatusBadge status="unconnected" label="未预约" /></h3>
               <div className="btn-row no-print">
-                <button type="button" className="btn secondary" onClick={download}>下载 .txt</button>
-                <button type="button" className="btn ghost" onClick={() => window.print()}>打印</button>
+                <button type="button" className="btn secondary" onClick={copy}>复制全文</button>
+                {!EMBED && <button type="button" className="btn secondary" onClick={download}>下载 .txt</button>}
+                {!EMBED && <button type="button" className="btn ghost" onClick={() => window.print()}>打印</button>}
               </div>
             </div>
+            {copied && <p className="small muted" role="status">{copied}</p>}
             <div id="prep-sheet" className="prep-sheet" tabIndex={-1}>{sheet}</div>
           </div>
         )}

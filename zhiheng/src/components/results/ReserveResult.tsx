@@ -5,6 +5,7 @@ import { Kind } from '../Badges';
 import { ANNUAL_FX_QUOTA_USD, CURRENCIES, computePlan, toHKD, type PlanInput } from '../../lib/finance/planning';
 import { money, num } from '../../lib/format';
 import { DEFAULT_FX_NOTE } from '../../data/defaultPlan';
+import { EMBED } from '../../env';
 
 const CUR_NAME = { HKD: '港元', CNY: '人民币', USD: '美元' } as const;
 
@@ -155,7 +156,7 @@ export function ReserveResult({ plan, isSample, question, onEdit }: { plan: Plan
             <Link className="btn" to="/plan">修改参数并重新计算</Link>
           )}
           <Link className="btn secondary" to="/experts?domain=hk-family">请香港家庭财务专家复核</Link>
-          <button type="button" className="btn ghost" onClick={() => window.print()}>打印本页</button>
+          {!EMBED && <button type="button" className="btn ghost" onClick={() => window.print()}>打印本页</button>}
         </>
       }
     />
