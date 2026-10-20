@@ -8,8 +8,9 @@ export function InsufficientResult({ question, reason, missing }: { question?: s
       question={question}
       insufficient
       answerKind="fact"
-      answer={<>资料不足，暂不能判断。{reason ?? '这个问题目前没有匹配到平台能可靠计算的模板，我们不会用猜测代替计算。'}</>}
-      figures={
+      answer={<>资料不足，暂不能判断。{reason ?? '这个问题目前还没有可靠的计算方法，我们不会用猜测代替计算。'}</>}
+      highlights={[]}
+      chart={
         <div className="notice info">
           <p>知衡目前可以可靠计算三类问题：</p>
           <ul style={{ margin: 0 }}>

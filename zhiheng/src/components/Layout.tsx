@@ -37,6 +37,19 @@ export function Layout() {
           <NavLink to="/" className="brand" aria-label="知衡 首页">
             知衡<small>家庭财务 · 美元资产</small>
           </NavLink>
+          <details className="demo-pill">
+            <summary aria-label="演示版：查看数据与服务状态">演示版</summary>
+            <div className="demo-panel">
+              <strong>这是演示版本</strong>
+              <ul aria-label="服务状态">
+                <li><span>债券与价格</span><span>虚构示例，非报价</span></li>
+                <li><span>新闻</span><span>{API_ENABLED ? '已配置' : '未接入'}</span></li>
+                <li><span>AI 解读</span><span>{API_ENABLED ? '已配置' : '未接入'}</span></li>
+                <li><span>证券账户</span><span>未连接</span></li>
+                <li><span>专家预约</span><span>未开放</span></li>
+              </ul>
+            </div>
+          </details>
           <button
             type="button"
             className="nav-toggle"
@@ -57,17 +70,6 @@ export function Layout() {
               ))}
             </ul>
           </nav>
-        </div>
-        <div className="status-strip">
-          <div className="container">
-            <ul aria-label="服务状态">
-              <li><span className="dot sample" aria-hidden="true" />数据：示例（虚构债券，非报价）</li>
-              <li><span className={`dot ${API_ENABLED ? 'on' : 'off'}`} aria-hidden="true" />新闻接口：{API_ENABLED ? '已配置' : '未接入'}</li>
-              <li><span className={`dot ${API_ENABLED ? 'on' : 'off'}`} aria-hidden="true" />AI 解读：{API_ENABLED ? '已配置' : '未接入（规则分流）'}</li>
-              <li><span className="dot off" aria-hidden="true" />账户：未连接</li>
-              <li><span className="dot off" aria-hidden="true" />专家预约：未开放</li>
-            </ul>
-          </div>
         </div>
       </header>
       <main id="main" ref={mainRef} tabIndex={-1}>

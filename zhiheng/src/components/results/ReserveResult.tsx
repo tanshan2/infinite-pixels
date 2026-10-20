@@ -17,16 +17,16 @@ export function ReserveResult({ plan, isSample, question, onEdit }: { plan: Plan
 
   const answer = surplus ? (
     <>
-      按当前假设，未来 {plan.horizonMonths} 个月共需准备约 <span className="num">{money(r.totalNeedHKD)}</span>，其中备用金{' '}
-      <span className="num">{money(r.reserveHKD)}</span>（{plan.reserveMonths} 个月家庭支出）；现有资金覆盖后，另有{' '}
-      <span className="num">{money(r.unallocatedHKD)}</span> 尚未指定用途。
+      按现在的假设，未来 {plan.horizonMonths} 个月一共要准备约 <span className="num">{money(r.totalNeedHKD)}</span>。
+      你现有的钱够用，还多出约 <span className="num">{money(r.unallocatedHKD)}</span>，这部分先不指定用途。
     </>
   ) : (
     <>
-      按当前假设，未来 {plan.horizonMonths} 个月共需准备约 <span className="num">{money(r.totalNeedHKD)}</span>，现有资金尚差约{' '}
-      <span className="num">{money(-r.unallocatedHKD)}</span>。建议先调整支出、备用期限或到港时间，再考虑其他安排。
+      按现在的假设，未来 {plan.horizonMonths} 个月一共要准备约 <span className="num">{money(r.totalNeedHKD)}</span>，
+      现有资金还差约 <span className="num">{money(-r.unallocatedHKD)}</span>。可以先调整支出、备用期限或到港时间。
     </>
   );
+  const overQuota = r.cnyConvertedUSD > ANNUAL_FX_QUOTA_USD;
 
   return (
     <ResultLayout
@@ -34,77 +34,85 @@ export function ReserveResult({ plan, isSample, question, onEdit }: { plan: Plan
       question={question}
       answer={answer}
       answerKind="calc"
-      figures={
+      highlights={[
+        { label: '一共需要准备', value: money(r.totalNeedHKD), note: `未来 ${plan.horizonMonths} 个月` },
+        { label: '其中备用金', value: money(r.reserveHKD), note: `${plan.reserveMonths} 个月的家庭开支` },
+        surplus
+          ? { label: '还多出', value: money(r.unallocatedHKD), note: '暂不指定用途，不等于可投资', tone: 'emph' }
+          : { label: '还差', value: money(-r.unallocatedHKD), note: '现有资金不够', tone: 'warn' },
+      ]}
+      chart={
+        <>
+          <NeedsBar
+            available={r.holdingsHKD}
+            segments={[
+              { label: '一次性落地成本', value: r.oneOffHKD, color: SERIES.blue },
+              { label: `没有收入的头 ${r.noIncomeMonths} 个月`, value: r.noIncomeCostHKD, color: SERIES.gold },
+              { label: `有收入后仍不够的部分`, value: r.ongoingGapHKD, color: SERIES.clay },
+              { label: '备用金', value: r.reserveHKD, color: SERIES.green },
+              { label: '汇率缓冲', value: r.fxBufferHKD, color: SERIES.neutral, hatched: true },
+            ]}
+          />
+          {overQuota && (
+            <p className="notice" style={{ marginTop: 16 }}>
+              需要从人民币换出约 <span className="num">{money(r.cnyConvertedUSD, 'USD')}</span>，超过一个人一年 5 万美元的购汇额度，需要分家庭成员或分年度安排。详见“计算明细”。
+            </p>
+          )}
+        </>
+      }
+      details={
         <>
           <div className="kpis">
-            <Kpi label="每月家庭支出" value={money(E)} sub="港元，按你填写的分项合计" />
+            <Kpi label="每月家庭支出" value={money(E)} sub="按你填写的分项合计" />
             <Kpi
               label="每月收支"
               value={`${r.monthlyNetHKD >= 0 ? '+' : ''}${money(r.monthlyNetHKD)}`}
-              sub={r.monthlyNetHKD >= 0 ? '收入到位后每月结余' : '收入到位后每月仍有缺口'}
+              sub={r.monthlyNetHKD >= 0 ? '收入到位后每月结余' : '收入到位后每月仍不够'}
             />
             <Kpi label="一次性落地成本" value={money(r.oneOffHKD)} sub="外币按假设汇率折算" />
-            <Kpi label="备用金" value={money(r.reserveHKD)} sub={`${plan.reserveMonths} 个月 × 月支出`} />
-            <Kpi label="规划期总需求" value={money(r.totalNeedHKD)} sub={`${plan.horizonMonths} 个月，含汇率缓冲`} />
-            <Kpi
-              emph
-              label={surplus ? '未分配资金' : '资金缺口'}
-              value={money(Math.abs(r.unallocatedHKD))}
-              sub={surplus ? '尚未指定用途，不等于可投资金额' : '现有资金不足以覆盖需求'}
-            />
+            <Kpi label="汇率缓冲" value={money(r.fxBufferHKD)} sub={`人民币换汇部分 × ${num(plan.fxBufferPct * 100, 1)}%`} />
           </div>
-          <div style={{ marginTop: 20 }}>
-            <NeedsBar
-              available={r.holdingsHKD}
-              segments={[
-                { label: '一次性落地成本', value: r.oneOffHKD, color: SERIES.blue },
-                { label: `无收入过渡期（${r.noIncomeMonths} 个月）`, value: r.noIncomeCostHKD, color: SERIES.gold },
-                { label: `收入到位后的持续缺口（${r.gapMonths} 个月）`, value: r.ongoingGapHKD, color: SERIES.clay },
-                { label: '备用金', value: r.reserveHKD, color: SERIES.green },
-                { label: '汇率缓冲', value: r.fxBufferHKD, color: SERIES.neutral, hatched: true },
-              ]}
-            />
-          </div>
-          <h3 style={{ marginTop: 24 }}>按币种看：需要多少、手上有多少</h3>
+          <h3 style={{ marginTop: 20, fontSize: '1rem' }}>按币种看：需要多少、手上有多少</h3>
           <div className="table-wrap">
             <table>
               <thead>
-                <tr><th>币种</th><th className="n">需求（原币）</th><th className="n">持有（原币）</th><th className="n">差额（原币）</th></tr>
+                <tr><th>币种</th><th className="n">需要</th><th className="n">手上有</th><th className="n">差额</th></tr>
               </thead>
               <tbody>
                 {CURRENCIES.map((c) => {
                   const d = plan.holdings[c] - r.needs[c];
                   return (
                     <tr key={c}>
-                      <td>{CUR_NAME[c]} {c}</td>
+                      <td>{CUR_NAME[c]}</td>
                       <td className="n">{money(r.needs[c], c)}</td>
                       <td className="n">{money(plan.holdings[c], c)}</td>
-                      <td className="n">{d >= 0 ? '盈余 ' : '不足 '}{money(Math.abs(d), c)}</td>
+                      <td className="n">{d >= 0 ? '多 ' : '少 '}{money(Math.abs(d), c)}</td>
                     </tr>
                   );
                 })}
               </tbody>
-              <caption>港元需求 = 一次性港元支出 + 过渡期支出 + 持续缺口 + 备用金；在港日常开支均按港元计。</caption>
+              <caption>在港的日常开支、头几个月的开支和备用金都按港元计。</caption>
             </table>
           </div>
           {r.conversions.length > 0 && (
-            <div className="panel" style={{ marginTop: 12 }}>
-              <h4>需要兑换的金额（按“先美元、再港元、最后人民币”的顺序动用盈余）</h4>
-              <ul style={{ margin: 0 }}>
+            <>
+              <h3 style={{ marginTop: 20, fontSize: '1rem' }}>需要换汇的金额</h3>
+              <p className="small muted">先用美元，再用港元，最后用人民币。</p>
+              <ul>
                 {r.conversions.map((c, i) => (
-                  <li key={i} className="num small">
+                  <li key={i} className="num">
                     {money(c.amountFrom, c.from)} → {CUR_NAME[c.to]}（约 {money(c.amountHKD)}）
                   </li>
                 ))}
               </ul>
-              {r.cnyConvertedUSD > ANNUAL_FX_QUOTA_USD && (
-                <p className="notice" style={{ marginTop: 12 }}>
-                  <Kind kind="fact" />境内个人购汇便利化额度为每人每年等值 5 万美元（以国家外汇管理局最新规定为准）。
+              {overQuota && (
+                <p className="small">
+                  <Kind kind="fact" />境内个人购汇便利化额度为每人每年等值 5 万美元，以国家外汇管理局最新规定为准。
                   <br />
-                  <Kind kind="calc" />按当前安排需从人民币兑出约 <span className="num">{money(r.cnyConvertedUSD, 'USD')}</span>，超过一人一年的额度，需要按家庭成员或年度分批规划。
+                  <Kind kind="calc" />按当前安排需从人民币换出约 <span className="num">{money(r.cnyConvertedUSD, 'USD')}</span>。
                 </p>
               )}
-            </div>
+            </>
           )}
         </>
       }
@@ -151,12 +159,12 @@ export function ReserveResult({ plan, isSample, question, onEdit }: { plan: Plan
       actions={
         <>
           {onEdit ? (
-            <button type="button" className="btn" onClick={onEdit}>修改参数</button>
+            <button type="button" className="btn" onClick={onEdit}>改一改我的数字</button>
           ) : (
-            <Link className="btn" to="/plan">修改参数并重新计算</Link>
+            <Link className="btn" to="/plan">换成我的数字</Link>
           )}
-          <Link className="btn secondary" to="/experts?domain=hk-family">请香港家庭财务专家复核</Link>
-          {!EMBED && <button type="button" className="btn ghost" onClick={() => window.print()}>打印本页</button>}
+          <Link className="btn secondary" to="/experts?domain=hk-family">请专家帮我复核</Link>
+          {!EMBED && <button type="button" className="btn ghost" onClick={() => window.print()}>打印</button>}
         </>
       }
     />

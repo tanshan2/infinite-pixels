@@ -1,9 +1,9 @@
 import { useMemo, useRef, useState, type FormEvent } from 'react';
 import { NumberField } from '../components/NumberField';
 import { ReserveResult } from '../components/results/ReserveResult';
-import { StatusBadge } from '../components/Badges';
+import { money, moneyShort } from '../lib/format';
 import { useAppState } from '../state/AppState';
-import { CURRENCIES, validatePlan, type Currency, type PlanInput } from '../lib/finance/planning';
+import { CURRENCIES, toHKD, validatePlan, type Currency, type PlanInput } from '../lib/finance/planning';
 import { DEFAULT_FX_NOTE, DEFAULT_PLAN } from '../data/defaultPlan';
 
 let seq = 0;
@@ -21,6 +21,22 @@ export function PlanPage() {
   const err = (field: string) => (showErrors ? issues.find((i) => i.field === field)?.message : undefined);
   const dirty = JSON.stringify(draft) !== JSON.stringify(plan);
 
+  const GROUP_OF: Record<string, string> = { monthlyIncomeHKD: 'income', incomeStartMonth: 'income', horizonMonths: 'fx', reserveMonths: 'fx', fxBufferPct: 'fx' };
+  const groupOf = (field: string) => GROUP_OF[field] ?? (field.startsWith('holdings') ? 'holdings' : field.startsWith('expense') ? 'expense' : field.startsWith('oneoff') ? 'oneoff' : 'fx');
+  const groupHasError = (g: string) => showErrors && issues.some((i) => groupOf(i.field) === g);
+  const ok = (n: number) => Number.isFinite(n);
+  const fxOk = draft.fx.CNYHKD > 0 && draft.fx.USDHKD > 0;
+  const sumHoldings = CURRENCIES.reduce((t, c) => t + toHKD(draft.holdings[c], c, draft.fx), 0);
+  const sumExpense = draft.expenses.reduce((t, e) => t + e.monthlyHKD, 0);
+  const sumOneOff = draft.oneOffCosts.reduce((t, c) => t + toHKD(c.amount, c.currency, draft.fx), 0);
+  const groupSummary = {
+    holdings: fxOk && ok(sumHoldings) ? `约 ${moneyShort(sumHoldings)}` : '待填写',
+    income: ok(draft.monthlyIncomeHKD) && ok(draft.incomeStartMonth) ? `${money(draft.monthlyIncomeHKD)}/月，第 ${draft.incomeStartMonth + 1} 个月起` : '待填写',
+    expense: ok(sumExpense) ? `${money(sumExpense)}/月` : '待填写',
+    oneoff: fxOk && ok(sumOneOff) ? `约 ${money(sumOneOff)}` : '待填写',
+    fx: `规划 ${ok(draft.horizonMonths) ? draft.horizonMonths : '–'} 个月 · 备用 ${ok(draft.reserveMonths) ? draft.reserveMonths : '–'} 个月`,
+  };
+
   const update = (patch: Partial<PlanInput>) => {
     setDraft((d) => ({ ...d, ...patch }));
     setMessage(null);
@@ -36,7 +52,8 @@ export function PlanPage() {
     }
     setShowErrors(false);
     setPlan(draft);
-    setMessage({ type: 'success', text: '已按新参数重新计算。右侧（手机端为下方）结果已更新。' });
+    setMessage({ type: 'success', text: '已重新计算，结果已更新。' });
+    document.getElementById('plan-result')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
   const reset = () => {
@@ -49,22 +66,17 @@ export function PlanPage() {
   return (
     <>
       <header className="page-head">
-        <p className="eyebrow">香港落地资金规划</p>
-        <h1>赴港第一年，需要准备多少钱</h1>
+        <h1>赴港第一年，要准备多少钱</h1>
         <p>
-          填写家庭的资金、收入和支出，计算收支缺口、备用金和各币种需求。剩余资金只标为“未分配”，它不等于适合投资的金额。
-        </p>
-        <p className="btn-row small">
-          <StatusBadge status="sample" label={planIsSample ? '当前为示例家庭参数' : '当前为你的输入'} />
-          <span className="muted">数字只在本页内存中计算，刷新后清除，不保存、不上传。</span>
-          <button type="button" className="btn ghost" onClick={() => document.getElementById('plan-result')?.scrollIntoView({ behavior: 'smooth' })}>
-            直接看结果 ↓
-          </button>
+          先看示例家庭的结果，再换成你自己的数字。{planIsSample ? '现在显示的是示例家庭。' : '现在显示的是你输入的数字。'}
+          数字只在这个页面里计算，刷新就清除。
         </p>
       </header>
 
-      <div className="split">
-        <form ref={formRef} id="plan-form" onSubmit={submit} noValidate className="panel" aria-label="规划参数">
+      <div className="split plan-split">
+        <form ref={formRef} id="plan-form" onSubmit={submit} noValidate className="plan-form" aria-label="我的数字">
+          <h2 style={{ fontSize: '1.1rem' }}>我的数字</h2>
+          <p className="small muted" style={{ marginTop: -4 }}>点开任意一项修改，改完点“重新计算”。</p>
           {showErrors && issues.length > 0 && (
             <div ref={summaryRef} tabIndex={-1} className="notice error" role="alert" style={{ marginBottom: 16 }}>
               <p><b>请修改以下输入：</b></p>
@@ -72,7 +84,9 @@ export function PlanPage() {
             </div>
           )}
 
-          <h3 className="form-group-title">可用资金</h3>
+          <details className="form-acc" open={groupHasError('holdings') || undefined}>
+            <summary><b>手上的钱</b><span>{groupSummary.holdings}</span></summary>
+            <div className="form-acc-body">
           {CURRENCIES.map((c) => (
             <NumberField
               key={c}
@@ -86,7 +100,11 @@ export function PlanPage() {
             />
           ))}
 
-          <h3 className="form-group-title">收入</h3>
+            </div>
+          </details>
+          <details className="form-acc" open={groupHasError('income') || undefined}>
+            <summary><b>收入</b><span>{groupSummary.income}</span></summary>
+            <div className="form-acc-body">
           <NumberField label="家庭税后月收入" prefix="HKD" value={draft.monthlyIncomeHKD} min={0} step={1000} error={err('monthlyIncomeHKD')} onChange={(v) => update({ monthlyIncomeHKD: v })} />
           <NumberField
             label="抵港后多少个月开始有收入"
@@ -99,7 +117,11 @@ export function PlanPage() {
             onChange={(v) => update({ incomeStartMonth: v })}
           />
 
-          <h3 className="form-group-title">每月家庭支出（港元）</h3>
+            </div>
+          </details>
+          <details className="form-acc" open={groupHasError('expense') || undefined}>
+            <summary><b>每月开支（港元）</b><span>{groupSummary.expense}</span></summary>
+            <div className="form-acc-body">
           {draft.expenses.map((e, i) => (
             <div className="line-item two" key={e.id}>
               <div className="li-label">
@@ -122,7 +144,11 @@ export function PlanPage() {
             ＋ 添加支出项
           </button>
 
-          <h3 className="form-group-title">一次性搬迁与落地成本</h3>
+            </div>
+          </details>
+          <details className="form-acc" open={groupHasError('oneoff') || undefined}>
+            <summary><b>一次性搬家与落地成本</b><span>{groupSummary.oneoff}</span></summary>
+            <div className="form-acc-body">
           {draft.oneOffCosts.map((c, i) => (
             <div className="line-item" key={c.id}>
               <div className="li-label">
@@ -155,7 +181,11 @@ export function PlanPage() {
             ＋ 添加成本项
           </button>
 
-          <h3 className="form-group-title">期限与汇率假设</h3>
+            </div>
+          </details>
+          <details className="form-acc" open={groupHasError('fx') || undefined}>
+            <summary><b>期限与汇率</b><span>{groupSummary.fx}</span></summary>
+            <div className="form-acc-body">
           <div className="grid-2" style={{ gap: 12 }}>
             <NumberField label="规划期" suffix="个月" value={draft.horizonMonths} min={1} max={60} error={err('horizonMonths')} onChange={(v) => update({ horizonMonths: v })} />
             <NumberField label="备用金覆盖" suffix="个月" value={draft.reserveMonths} min={0} max={36} hint="常见做法为 3–12 个月" error={err('reserveMonths')} onChange={(v) => update({ reserveMonths: v })} />
@@ -164,6 +194,9 @@ export function PlanPage() {
           </div>
           <NumberField label="人民币兑换的汇率缓冲" suffix="%" percent step={0.5} value={draft.fxBufferPct} hint="为应对兑换前人民币贬值多准备的比例" error={err('fxBufferPct')} onChange={(v) => update({ fxBufferPct: v })} />
           <p className="small muted">{DEFAULT_FX_NOTE}</p>
+
+            </div>
+          </details>
 
           <div className="btn-row" style={{ marginTop: 16 }}>
             <button type="submit" className="btn">重新计算</button>
@@ -181,7 +214,7 @@ export function PlanPage() {
             isSample={planIsSample}
             onEdit={() => {
               formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-              formRef.current?.querySelector<HTMLInputElement>('input')?.focus({ preventScroll: true });
+              formRef.current?.querySelector<HTMLElement>('summary')?.focus({ preventScroll: true });
             }}
           />
         </div>

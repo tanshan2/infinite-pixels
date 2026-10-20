@@ -139,17 +139,11 @@ export function ExpertsPage() {
   return (
     <>
       <header className="page-head">
-        <p className="eyebrow">真人一对一</p>
-        <h1>把问题整理清楚，再交给对的人</h1>
-        <p>按领域分流。专家需公开资质、所属机构、服务地区、语言、费用，以及是否收取产品佣金。</p>
+        <h1>找真人聊一聊</h1>
+        <p>目前还没有专家入驻，也不能预约。你可以先把问题整理成一张准备单，带去找持牌的专业人士。</p>
       </header>
 
-      <div className="notice" role="note" style={{ marginBottom: 24 }}>
-        <p>
-          <b>目前没有专家入驻，预约功能未开放。</b>因此本页不展示任何专家、评价或可预约时段。你可以先生成咨询准备单，自行联系持牌专业人士；或登记咨询意向（服务接入后才会发送）。
-        </p>
-      </div>
-
+      <p className="small muted" style={{ marginBottom: 8 }}>你想问哪方面？</p>
       <div className="tabs" role="tablist" aria-label="咨询领域">
         {EXPERT_DOMAINS.map((d) => (
           <button key={d.id} type="button" role="tab" aria-selected={d.id === domain.id} onClick={() => setParams({ domain: d.id })}>
@@ -158,48 +152,43 @@ export function ExpertsPage() {
         ))}
       </div>
 
-      <div className="grid-3">
-        <div>
-          <h3>可以帮你</h3>
-          <ul>{domain.helpsWith.map((h) => <li key={h}>{h}</li>)}</ul>
-        </div>
-        <div>
-          <h3>在香港应具备的许可</h3>
-          <ul className="rule-list">
-            {domain.localCredentials.map((c) => (
-              <li key={c.name} className="small">
-                {c.name}
-                <div className="muted">
-                  {c.regulator}
-                  {c.verifyUrl && <> · <a href={c.verifyUrl} target="_blank" rel="noreferrer noopener">查询公开名册<span className="visually-hidden">（在新窗口打开）</span></a></>}
-                </div>
-              </li>
-            ))}
-          </ul>
-          <p className="small muted">{domain.professionalTitles.join('、')} 等是专业资格，本身不等于在香港开展该业务的牌照。</p>
-        </div>
-        <div>
-          <h3>费用与利益冲突，先问清楚</h3>
-          <ul>{domain.feeQuestions.map((q) => <li key={q}>{q}</li>)}</ul>
-        </div>
+      <p>这类专家可以帮你：{domain.helpsWith.join('；')}。</p>
+      <div className="acc-group" style={{ marginTop: 12 }}>
+        <details className="acc">
+          <summary>找这类专家前，先确认这几件事</summary>
+          <div className="acc-body grid-2">
+            <div>
+              <h3 style={{ fontSize: '1rem' }}>在香港应具备的许可</h3>
+              <ul className="plain-list">
+                {domain.localCredentials.map((c) => (
+                  <li key={c.name} className="small">
+                    {c.name}
+                    <div className="muted">
+                      {c.regulator}
+                      {c.verifyUrl && <> · <a href={c.verifyUrl} target="_blank" rel="noreferrer noopener">查询公开名册<span className="visually-hidden">（在新窗口打开）</span></a></>}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+              <p className="small muted">{domain.professionalTitles.join('、')} 等是专业资格，本身不等于在香港开展该业务的牌照。</p>
+            </div>
+            <div>
+              <h3 style={{ fontSize: '1rem' }}>费用与利益冲突，先问清楚</h3>
+              <ul>{domain.feeQuestions.map((q) => <li key={q}>{q}</li>)}</ul>
+              <p className="small muted">专家资料应公开：资质、所属机构、服务地区、语言、费用，以及是否收取产品佣金。</p>
+            </div>
+          </div>
+        </details>
       </div>
 
       <section className="section" aria-labelledby="flow">
-        <h2 id="flow">咨询流程</h2>
-        <ol className="stepper">
-          {BOOKING_STEPS.map((s, i) => (
-            <li key={s.id} className={s.available ? 'on' : 'off'}>
-              <span className="s-no">{String(i + 1).padStart(2, '0')}</span>
-              {s.name}
-              <span className="visually-hidden">{s.available ? '（可用）' : '（专家入驻后开放）'}</span>
-              {!s.available && <span className="small" aria-hidden="true" style={{ display: 'block' }}>入驻后开放</span>}
-            </li>
-          ))}
-        </ol>
-
-        <form className="panel" onSubmit={onGenerate} noValidate aria-label="咨询准备单">
+        <h2 id="flow">整理你的问题</h2>
+        <p className="small muted">
+          完整流程是：{BOOKING_STEPS.map((st) => st.name).join(' → ')}。目前开放“问题整理”和“资料共享授权”，其余步骤要等专家入驻后才开放。
+        </p>
+        <form onSubmit={onGenerate} noValidate aria-label="咨询准备单">
           <div className="field">
-            <label htmlFor={`${fid}-q`}>1. 你的问题和背景</label>
+            <label htmlFor={`${fid}-q`}>你的问题和背景</label>
             <textarea
               id={`${fid}-q`}
               value={question}
@@ -213,9 +202,12 @@ export function ExpertsPage() {
             {errors.question && <span id={`${fid}-qe`} className="error" role="alert">{errors.question}</span>}
           </div>
 
+          <details className="form-acc" open={errors.langs ? true : undefined}>
+            <summary><b>语言、地区、预算（可选）</b><span>{langs.join('、') || '未选'} · {region} · {budget}</span></summary>
+            <div className="form-acc-body">
           <div className="grid-2" style={{ gap: 16 }}>
             <fieldset className="field">
-              <legend>2. 语言</legend>
+              <legend>语言</legend>
               {LANGS.map((l) => (
                 <label key={l} className="check"><input type="checkbox" checked={langs.includes(l)} onChange={() => setLangs(toggle(langs, l))} />{l}</label>
               ))}
@@ -238,41 +230,50 @@ export function ExpertsPage() {
           </div>
 
           <fieldset className="field">
-            <legend>3. 是否接受收取产品佣金的顾问？</legend>
+            <legend>是否接受收取产品佣金的顾问？</legend>
             {([['no', '不接受，只找按服务收费的顾问'], ['yes', '接受，但需事先书面披露佣金'], ['unsure', '还不确定']] as const).map(([v, l]) => (
               <label key={v} className="check"><input type="radio" name={`${fid}-c`} checked={commission === v} onChange={() => setCommission(v)} />{l}</label>
             ))}
           </fieldset>
 
-          <fieldset className="field">
-            <legend>4. 资料共享授权（默认不共享）</legend>
+            </div>
+          </details>
+
+          <fieldset className="field" style={{ marginTop: 16 }}>
+            <legend>附上平台里的资料？（默认不附）</legend>
             {SHARE_ITEMS.map((s) => (
               <label key={s.id} className="check"><input type="checkbox" checked={share.includes(s.id)} onChange={() => setShare(toggle(share, s.id))} />{s.label}</label>
             ))}
             <span className="hint">勾选的内容只会写进准备单；专家服务未接入，不会发送给任何人。</span>
           </fieldset>
 
-          <div className="field" style={{ maxWidth: 420 }}>
-            <label htmlFor={`${fid}-ct`}>联系方式（仅登记意向时需要）</label>
-            <input
-              id={`${fid}-ct`}
-              type="text"
-              autoComplete="email"
-              value={contact}
-              aria-invalid={errors.contact ? true : undefined}
-              aria-describedby={errors.contact ? `${fid}-cte` : undefined}
-              onChange={(e) => setContact(e.target.value)}
-              placeholder="邮箱或电话"
-            />
-            {errors.contact && <span id={`${fid}-cte`} className="error" role="alert">{errors.contact}</span>}
-          </div>
-
           <div className="btn-row">
             <button type="submit" className="btn">生成咨询准备单</button>
-            <button type="button" className="btn secondary" onClick={onRegister} disabled={submitState.status === 'loading'}>
-              {submitState.status === 'loading' ? <><span className="spinner" aria-hidden="true" /> 正在提交…</> : '登记咨询意向'}
-            </button>
           </div>
+
+          <details className="form-acc" style={{ marginTop: 20 }} open={errors.contact || submitState.status !== 'idle' ? true : undefined}>
+            <summary><b>专家入驻后通知我（可选）</b><span>登记意向</span></summary>
+            <div className="form-acc-body">
+              <p className="small muted">登记不等于预约。服务未接入前，意向不会发送给任何人。</p>
+              <div className="field" style={{ maxWidth: 420 }}>
+                <label htmlFor={`${fid}-ct`}>联系方式</label>
+                <input
+                  id={`${fid}-ct`}
+                  type="text"
+                  autoComplete="email"
+                  value={contact}
+                  aria-invalid={errors.contact ? true : undefined}
+                  aria-describedby={errors.contact ? `${fid}-cte` : undefined}
+                  onChange={(e) => setContact(e.target.value)}
+                  placeholder="邮箱或电话"
+                />
+                {errors.contact && <span id={`${fid}-cte`} className="error" role="alert">{errors.contact}</span>}
+              </div>
+              <button type="button" className="btn secondary" onClick={onRegister} disabled={submitState.status === 'loading'}>
+                {submitState.status === 'loading' ? <><span className="spinner" aria-hidden="true" /> 正在提交…</> : '登记咨询意向'}
+              </button>
+            </div>
+          </details>
           <div aria-live="polite" style={{ marginTop: 12 }}>
             {submitState.status === 'done' && (
               <p className={`notice ${submitState.ok ? 'success' : 'error'}`}>

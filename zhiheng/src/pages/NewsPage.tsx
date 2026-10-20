@@ -31,19 +31,10 @@ export function NewsPage() {
   return (
     <>
       <header className="page-head">
-        <p className="eyebrow">信息与新闻中心</p>
-        <h1>发生了什么，可能影响什么</h1>
-        <p>每条内容标明来源、原始发布时间和平台获取时间；新闻陈述的事实与平台解读分开展示。一条新闻很少是价格变化的唯一原因。</p>
+        <h1>信息中心</h1>
+        <p>每条信息分开写“发生了什么”和“我们怎么看”。新闻接口还没接入，下面是围绕虚构发行人的演示条目；政策与利率请看官方来源。</p>
+        <p className="small muted">新闻不等于报价：即使以后接入实时新闻，债券页面的价格仍是示例，不能用来交易。</p>
       </header>
-
-      <div className="grid-2" style={{ marginBottom: 24 }}>
-        <div className="notice">
-          <p><b>实时新闻：未接入。</b>本页条目为围绕虚构发行人的演示内容，用于展示版式；香港政策与利率宏观类请直接查阅官方来源。</p>
-        </div>
-        <div className="notice info">
-          <p><b>新闻 ≠ 报价。</b>即使接入实时新闻，也不代表平台提供可成交的债券报价。债券页面的价格均为示例，不能据此交易。</p>
-        </div>
-      </div>
 
       <div className="tabs" role="tablist" aria-label="信息分类">
         <button type="button" role="tab" aria-selected={cat === 'all'} onClick={() => setCat('all')}>全部</button>
@@ -60,36 +51,38 @@ export function NewsPage() {
         </div>
       )}
 
-      {env?.data &&
-        shownCats.map((c) => {
-          const items = env.data!.filter((n) => n.category === c);
-          return (
-            <section key={c} className="section" aria-labelledby={`cat-${c}`}>
-              <h2 id={`cat-${c}`}>{NEWS_CATEGORY_LABEL[c]}</h2>
-              {items.length === 0 ? (
-                <p className="btn-row">
-                  <StatusBadge status="unconnected" label="演示状态：无条目" />
-                  <span className="muted small">新闻接口未接入，不展示也不编造该类别的新闻。</span>
-                </p>
-              ) : (
-                items.map((n) => <NewsArticle key={n.id} item={n} />)
-              )}
-              <details className="pro">
-                <summary>官方来源导航（{OFFICIAL_SOURCES[c].length}）</summary>
-                <div>
-                  <ul className="rule-list">
-                    {OFFICIAL_SOURCES[c].map((s) => (
-                      <li key={s.url}>
-                        <a href={s.url} target="_blank" rel="noreferrer noopener">{s.name}<span className="visually-hidden">（在新窗口打开）</span></a>
-                        <span className="small muted"> · {s.covers}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </details>
+      {env?.data && (() => {
+        const items = env.data.filter((n) => cat === 'all' || n.category === cat).sort((x, y) => (x.publishedAt < y.publishedAt ? 1 : -1));
+        return (
+          <>
+            {items.length === 0 ? (
+              <p className="muted">这一类暂时没有条目。新闻接口未接入，我们不会编造新闻，请先看下面的官方来源。</p>
+            ) : (
+              items.map((n) => <NewsArticle key={n.id} item={n} />)
+            )}
+            <section className="calm-block" aria-labelledby="official">
+              <h2 id="official">官方来源</h2>
+              <div className="acc-group" style={{ marginTop: 0 }}>
+                {shownCats.map((c) => (
+                  <details key={c} className="acc" open={cat !== 'all' || undefined}>
+                    <summary>{NEWS_CATEGORY_LABEL[c]}<span className="acc-sub">{OFFICIAL_SOURCES[c].length} 个</span></summary>
+                    <div className="acc-body">
+                      <ul className="plain-list">
+                        {OFFICIAL_SOURCES[c].map((os) => (
+                          <li key={os.url}>
+                            <a href={os.url} target="_blank" rel="noreferrer noopener">{os.name}<span className="visually-hidden">（在新窗口打开）</span></a>
+                            <span className="small muted"> · {os.covers}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </details>
+                ))}
+              </div>
             </section>
-          );
-        })}
+          </>
+        );
+      })()}
       {env && (
         <p className="small muted" style={{ marginTop: 20 }}>
           {env.source} · 平台载入时间 {env.fetchedAt?.slice(0, 16).replace('T', ' ')} UTC
@@ -106,26 +99,30 @@ function NewsArticle({ item }: { item: NewsItem }) {
         {item.isDemo && <StatusBadge status="sample" label="演示条目" />} {item.title}
       </h3>
       <div className="news-meta">
-        <span>来源：{item.source}</span>
-        <span>原始发布：<span className="num">{item.publishedAt}</span></span>
-        <span>平台获取：<span className="num">{item.fetchedAt}</span></span>
-        <span>{item.url ? <a href={item.url} target="_blank" rel="noreferrer noopener">原文链接</a> : '原文链接：演示条目无原文'}</span>
+        <span>{item.source}</span>
+        <span>发布 <span className="num">{item.publishedAt}</span></span>
+        <span>获取 <span className="num">{item.fetchedAt}</span></span>
+        <span>{item.url ? <a href={item.url} target="_blank" rel="noreferrer noopener">原文</a> : '无原文链接'}</span>
       </div>
       <div className="news-cols">
         <div>
-          <h4><Kind kind="fact" />新闻陈述的事实</h4>
+          <h4><Kind kind="fact" />发生了什么</h4>
           <ul>{item.facts.map((f) => <li key={f}>{f}</li>)}</ul>
         </div>
         <div>
-          <h4><Kind kind="opinion" />平台解读</h4>
+          <h4><Kind kind="opinion" />我们怎么看</h4>
           <p style={{ fontSize: '0.92rem' }}>{item.interpretation}</p>
         </div>
       </div>
-      <h4 style={{ marginTop: 10 }}>可能的传导路径</h4>
-      {item.channels.map((ch) => (
-        <p key={ch.asset} className="channel"><b>{ch.asset}：</b>{ch.path}</p>
-      ))}
-      <p className="small muted" style={{ marginTop: 8 }}>注意：{item.caveat}</p>
+      <details className="acc" style={{ borderBottom: 0 }}>
+        <summary style={{ padding: '10px 0', fontSize: '0.92rem' }}>可能影响哪些资产</summary>
+        <div className="acc-body" style={{ padding: '0 0 8px' }}>
+          {item.channels.map((ch) => (
+            <p key={ch.asset} className="channel"><b>{ch.asset}：</b>{ch.path}</p>
+          ))}
+          <p className="small muted" style={{ marginTop: 8 }}>{item.caveat}</p>
+        </div>
+      </details>
       {item.relatedBondId && <Link className="small" to={`/bonds/${item.relatedBondId}`}>查看相关示例债券 →</Link>}
     </article>
   );

@@ -3,7 +3,6 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { classifyQuestion, TOPIC_LABEL, type Topic } from '../lib/intent';
 import { requestAiInterpretation } from '../api/services';
 import type { DataEnvelope } from '../api/types';
-import { StatusBadge } from '../components/Badges';
 import { ReserveResult } from '../components/results/ReserveResult';
 import { CouponYieldResult, RateImpactResult } from '../components/results/BondResults';
 import { InsufficientResult } from '../components/results/InsufficientResult';
@@ -58,40 +57,35 @@ export function AnalysisPage() {
         <Link to="/">工作台</Link> / 分析结果
       </nav>
 
-      <div className="notice info" style={{ marginBottom: 20 }}>
-        <p className="btn-row" style={{ gap: 8 }}>
-          <StatusBadge status={ai?.status ?? 'unconnected'} label={ai?.status === 'live' ? 'AI 解读已生成' : 'AI 解读未接入'} />
-          {question
-            ? <>已按规则将问题归为“{TOPIC_LABEL[topic]}”。{ai?.note}</>
-            : <>正在展示“{TOPIC_LABEL[topic]}”的计算模板。</>}
+      {ai?.status === 'live' && ai.data && (
+        <p className="notice info"><b>AI 解读（观点，供参考）：</b>{ai.data.summary}</p>
+      )}
+      {topic !== 'unknown' && (
+        <p className="small muted" style={{ marginBottom: 16 }}>
+          {question ? <>按关键词理解为“{TOPIC_LABEL[topic]}”（AI 解读未接入，问题没有发送出去）。</> : null}
+          想问的是别的？
+          {TOPICS.filter((t) => t !== topic).map((t) => (
+            <button
+              key={t}
+              type="button"
+              className="btn ghost"
+              style={{ minHeight: 0, margin: '0 6px', fontSize: 'inherit' }}
+              onClick={() => {
+                const next = new URLSearchParams(params);
+                next.set('topic', t);
+                next.delete('bond');
+                setParams(next);
+              }}
+            >
+              {TOPIC_LABEL[t]}
+            </button>
+          ))}
         </p>
-        {ai?.status === 'live' && ai.data && <p><b>AI 解读（观点，供参考）：</b>{ai.data.summary}</p>}
-        {topic !== 'unknown' && (
-          <p className="small">
-            不是你想问的？切换为：
-            {TOPICS.filter((t) => t !== topic).map((t) => (
-              <button
-                key={t}
-                type="button"
-                className="btn ghost"
-                style={{ minHeight: 0, margin: '0 8px' }}
-                onClick={() => {
-                  const next = new URLSearchParams(params);
-                  next.set('topic', t);
-                  next.delete('bond');
-                  setParams(next);
-                }}
-              >
-                {TOPIC_LABEL[t]}
-              </button>
-            ))}
-          </p>
-        )}
-      </div>
+      )}
 
       {(topic === 'coupon-yield' || topic === 'rate-impact') && (
         <div className="field" style={{ maxWidth: 460 }}>
-          <label htmlFor={selectId}>分析哪只债券（账户未连接，以下均为虚构示例）</label>
+          <label htmlFor={selectId}>看哪只债券（虚构示例）</label>
           <select
             id={selectId}
             value={bond?.id ?? ''}

@@ -33,55 +33,47 @@ export function CouponYieldResult({ bond, question }: { bond: BondRecord; questi
       answerKind="calc"
       answer={
         <>
-          不等于。{bond.name}的票息 <span className="num">{pct(coupon)}</span> 是按面值计算的年利息；以示例价格{' '}
-          <span className="num">{num(a.cleanPrice)}</span> 买入并持有到期，年化到期收益率约 <span className="num">{pct(a.ytm)}</span>
+          不等于。这只债每年按面值付 <span className="num">{pct(coupon)}</span> 的利息，但现在买要花{' '}
+          <span className="num">{num(a.cleanPrice)}</span>（面值是 100），
+          {a.cleanPrice > 100 ? '到期只拿回 100，' : a.cleanPrice < 100 ? '到期能拿回 100，' : ''}
+          所以持有到期一年大约赚 <span className="num">{pct(a.ytm)}</span>
           {a.ytwBasis === 'call' && (
-            <>
-              ；若发行人在 {a.ytwDate} 提前赎回，年化约 <span className="num">{pct(a.ytw)}</span>，这是更保守的参考
-            </>
+            <>；如果在 {a.ytwDate} 被提前赎回，大约是 <span className="num">{pct(a.ytw)}</span></>
           )}
-          。{distressed && '该价格隐含较高的违约担忧，上述收益率只在全部按时足额偿付时才成立。'}
+          。{distressed && '这个价格说明市场担心它还不上钱，这个收益率只在全部按时还款时才成立。'}
         </>
       }
-      figures={
+      highlights={[
+        { label: '票息（每年利息）', value: pct(coupon), note: '按面值 100 计算' },
+        { label: '持有到期，每年大约赚', value: pct(a.ytm), note: '到期收益率 YTM', tone: 'emph' },
+        a.ytwBasis === 'call'
+          ? { label: '最坏情况', value: pct(a.ytw), note: `${a.ytwDate} 被提前赎回（YTW）`, tone: 'warn' }
+          : { label: '现在的买入价', value: num(a.cleanPrice), note: '每 100 面值，示例价格' },
+      ]}
+      chart={<CashflowChart flows={a.schedule.flows} />}
+      details={
         <>
           <div className="yield-cards">
             <div><div className="small">票息 Coupon</div><div className="value">{pct(coupon)}</div><p>按面值每年支付的利息比例</p></div>
-            <div><div className="small">当期收益率 Current Yield</div><div className="value">{pct(a.currentYield)}</div><p>年票息 ÷ 净价，忽略到期损益</p></div>
-            <div><div className="small">到期收益率 YTM</div><div className="value">{pct(a.ytm)}</div><p>持有到期、全部偿付时的年化收益</p></div>
-            <div>
-              <div className="small">最差收益率 YTW</div>
-              <div className="value">{pct(a.ytw)}</div>
-              <p>{callable ? `在到期与各赎回日中取最低（${a.ytwBasis === 'call' ? a.ytwDate + ' 赎回' : '到期'}）` : '不可赎回，等于到期收益率'}</p>
-            </div>
+            <div><div className="small">当期收益率</div><div className="value">{pct(a.currentYield)}</div><p>年票息 ÷ 买入价，不算到期的差价</p></div>
+            <div><div className="small">到期收益率 YTM</div><div className="value">{pct(a.ytm)}</div><p>持有到期、全部偿付</p></div>
+            <div><div className="small">最差收益率 YTW</div><div className="value">{pct(a.ytw)}</div><p>{callable ? '到期与各赎回日中最低' : '不可赎回，等于到期收益率'}</p></div>
           </div>
-          <h3 style={{ marginTop: 20 }}>以 100 美元面值算一笔账</h3>
+          <h3 style={{ marginTop: 20, fontSize: '1rem' }}>以 100 美元面值算一笔账</h3>
           <div className="table-wrap">
             <table>
               <tbody>
-                <tr><td>买入需支付（净价 + 应计利息）</td><td className="n">{num(a.dirtyPrice)}</td></tr>
-                <tr><td>持有到期共收到票息</td><td className="n">{num(totalCoupons)}</td></tr>
-                <tr><td>到期收回本金</td><td className="n">{num(principal)}</td></tr>
-                <tr className="total"><td>合计收回 − 买入支付（未折现、未扣费用）</td><td className="n">{num(received - a.dirtyPrice)}</td></tr>
+                <tr><td>买入要付（价格 + 应计利息）</td><td className="n">{num(a.dirtyPrice)}</td></tr>
+                <tr><td>持有到期共收到利息</td><td className="n">{num(totalCoupons)}</td></tr>
+                <tr><td>到期拿回本金</td><td className="n">{num(principal)}</td></tr>
+                <tr className="total"><td>一共拿回 − 买入支付（未折现、未扣费用）</td><td className="n">{num(received - a.dirtyPrice)}</td></tr>
               </tbody>
-              <caption>
-                {a.cleanPrice > 100 ? `价格高于面值：到期只收回 100，${num(a.cleanPrice - 100)} 的溢价会在持有期内逐步“吃掉”部分票息。` : a.cleanPrice < 100 ? `价格低于面值：到期多收回 ${num(100 - a.cleanPrice)}，因此收益率高于票息。` : '价格等于面值。'}
-              </caption>
             </table>
           </div>
-          <div style={{ marginTop: 20 }}>
-            <CashflowChart flows={a.schedule.flows} />
-          </div>
-        </>
-      }
-      figuresPro={
-        <>
-          <dl className="dl-grid">
+          <dl className="dl-grid" style={{ marginTop: 16 }}>
             <div><dt>价格日</dt><dd className="num">{priceDate(bond)}</dd></div>
             <div><dt>结算日（T+2，未计假日）</dt><dd className="num">{a.settlement}</dd></div>
-            <div><dt>上一付息日</dt><dd className="num">{a.schedule.previousCoupon}</dd></div>
             <div><dt>应计利息（每 100）</dt><dd className="num">{num(a.accrued, 4)}</dd></div>
-            <div><dt>全价 Dirty Price</dt><dd className="num">{num(a.dirtyPrice, 4)}</dd></div>
             <div><dt>剩余付款次数</dt><dd className="num">{a.schedule.flows.length}</dd></div>
           </dl>
           {callable && (
@@ -124,8 +116,8 @@ export function CouponYieldResult({ bond, question }: { bond: BondRecord; questi
       limits={['仅支持固定票息、到期一次还本的债券（可含赎回权）；永续、浮息、摊还结构暂不支持。', '未计入违约概率与回收率。']}
       actions={
         <>
-          <Link className="btn" to={`/bonds/${bond.id}`}>查看债券详情、修改假设价格</Link>
-          <Link className="btn secondary" to="/experts?domain=usd-bond">请美元债专家复核</Link>
+          <Link className="btn" to={`/bonds/${bond.id}`}>看这只债券的详情</Link>
+          <Link className="btn secondary" to="/experts?domain=usd-bond">请专家帮我复核</Link>
         </>
       }
     />
@@ -156,26 +148,27 @@ export function RateImpactResult({ bond, face = 200_000, question }: { bond: Bon
       answerKind="calc"
       answer={
         <>
-          若市场收益率即时上升 1 个百分点，{bond.name}价格估计下跌约 <span className="num">{num(Math.abs(up.pctChange) * 100, 1)}%</span>，
-          按 <span className="num">{money(face, 'USD')}</span> 面值计约减少 <span className="num">{money(Math.abs(marketValue * up.pctChange), 'USD')}</span>；
-          若持有到期且发行人如约偿付，到期仍收回面值。
+          如果利率上升 1 个百分点，这只债的价格大约会跌 <span className="num">{num(Math.abs(up.pctChange) * 100, 1)}%</span>，
+          按 {money(face, 'USD')} 面值约少 <span className="num">{money(Math.abs(marketValue * up.pctChange), 'USD')}</span>。
+          如果一直拿到期、发行人正常还钱，到期仍拿回面值，中途的涨跌不影响最终结果。
         </>
       }
-      figures={
+      highlights={[
+        { label: '利率升 1 个百分点', value: signedPct(scen[0].pctChange, 1), note: money(marketValue * scen[0].pctChange, 'USD'), tone: 'warn' },
+        { label: '利率降 1 个百分点', value: signedPct(scen[1].pctChange, 1), note: `+${money(Math.abs(marketValue * scen[1].pctChange), 'USD')}` },
+        { label: '敏感程度（修正久期）', value: num(a.risk.modifiedDuration, 1), note: '数字越大，对利率越敏感' },
+      ]}
+      chart={<StressChart points={stressCurve(a, f)} highlightBp={100} />}
+      details={
         <>
           <div className="kpis">
-            <Kpi label="修正久期" value={num(a.risk.modifiedDuration)} sub="收益率变动 1 个百分点，价格约变动的百分比" />
-            <Kpi label="DV01（按持仓面值）" value={money((a.risk.dv01 * face) / 100, 'USD', 0)} sub="收益率变动 1bp 的价格变动" />
-            <Kpi label="收益率 +100bp" value={signedPct(scen[0].pctChange, 1)} sub={money(marketValue * scen[0].pctChange, 'USD')} />
-            <Kpi label="收益率 −100bp" value={signedPct(scen[1].pctChange, 1)} sub={`+${money(Math.abs(marketValue * scen[1].pctChange), 'USD')}`} />
+            <Kpi label="修正久期" value={num(a.risk.modifiedDuration)} sub="收益率变 1 个百分点，价格约变的 %" />
+            <Kpi label="DV01（按持仓面值）" value={money((a.risk.dv01 * face) / 100, 'USD', 0)} sub="收益率变 0.01 个百分点的价格变化" />
           </div>
-          <div style={{ marginTop: 20 }}>
-            <StressChart points={stressCurve(a, f)} highlightBp={100} />
-          </div>
-          <h3 style={{ marginTop: 20 }}>几种情景</h3>
+          <h3 style={{ marginTop: 20, fontSize: '1rem' }}>几种情景</h3>
           <div className="table-wrap">
             <table>
-              <thead><tr><th>情景</th><th className="n">基准利率</th><th className="n">信用利差</th><th className="n">价格变化</th><th className="n">按面值金额</th></tr></thead>
+              <thead><tr><th>情景</th><th className="n">美国利率</th><th className="n">信用利差</th><th className="n">价格变化</th><th className="n">金额</th></tr></thead>
               <tbody>
                 {[
                   ['美国利率上升', scen[0]],
@@ -196,7 +189,7 @@ export function RateImpactResult({ bond, face = 200_000, question }: { bond: Bon
                   );
                 })}
               </tbody>
-              <caption>持仓面值 {money(face, 'USD')}（示例，未连接账户），当前全价市值约 {money(marketValue, 'USD')}。</caption>
+              <caption>持仓面值 {money(face, 'USD')}（示例，未连接账户），当前市值约 {money(marketValue, 'USD')}。100 bp = 1 个百分点。</caption>
             </table>
           </div>
         </>
@@ -220,8 +213,8 @@ export function RateImpactResult({ bond, face = 200_000, question }: { bond: Bon
       limits={['未反映赎回权随利率变化的价值（OAS 模型未实现）。', '未计入违约与回收率；“信用明显恶化”情景只是收益率冲击，不等于违约损失。']}
       actions={
         <>
-          <Link className="btn" to={`/bonds/${bond.id}#stress`}>自定义利率与利差情景</Link>
-          <Link className="btn secondary" to="/experts?domain=usd-bond">请美元债专家复核</Link>
+          <Link className="btn" to={`/bonds/${bond.id}#stress`}>自己设定利率变化</Link>
+          <Link className="btn secondary" to="/experts?domain=usd-bond">请专家帮我复核</Link>
         </>
       }
     />
