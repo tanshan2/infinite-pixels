@@ -156,7 +156,7 @@ export function ExpertsPage() {
       </div>
 
       <p>服务范围：{domain.helpsWith.join('；')}。</p>
-      <div className="acc-group" style={{ marginTop: 12 }}>
+      <div className="acc-group plain" style={{ marginTop: 12 }}>
         <details className="acc">
           <summary>资质与利益冲突核查</summary>
           <div className="acc-body grid-2">
@@ -189,7 +189,7 @@ export function ExpertsPage() {
         <p className="small muted">
           完整流程是：{BOOKING_STEPS.map((st) => st.name).join(' → ')}。目前开放“问题整理”和“资料共享授权”，其余步骤要等专家入驻后才开放。
         </p>
-        <form onSubmit={onGenerate} noValidate aria-label="咨询准备单">
+        <form onSubmit={onGenerate} noValidate aria-label="咨询准备单" className="panel">
           <div className="field">
             <label htmlFor={`${fid}-q`}>你的问题和背景</label>
             <textarea

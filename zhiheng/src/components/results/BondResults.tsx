@@ -153,8 +153,8 @@ export function RateImpactResult({ bond, face = 200_000, question }: { bond: Bon
         </>
       }
       highlights={[
-        { label: '收益率 +100bp', value: signedPct(scen[0].pctChange, 1), note: `按面值 ${money(marketValue * scen[0].pctChange, 'USD')}`, tone: 'warn' },
-        { label: '收益率 −100bp', value: signedPct(scen[1].pctChange, 1), note: `按面值 +${money(Math.abs(marketValue * scen[1].pctChange), 'USD')}` },
+        { label: '收益率 +100bp', value: `${scen[0].pctChange < 0 ? '−' : '+'}${num(Math.abs(scen[0].pctChange) * 100, 1)}%`, note: `价格${scen[0].pctChange < 0 ? '下跌' : '上升'} · 按面值 ${money(marketValue * scen[0].pctChange, 'USD')}`, tone: 'warn' },
+        { label: '收益率 −100bp', value: `${scen[1].pctChange < 0 ? '−' : '+'}${num(Math.abs(scen[1].pctChange) * 100, 1)}%`, note: `价格${scen[1].pctChange < 0 ? '下跌' : '上升'} · 按面值 ${scen[1].pctChange < 0 ? '' : '+'}${money(marketValue * scen[1].pctChange, 'USD')}` },
         { label: '修正久期', value: num(a.risk.modifiedDuration), note: '收益率每变动 1%，价格约变动的 %' },
       ]}
       chart={<StressChart points={stressCurve(a, f)} highlightBp={100} />}

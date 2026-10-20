@@ -64,7 +64,7 @@ export function NewsPage() {
             )}
             <section className="calm-block" aria-labelledby="official">
               <h2 id="official">官方来源</h2>
-              <div className="acc-group" style={{ marginTop: 0 }}>
+              <div className="acc-group plain" style={{ marginTop: 0 }}>
                 {shownCats.map((c) => (
                   <details key={c} className="acc" open={cat !== 'all' || undefined}>
                     <summary>{NEWS_CATEGORY_LABEL[c]}<span className="acc-sub">{OFFICIAL_SOURCES[c].length} 个</span></summary>

@@ -117,7 +117,7 @@ export function NeedsBar({ segments, available }: { segments: Segment[]; availab
           </defs>
           {Array.from({ length: Math.round(axisMax / step) + 1 }, (_, i) => i * step).map((t) => (
             <g key={t}>
-              <line x1={x(t)} x2={x(t)} y1={10} y2={height - 22} stroke="#e6e1d7" />
+              <line x1={x(t)} x2={x(t)} y1={10} y2={height - 22} stroke="#efebe4" />
               <text x={x(t)} y={height - 6} fontSize="11" textAnchor="middle" fill="#6a736d" style={{ fontVariantNumeric: 'tabular-nums' }}>
                 {t === 0 ? '0' : `${num(t / 10_000, 0)}万`}
               </text>
@@ -139,7 +139,7 @@ export function NeedsBar({ segments, available }: { segments: Segment[]; availab
                 y={rows[0].y}
                 width={w}
                 height={barH}
-                rx={2}
+                rx={4}
                 fill={s.hatched ? 'url(#hatch)' : s.color}
                 tabIndex={0}
                 aria-label={`${s.label} ${money(s.value)}`}
@@ -150,7 +150,7 @@ export function NeedsBar({ segments, available }: { segments: Segment[]; availab
               />
             );
           })}
-          <rect x={labelW} y={rows[1].y} width={Math.max(0, x(available) - labelW)} height={barH} rx={2} fill={SERIES.ink} />
+          <rect x={labelW} y={rows[1].y} width={Math.max(0, x(available) - labelW)} height={barH} rx={4} fill={SERIES.ink} />
           <text x={x(total) + 4 > width - 90 ? x(total) - 4 : x(total) + 4} y={rows[0].y + barH / 2 + 4} fontSize="12" fill="#1c2420" textAnchor={x(total) + 4 > width - 90 ? 'end' : 'start'} style={{ fontVariantNumeric: 'tabular-nums' }}>
             {x(total) + 4 > width - 90 ? '' : moneyShort(total)}
           </text>
@@ -221,7 +221,7 @@ export function CashflowChart({ flows, perFace = 100, unit = '每 100 美元面�
         <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`共 ${flows.length} 次付款，最后一期包含本金`}>
           {Array.from({ length: Math.round(axisMax / step) + 1 }, (_, i) => i * step).map((t) => (
             <g key={t}>
-              <line x1={left} x2={width - 8} y1={y(t)} y2={y(t)} stroke="#e6e1d7" />
+              <line x1={left} x2={width - 8} y1={y(t)} y2={y(t)} stroke="#efebe4" />
               <text x={left - 6} y={y(t) + 4} fontSize="11" textAnchor="end" fill="#6a736d">{num(t, step < 1 ? 1 : 0)}</text>
             </g>
           ))}
@@ -234,12 +234,12 @@ export function CashflowChart({ flows, perFace = 100, unit = '每 100 美元面�
               <g key={f.date}>
                 {f.principal > 0 && (
                   <>
-                    <rect x={cx - bw / 2} y={top - 12} width={bw} height={y(c) - (top - 12) - 2} rx={2} fill={SERIES.ink} aria-label={`${f.date} 本金 ${num(f.principal * scale)}`} {...handlers} />
+                    <rect x={cx - bw / 2} y={top - 12} width={bw} height={y(c) - (top - 12) - 2} rx={4} fill={SERIES.ink} aria-label={`${f.date} 本金 ${num(f.principal * scale)}`} {...handlers} />
                     <path d={`M${cx - bw / 2 - 2} ${top + 6} l${bw / 2 + 2} -5 l${bw / 2 + 2} 5`} stroke="#fff" strokeWidth="2.5" fill="none" />
                     <text x={cx} y={top - 16} fontSize="11" textAnchor={i > flows.length - 3 ? 'end' : 'middle'} fill="#1c2420">本金 {num(f.principal * scale, 0)}</text>
                   </>
                 )}
-                <rect x={cx - bw / 2} y={y(c)} width={bw} height={Math.max(1, bottom - y(c))} rx={2} fill={SERIES.green} aria-label={`${f.date} 票息 ${num(c)}`} {...handlers} />
+                <rect x={cx - bw / 2} y={y(c)} width={bw} height={Math.max(1, bottom - y(c))} rx={4} fill={SERIES.green} aria-label={`${f.date} 票息 ${num(c)}`} {...handlers} />
                 {i % labelEvery === 0 && (
                   <text x={cx} y={height - 8} fontSize="10.5" textAnchor="middle" fill="#6a736d">{f.date.slice(0, 7)}</text>
                 )}
@@ -325,7 +325,7 @@ export function StressChart({ points, highlightBp }: { points: StressCurvePoint[
         <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label="收益率上升时价格下跌、收益率下降时价格上涨的曲线，详见数据表">
           {ticksY.map((t) => (
             <g key={t}>
-              <line x1={left} x2={right} y1={y(t)} y2={y(t)} stroke={Math.abs(t) < 1e-9 ? '#a9a193' : '#e6e1d7'} />
+              <line x1={left} x2={right} y1={y(t)} y2={y(t)} stroke={Math.abs(t) < 1e-9 ? '#bdb5a6' : '#efebe4'} />
               <text x={left - 6} y={y(t) + 4} fontSize="11" textAnchor="end" fill="#6a736d">{t > 0 ? '+' : t < 0 ? '−' : ''}{Math.abs(t * 100).toFixed(0)}%</text>
             </g>
           ))}
@@ -336,12 +336,26 @@ export function StressChart({ points, highlightBp }: { points: StressCurvePoint[
             </g>
           ))}
           <line x1={x(0)} x2={x(0)} y1={top} y2={bottom} stroke="#a9a193" />
-          <path d={path('approx')} fill="none" stroke={SERIES.clay} strokeWidth={2} strokeDasharray="5 4" />
-          <path d={path('pct')} fill="none" stroke={SERIES.green} strokeWidth={2} />
+          <defs>
+            <linearGradient id="stress-up" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={SERIES.green} stopOpacity="0.22" />
+              <stop offset="100%" stopColor={SERIES.green} stopOpacity="0" />
+            </linearGradient>
+            <linearGradient id="stress-down" x1="0" y1="1" x2="0" y2="0">
+              <stop offset="0%" stopColor={SERIES.clay} stopOpacity="0.2" />
+              <stop offset="100%" stopColor={SERIES.clay} stopOpacity="0" />
+            </linearGradient>
+            <clipPath id="clip-above"><rect x={left} y={top} width={right - left} height={Math.max(0, y(0) - top)} /></clipPath>
+            <clipPath id="clip-below"><rect x={left} y={y(0)} width={right - left} height={Math.max(0, bottom - y(0))} /></clipPath>
+          </defs>
+          <path d={`${path('pct')} L${x(maxBp).toFixed(1)} ${y(0).toFixed(1)} L${x(minBp).toFixed(1)} ${y(0).toFixed(1)} Z`} fill="url(#stress-up)" clipPath="url(#clip-above)" />
+          <path d={`${path('pct')} L${x(maxBp).toFixed(1)} ${y(0).toFixed(1)} L${x(minBp).toFixed(1)} ${y(0).toFixed(1)} Z`} fill="url(#stress-down)" clipPath="url(#clip-below)" />
+          <path d={path('approx')} fill="none" stroke={SERIES.clay} strokeWidth={1.5} strokeDasharray="4 4" opacity={0.8} />
+          <path d={path('pct')} fill="none" stroke={SERIES.green} strokeWidth={2.25} strokeLinejoin="round" />
           {hl && (
             <g>
               <circle cx={x(hl.bp)} cy={y(hl.pct)} r={5} fill={SERIES.green} stroke="#fff" strokeWidth={2} />
-              <text x={x(hl.bp) + (hl.bp > (minBp + maxBp) / 2 ? -8 : 8)} y={y(hl.pct) - 10} fontSize="12" fill="#1c2420" textAnchor={hl.bp > (minBp + maxBp) / 2 ? 'end' : 'start'}>
+              <text x={x(hl.bp) + 10} y={y(hl.pct) + (hl.pct < 0 ? -12 : 20)} fontSize="12" fontWeight="600" fill="#16201c" textAnchor="start" stroke="#ffffff" strokeWidth={4} paintOrder="stroke" strokeLinejoin="round">
                 当前情景 {signedPct(hl.pct, 1)}
               </text>
             </g>

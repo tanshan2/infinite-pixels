@@ -2,14 +2,20 @@ import { useId, useMemo, useRef, useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { EXAMPLE_QUESTIONS } from '../lib/intent';
 import { useAppState } from '../state/AppState';
-import { computePlan } from '../lib/finance/planning';
+import { ANNUAL_FX_QUOTA_USD, computePlan } from '../lib/finance/planning';
 import { SAMPLE_BONDS } from '../data/sampleBonds';
-import { DEMO_NEWS } from '../data/news';
+import { DEMO_NEWS, NEWS_CATEGORY_LABEL } from '../data/news';
 import { analyzeRecord } from '../lib/bondView';
 import { money, num, pct } from '../lib/format';
-import { StatusBadge } from '../components/Badges';
+import { Icon } from '../components/Icon';
 
 const MAX_LEN = 500;
+
+const PRINCIPLES = [
+  { icon: 'calc' as const, title: '确定性计算', text: '关键数字由公开公式计算，可复核' },
+  { icon: 'source' as const, title: '来源可追溯', text: '每个结论都列出数据、时间与假设' },
+  { icon: 'people' as const, title: '真人复核', text: '需要时整理成准备单，交给持牌专家' },
+];
 
 export function HomePage() {
   const navigate = useNavigate();
@@ -20,6 +26,7 @@ export function HomePage() {
   const { plan, planIsSample } = useAppState();
   const r = useMemo(() => computePlan(plan), [plan]);
   const watch = useMemo(() => SAMPLE_BONDS.map((b) => ({ b, a: analyzeRecord(b) })), []);
+  const maxDur = Math.max(...watch.map(({ a }) => (a.supported ? a.risk.modifiedDuration : 0)), 1);
   const news = useMemo(() => [...DEMO_NEWS].sort((x, y) => (x.publishedAt < y.publishedAt ? 1 : -1)), []);
 
   const submit = (e: FormEvent) => {
@@ -39,114 +46,152 @@ export function HomePage() {
   };
 
   return (
-    <>
-      <section className="ws-ask" aria-labelledby="ask-title">
-        <h1 id="ask-title">提出问题</h1>
-        <p className="small muted" style={{ margin: 0 }}>描述实际情况，平台调用对应的确定性计算，并列出数据来源、公式与假设。</p>
-        <form onSubmit={submit} noValidate>
-          <label htmlFor={id} className="visually-hidden">你的问题</label>
-          <textarea
-            id={id}
-            ref={inputRef}
-            value={q}
-            maxLength={MAX_LEN + 50}
-            placeholder="例如：我们一家三口明年 3 月赴港，入职后月薪约 4 万港元，需要留多少备用金？"
-            aria-invalid={error ? true : undefined}
-            aria-describedby={`${id}-help${error ? ` ${id}-err` : ''}`}
-            onChange={(e) => {
-              setQ(e.target.value);
-              if (error) setError(null);
-            }}
-          />
-          <div className="btn-row" style={{ justifyContent: 'space-between', marginTop: 10 }}>
-            <ul className="chips" aria-label="示例问题" style={{ margin: 0 }}>
-              {EXAMPLE_QUESTIONS.map((ex) => (
-                <li key={ex}>
-                  <button type="button" onClick={() => { setQ(ex); setError(null); inputRef.current?.focus(); }}>{ex}</button>
-                </li>
-              ))}
-            </ul>
-            <button className="btn" type="submit">开始分析</button>
-          </div>
-          <p id={`${id}-help`} className="small muted" style={{ margin: '8px 0 0' }}>问题只在本地分流，不会发送到外部服务（AI 解读未接入）。</p>
-          {error && <p id={`${id}-err`} className="small" role="alert" style={{ color: 'var(--neg)', margin: '6px 0 0' }}>{error}</p>}
-        </form>
+    <div className="home">
+      <section className="hero" aria-labelledby="ask-title">
+        <div className="hero-main">
+          <p className="hero-eyebrow">知衡 · 家庭财务工作台</p>
+          <h1 id="ask-title">今天想弄清楚什么？</h1>
+          <p className="hero-lede">描述你的实际情况。知衡调用对应的计算，给出能核对的答案。</p>
+          <form onSubmit={submit} noValidate className="hero-form">
+            <div className="ask-field">
+              <Icon name="spark" size={20} className="ask-icon" />
+              <label htmlFor={id} className="visually-hidden">你的问题</label>
+              <textarea
+                id={id}
+                ref={inputRef}
+                rows={2}
+                value={q}
+                maxLength={MAX_LEN + 50}
+                placeholder="例如：我们一家三口明年 3 月赴港，入职后月薪约 4 万港元，需要留多少备用金？"
+                aria-invalid={error ? true : undefined}
+                aria-describedby={`${id}-help${error ? ` ${id}-err` : ''}`}
+                onChange={(e) => {
+                  setQ(e.target.value);
+                  if (error) setError(null);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) submit(e);
+                }}
+              />
+              <button className="btn gold" type="submit">开始分析<Icon name="arrow" size={16} /></button>
+            </div>
+            {error && <p id={`${id}-err`} className="hero-error" role="alert">{error}</p>}
+            <p id={`${id}-help`} className="hero-help"><Icon name="lock" size={13} />问题只在本地分流，不会发送到外部服务</p>
+          </form>
+          <ul className="hero-chips" aria-label="示例问题">
+            {EXAMPLE_QUESTIONS.map((ex) => (
+              <li key={ex}>
+                <button type="button" onClick={() => { setQ(ex); setError(null); inputRef.current?.focus(); }}>{ex}</button>
+              </li>
+            ))}
+          </ul>
+        </div>
+        <ul className="hero-principles" aria-label="平台原则">
+          {PRINCIPLES.map((p) => (
+            <li key={p.title}>
+              <span className="pr-icon"><Icon name={p.icon} size={18} /></span>
+              <span><b>{p.title}</b>{p.text}</span>
+            </li>
+          ))}
+        </ul>
       </section>
 
-      <div className="ws-grid">
-        <div className="ws-side">
-          <section className="ws-panel" aria-labelledby="ws-plan">
-            <header>
-              <h2 id="ws-plan">香港落地资金</h2>
-              <StatusBadge status="sample" label={planIsSample ? '示例家庭' : '你的输入'} />
-            </header>
-            <div className="ws-body">
-              <div className="mini-kpis">
-                <div><div className="l">规划期需求</div><div className="v">{money(r.totalNeedHKD)}</div></div>
-                <div><div className="l">备用金</div><div className="v">{money(r.reserveHKD)}</div></div>
-                <div><div className="l">{r.unallocatedHKD >= 0 ? '未分配' : '缺口'}</div><div className="v">{money(Math.abs(r.unallocatedHKD))}</div></div>
-              </div>
-              <p className="small muted" style={{ margin: '10px 0 12px' }}>{plan.horizonMonths} 个月 · 港元计 · 未分配不等于可投资金额</p>
-              <Link className="btn secondary" to="/plan">打开资金规划</Link>
-            </div>
-          </section>
-
-          <section className="ws-panel" aria-labelledby="ws-expert">
-            <header>
-              <h2 id="ws-expert">专家咨询</h2>
-              <StatusBadge status="unconnected" label="预约未开放" />
-            </header>
-            <div className="ws-body">
-              <p className="small" style={{ marginTop: 0 }}>家庭财务 · 跨境税务 · 保险 · 美元债与信用。可先生成咨询准备单。</p>
-              <Link className="btn secondary" to="/experts">整理咨询问题</Link>
-            </div>
-          </section>
+      <section aria-labelledby="overview" className="block">
+        <div className="block-head">
+          <h2 id="overview">资金概览</h2>
+          <span className="badge sample">◆ {planIsSample ? '示例家庭' : '你的输入'}</span>
+          <Link to="/plan" className="block-link">打开规划 <Icon name="arrow" size={14} /></Link>
         </div>
-
-        <div className="ws-side">
-          <section className="ws-panel" aria-labelledby="ws-watch">
-            <header>
-              <h2 id="ws-watch">关注列表</h2>
-              <span className="muted">账户未连接 · 虚构示例 · 非报价</span>
-            </header>
-            <div className="table-wrap">
-              <table className="data-table">
-                <thead>
-                  <tr><th>债券</th><th className="n hide-sm">净价</th><th className="n">YTW</th><th className="n hide-sm">修正久期</th></tr>
-                </thead>
-                <tbody>
-                  {watch.map(({ b, a }) => (
-                    <tr key={b.id}>
-                      <td><Link to={`/bonds/${b.id}`}>{b.name}</Link></td>
-                      <td className="n hide-sm">{num(b.price.clean)}</td>
-                      <td className="n em">
-                        {a.supported ? pct(a.ytw) : '—'}
-                        {b.price.clean < 80 && <span className="risk-flag">高违约风险</span>}
-                      </td>
-                      <td className="n hide-sm">{a.supported ? num(a.risk.modifiedDuration) : '—'}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </section>
-
-          <section className="ws-panel" aria-labelledby="ws-news">
-            <header>
-              <h2 id="ws-news">信息更新</h2>
-              <Link to="/news">全部 →</Link>
-            </header>
-            <ul className="ws-news">
-              {news.map((n) => (
-                <li key={n.id}>
-                  <time>{n.publishedAt} · 演示条目</time>
-                  <Link to={`/news#${n.id}`}>{n.title}</Link>
-                </li>
-              ))}
-            </ul>
-          </section>
+        <div className="metric-row">
+          <article className="metric">
+            <p className="m-label"><Icon name="wallet" size={15} />规划期资金需求</p>
+            <p className="m-value">{money(r.totalNeedHKD)}</p>
+            <p className="m-sub">{plan.horizonMonths} 个月 · 含汇率缓冲</p>
+          </article>
+          <article className="metric">
+            <p className="m-label"><Icon name="shield" size={15} />备用金</p>
+            <p className="m-value">{money(r.reserveHKD)}</p>
+            <p className="m-sub">{plan.reserveMonths} 个月家庭支出</p>
+          </article>
+          <article className="metric accent">
+            <p className="m-label"><Icon name="calc" size={15} />{r.unallocatedHKD >= 0 ? '未分配资金' : '资金缺口'}</p>
+            <p className="m-value">{money(Math.abs(r.unallocatedHKD))}</p>
+            <p className="m-sub">尚未指定用途，不等于可投资金额</p>
+          </article>
+          <article className="metric">
+            <p className="m-label"><Icon name="exchange" size={15} />人民币换汇需求</p>
+            <p className="m-value">{money(r.cnyConvertedUSD, 'USD')}</p>
+            <p className={`m-sub${r.cnyConvertedUSD > ANNUAL_FX_QUOTA_USD ? ' warn' : ''}`}>
+              {r.cnyConvertedUSD > ANNUAL_FX_QUOTA_USD ? '▲ 超过单人年度购汇额度' : '在单人年度额度内'}
+            </p>
+          </article>
         </div>
+      </section>
+
+      <div className="home-grid">
+        <section className="card" aria-labelledby="ws-watch">
+          <div className="card-head">
+            <h2 id="ws-watch">关注列表</h2>
+            <span className="muted small">账户未连接 · 虚构示例 · 非报价</span>
+          </div>
+          <div className="table-wrap flush">
+            <table className="data-table">
+              <thead>
+                <tr><th>债券</th><th className="n hide-sm">净价</th><th className="n">YTW</th><th className="hide-sm">利率敏感度（修正久期）</th></tr>
+              </thead>
+              <tbody>
+                {watch.map(({ b, a }) => (
+                  <tr key={b.id}>
+                    <td>
+                      <Link to={`/bonds/${b.id}`}>{b.name}</Link>
+                      <span className="sub">{b.rating.value}（示例） · {b.terms.maturity || '永续'}</span>
+                    </td>
+                    <td className="n hide-sm">{num(b.price.clean)}</td>
+                    <td className="n em">
+                      {a.supported ? pct(a.ytw) : '—'}
+                      {b.price.clean < 80 && <span className="risk-flag">高违约风险</span>}
+                    </td>
+                    <td className="hide-sm">
+                      {a.supported ? (
+                        <span className="dur">
+                          <span className="dur-bar"><span style={{ width: `${(a.risk.modifiedDuration / maxDur) * 100}%` }} /></span>
+                          <span className="num">{num(a.risk.modifiedDuration)}</span>
+                        </span>
+                      ) : <span className="sub">结构暂不支持</span>}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section className="card" aria-labelledby="ws-news">
+          <div className="card-head">
+            <h2 id="ws-news">信息更新</h2>
+            <Link to="/news" className="block-link">全部 <Icon name="arrow" size={14} /></Link>
+          </div>
+          <ol className="timeline">
+            {news.map((n) => (
+              <li key={n.id}>
+                <span className={`tl-dot ${n.category}`} aria-hidden="true" />
+                <p className="tl-meta"><span>{NEWS_CATEGORY_LABEL[n.category]}</span><time>{n.publishedAt}</time></p>
+                <Link to={`/news#${n.id}`}>{n.title}</Link>
+              </li>
+            ))}
+          </ol>
+          <p className="card-foot muted small">演示条目，仅涉及虚构发行人；实时新闻接口未接入。</p>
+        </section>
       </div>
-    </>
+
+      <section className="cta-band" aria-labelledby="ws-expert">
+        <span className="cta-icon"><Icon name="users" size={22} /></span>
+        <div>
+          <h2 id="ws-expert">需要真人复核？</h2>
+          <p>家庭财务、跨境税务、保险、美元债与信用分析。先把问题和计算整理成准备单，再交给持牌专家。</p>
+        </div>
+        <Link className="btn secondary" to="/experts">整理咨询问题</Link>
+      </section>
+    </div>
   );
 }
