@@ -58,19 +58,22 @@ export function ResultLayout(p: ResultProps) {
   const [pro, setPro] = useState(false);
   return (
     <article aria-labelledby="result-answer">
-      <div className="btn-row" style={{ justifyContent: 'space-between', marginBottom: 12 }}>
-        <span className="small muted">{p.topicLabel}</span>
+      <div className="btn-row" style={{ justifyContent: 'flex-end', marginBottom: 8 }}>
         <label className="pro-switch">
           <input type="checkbox" checked={pro} onChange={(e) => setPro(e.target.checked)} />
-          显示专业细节
+          展开全部专业细节
         </label>
       </div>
 
       <section className="answer-card" aria-labelledby="result-answer">
-        {p.question && <p className="q">你的问题：<q>{p.question}</q></p>}
-        <h2 id="result-answer" className="visually-hidden">一句话回答</h2>
+        <div className="label-row">
+          <b>结论</b>
+          <span>{p.topicLabel}</span>
+          <Kind kind={p.answerKind} />
+        </div>
+        {p.question && <p className="q">问题：<q>{p.question}</q></p>}
+        <h2 id="result-answer" className="visually-hidden">结论</h2>
         <p className={`answer${p.insufficient ? ' insufficient' : ''}`}>{p.answer}</p>
-        <Kind kind={p.answerKind} />
         {p.highlights.length > 0 && (
           <div className="highlights" role="list" aria-label="关键数字">
             {p.highlights.slice(0, 3).map((h) => (
@@ -88,12 +91,12 @@ export function ResultLayout(p: ResultProps) {
 
       <div className="acc-group" key={String(pro)}>
         {p.details && (
-          <Acc title="查看计算明细" open={pro}>
+          <Acc title="计算明细" open={pro}>
             {p.details}
           </Acc>
         )}
         {p.factors.length > 0 && (
-          <Acc title="哪些因素会改变结果" sub={`${p.factors.length} 项`} open={pro}>
+          <Acc title="影响因素与敏感性" sub={`${p.factors.length} 项`} open={pro}>
             <ul className="plain-list">
               {p.factors.map((f, i) => (
                 <li key={i}>
@@ -106,7 +109,7 @@ export function ResultLayout(p: ResultProps) {
             <KindLegend />
           </Acc>
         )}
-        <Acc title="依据：数据来源、公式与假设" open={pro}>
+        <Acc title="数据来源、公式与假设" sub={`${p.sources.length} 项数据 · ${p.formulas.length} 条公式`} open={pro}>
           <div className="table-wrap">
             <table>
               <thead>
@@ -140,7 +143,7 @@ export function ResultLayout(p: ResultProps) {
             </>
           )}
         </Acc>
-        <Acc title="还缺什么信息、有哪些局限" open={pro}>
+        <Acc title="信息缺口与分析局限" sub={`${p.missing.length + p.limits.length} 项`} open={pro}>
           {p.missing.length > 0 && (
             <>
               <h3 style={{ fontSize: '1rem' }}>缺少的信息</h3>

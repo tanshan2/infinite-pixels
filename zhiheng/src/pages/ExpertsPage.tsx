@@ -1,3 +1,4 @@
+import { PageTitle } from '../components/PageTitle';
 import { useId, useMemo, useState, type FormEvent } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { BOOKING_STEPS, EXPERT_DOMAINS, type ExpertDomain } from '../data/experts';
@@ -138,12 +139,14 @@ export function ExpertsPage() {
 
   return (
     <>
-      <header className="page-head">
-        <h1>找真人聊一聊</h1>
-        <p>目前还没有专家入驻，也不能预约。你可以先把问题整理成一张准备单，带去找持牌的专业人士。</p>
-      </header>
+      <PageTitle
+        section="真人一对一"
+        title="专家咨询"
+        desc="按领域分流。入驻专家须公开资质、所属机构、服务地区、语言、费用，以及是否收取产品佣金。"
+        meta={[<span className="tag" key="t">未开放预约</span>, '目前无专家入驻', '不展示虚构人物、评价或时段', '可生成咨询准备单']}
+      />
 
-      <p className="small muted" style={{ marginBottom: 8 }}>你想问哪方面？</p>
+      <p className="small muted" style={{ marginBottom: 8 }}>咨询领域</p>
       <div className="tabs" role="tablist" aria-label="咨询领域">
         {EXPERT_DOMAINS.map((d) => (
           <button key={d.id} type="button" role="tab" aria-selected={d.id === domain.id} onClick={() => setParams({ domain: d.id })}>
@@ -152,10 +155,10 @@ export function ExpertsPage() {
         ))}
       </div>
 
-      <p>这类专家可以帮你：{domain.helpsWith.join('；')}。</p>
+      <p>服务范围：{domain.helpsWith.join('；')}。</p>
       <div className="acc-group" style={{ marginTop: 12 }}>
         <details className="acc">
-          <summary>找这类专家前，先确认这几件事</summary>
+          <summary>资质与利益冲突核查</summary>
           <div className="acc-body grid-2">
             <div>
               <h3 style={{ fontSize: '1rem' }}>在香港应具备的许可</h3>
@@ -182,7 +185,7 @@ export function ExpertsPage() {
       </div>
 
       <section className="section" aria-labelledby="flow">
-        <h2 id="flow">整理你的问题</h2>
+        <h2 id="flow">咨询准备单</h2>
         <p className="small muted">
           完整流程是：{BOOKING_STEPS.map((st) => st.name).join(' → ')}。目前开放“问题整理”和“资料共享授权”，其余步骤要等专家入驻后才开放。
         </p>
@@ -203,7 +206,7 @@ export function ExpertsPage() {
           </div>
 
           <details className="form-acc" open={errors.langs ? true : undefined}>
-            <summary><b>语言、地区、预算（可选）</b><span>{langs.join('、') || '未选'} · {region} · {budget}</span></summary>
+            <summary><b>语言、地区、预算与佣金偏好</b><span>{langs.join('、') || '未选'} · {region} · {budget}</span></summary>
             <div className="form-acc-body">
           <div className="grid-2" style={{ gap: 16 }}>
             <fieldset className="field">
@@ -240,7 +243,7 @@ export function ExpertsPage() {
           </details>
 
           <fieldset className="field" style={{ marginTop: 16 }}>
-            <legend>附上平台里的资料？（默认不附）</legend>
+            <legend>资料共享授权（默认不共享）</legend>
             {SHARE_ITEMS.map((s) => (
               <label key={s.id} className="check"><input type="checkbox" checked={share.includes(s.id)} onChange={() => setShare(toggle(share, s.id))} />{s.label}</label>
             ))}
@@ -252,7 +255,7 @@ export function ExpertsPage() {
           </div>
 
           <details className="form-acc" style={{ marginTop: 20 }} open={errors.contact || submitState.status !== 'idle' ? true : undefined}>
-            <summary><b>专家入驻后通知我（可选）</b><span>登记意向</span></summary>
+            <summary><b>登记咨询意向</b><span>专家入驻后通知</span></summary>
             <div className="form-acc-body">
               <p className="small muted">登记不等于预约。服务未接入前，意向不会发送给任何人。</p>
               <div className="field" style={{ maxWidth: 420 }}>

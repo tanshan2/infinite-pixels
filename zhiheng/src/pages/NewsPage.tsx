@@ -1,3 +1,4 @@
+import { PageTitle } from '../components/PageTitle';
 import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { getNews } from '../api/services';
@@ -30,11 +31,12 @@ export function NewsPage() {
 
   return (
     <>
-      <header className="page-head">
-        <h1>信息中心</h1>
-        <p>每条信息分开写“发生了什么”和“我们怎么看”。新闻接口还没接入，下面是围绕虚构发行人的演示条目；政策与利率请看官方来源。</p>
-        <p className="small muted">新闻不等于报价：即使以后接入实时新闻，债券页面的价格仍是示例，不能用来交易。</p>
-      </header>
+      <PageTitle
+        section="信息与新闻"
+        title="信息中心"
+        desc="按香港政策、利率与宏观、发行人公告、信用事件分类。事实摘要与平台解读分开呈现；单条新闻很少是价格变动的唯一原因。"
+        meta={[<span className="tag" key="t">演示状态</span>, '新闻接口未接入', '演示条目仅涉及虚构发行人', '新闻不等于可成交报价']}
+      />
 
       <div className="tabs" role="tablist" aria-label="信息分类">
         <button type="button" role="tab" aria-selected={cat === 'all'} onClick={() => setCat('all')}>全部</button>
@@ -106,16 +108,16 @@ function NewsArticle({ item }: { item: NewsItem }) {
       </div>
       <div className="news-cols">
         <div>
-          <h4><Kind kind="fact" />发生了什么</h4>
+          <h4><Kind kind="fact" />事实摘要</h4>
           <ul>{item.facts.map((f) => <li key={f}>{f}</li>)}</ul>
         </div>
         <div>
-          <h4><Kind kind="opinion" />我们怎么看</h4>
+          <h4><Kind kind="opinion" />平台解读</h4>
           <p style={{ fontSize: '0.92rem' }}>{item.interpretation}</p>
         </div>
       </div>
       <details className="acc" style={{ borderBottom: 0 }}>
-        <summary style={{ padding: '10px 0', fontSize: '0.92rem' }}>可能影响哪些资产</summary>
+        <summary style={{ padding: '10px 0', fontSize: '0.92rem' }}>影响资产与传导路径</summary>
         <div className="acc-body" style={{ padding: '0 0 8px' }}>
           {item.channels.map((ch) => (
             <p key={ch.asset} className="channel"><b>{ch.asset}：</b>{ch.path}</p>

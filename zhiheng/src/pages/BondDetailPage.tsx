@@ -25,8 +25,8 @@ const CORPORATE_FOCUS = [
 
 type Tab = 'yield' | 'risk' | 'terms' | 'sources';
 const TABS: { id: Tab; label: string }[] = [
-  { id: 'yield', label: '能赚多少' },
-  { id: 'risk', label: '利率变化的影响' },
+  { id: 'yield', label: '收益与现金流' },
+  { id: 'risk', label: '利率与利差敏感度' },
   { id: 'terms', label: '条款与信用' },
   { id: 'sources', label: '资料来源' },
 ];
@@ -77,29 +77,40 @@ export function BondDetailPage() {
         <Link to="/bonds">美元债</Link> / {bond.name}
       </nav>
 
-      <section className="answer-card" aria-labelledby="bond-title">
-        <p className="btn-row" style={{ gap: 8, marginBottom: 8 }}>
-          <StatusBadge status="sample" label="虚构示例债券" />
-          <span className="small muted">{ISSUER_TYPE_LABEL[bond.issuerType]} · {bond.country} · 价格时间 {bond.price.time}</span>
-        </p>
-        <h1 id="bond-title" style={{ fontSize: 'clamp(1.35rem, 3vw, 1.8rem)' }}>{bond.name}</h1>
+      <section className="quote-head" aria-labelledby="bond-title">
+        <div className="qh-top">
+          <p className="btn-row" style={{ gap: 8, margin: 0 }}>
+            <StatusBadge status="sample" label="虚构示例债券" />
+            <span className="badge unconnected">{ISSUER_TYPE_LABEL[bond.issuerType]}</span>
+            <span className="badge unconnected">{STRUCTURE_LABEL[bond.terms.structure]}</span>
+          </p>
+          <h1 id="bond-title">{bond.name}</h1>
+          <div className="ids">
+            <span>ISIN {bond.isin}（演示代码）</span>
+            <span>{bond.issuer}</span>
+            <span>{bond.country}</span>
+            <span>{bond.currency}</span>
+            <span>价格时间 {bond.price.time} · {PRICE_KIND_LABEL[bond.price.kind]}</span>
+          </div>
+        </div>
+        <dl className="quote-strip">
+          <div><dt>净价</dt><dd>{num(bond.price.clean)}</dd></div>
+          <div><dt>票息</dt><dd>{pct(bond.terms.couponRate)}<small>{bond.terms.frequency === 2 ? '半年付' : `每年 ${bond.terms.frequency} 次`}</small></dd></div>
+          <div><dt>到期收益率 YTM</dt><dd>{a.supported ? pct(a.ytm) : '—'}</dd></div>
+          <div><dt>最差收益率 YTW</dt><dd>{a.supported ? pct(a.ytw) : '—'}{a.supported && a.ytwBasis === 'call' && <small>赎回情景</small>}</dd></div>
+          <div><dt>修正久期</dt><dd>{a.supported ? num(a.risk.modifiedDuration) : '—'}</dd></div>
+          <div><dt>评级（示例）· 到期</dt><dd>{bond.rating.value}<small>{bond.terms.maturity || '永续'}</small></dd></div>
+        </dl>
         {a.supported && up100 ? (
-          <>
-            <p className="answer" style={{ fontSize: 'clamp(1.05rem, 2.2vw, 1.25rem)' }}>
-              每年按面值付 <span className="num">{pct(bond.terms.couponRate)}</span> 利息。按示例价格 {num(a.cleanPrice)} 买入并拿到期，每年大约赚{' '}
-              <span className="num">{pct(a.ytm)}</span>
-              {a.ytwBasis === 'call' && <>；如果 {a.ytwDate} 被提前赎回，约 <span className="num">{pct(a.ytw)}</span></>}。
-              {a.cleanPrice < 80 && ' 价格远低于面值，说明市场担心它还不上钱。'}
-            </p>
-            <div className="highlights">
-              <div className="hl"><div className="label">每年利息（票息）</div><div className="value">{pct(bond.terms.couponRate)}</div><div className="note">按面值计算</div></div>
-              <div className="hl emph"><div className="label">拿到期每年大约赚</div><div className="value">{pct(a.ytm)}</div><div className="note">{a.ytwBasis === 'call' ? `最坏情况 ${pct(a.ytw)}` : '到期收益率 YTM'}</div></div>
-              <div className="hl"><div className="label">利率升 1 个百分点</div><div className="value">{signedPct(up100.pctChange, 1)}</div><div className="note">价格的大致变化</div></div>
-            </div>
-          </>
+          <p className="quote-summary">
+            <Kind kind="calc" />
+            按示例净价买入并持有至到期，年化约 {pct(a.ytm)}
+            {a.ytwBasis === 'call' && <>；若 {a.ytwDate} 被赎回约 {pct(a.ytw)}</>}。收益率即时上升 100bp，价格约 {signedPct(up100.pctChange, 1)}。
+            {a.cleanPrice < 80 && ' 价格远低于面值，隐含较高违约风险。'}
+          </p>
         ) : (
-          <p className="notice" style={{ marginTop: 12 }}>
-            <b>这类债券暂不支持计算。</b>{!a.supported && a.reason} 请看“条款与信用”，或请专家逐条解读。
+          <p className="quote-summary">
+            <b>暂不支持计算。</b>{!a.supported && a.reason} 请查看“条款与信用”，或请专家逐条解读。
           </p>
         )}
       </section>
@@ -115,7 +126,7 @@ export function BondDetailPage() {
       {a.supported && tab === 'yield' && (
         <section role="tabpanel" id="panel-yield" aria-labelledby="tab-yield">
           <div style={{ maxWidth: 320 }}>
-            <NumberField label="如果用别的价格买（每 100 面值）" value={priceInput} step={0.1} error={priceError} onChange={setPriceInput} hint={usingOverride ? `示例价格为 ${num(bond.price.clean)}，当前用你的假设` : '改一下价格，看看收益率怎么变'} />
+            <NumberField label="假设净价（每 100 面值）" value={priceInput} step={0.1} error={priceError} onChange={setPriceInput} hint={usingOverride ? `示例价格为 ${num(bond.price.clean)}，当前用你的假设` : '输入其他价格，查看收益率变化'} />
           </div>
           <div className="yield-cards">
             <div><div className="small">票息 Coupon</div><div className="value">{pct(bond.terms.couponRate)}</div><p><Kind kind="fact" />条款约定</p></div>
@@ -140,16 +151,16 @@ export function BondDetailPage() {
 
       {a.supported && tab === 'risk' && (
         <section role="tabpanel" id="panel-risk" aria-labelledby="tab-risk">
-          <p className="muted">美元债的收益率 ≈ 美国国债利率 + 发行人的信用利差。两项都可以自己设定。</p>
+          <p className="muted">美元债收益率 = 美国国债收益率 + 发行人信用利差。两项可分别设定，合计后全价重估。</p>
           <div className="grid-3" style={{ alignItems: 'start' }}>
-            <NumberField label="美国利率变化" suffix="bp" step={25} value={rateBp} error={rateError} onChange={setRateBp} hint="100 bp = 1 个百分点；负数为下降" />
-            <NumberField label="信用利差变化" suffix="bp" step={25} value={spreadBp} error={spreadError} onChange={setSpreadBp} hint="正数表示市场更担心这家发行人" />
-            <NumberField label="持有面值（示例）" prefix="USD" step={10000} value={face} error={faceError} onChange={setFace} />
+            <NumberField label="美国国债收益率变动" suffix="bp" step={25} value={rateBp} error={rateError} onChange={setRateBp} hint="100 bp = 1 个百分点；负数为下降" />
+            <NumberField label="信用利差变动" suffix="bp" step={25} value={spreadBp} error={spreadError} onChange={setSpreadBp} hint="正数表示风险补偿上升" />
+            <NumberField label="持仓面值（示例）" prefix="USD" step={10000} value={face} error={faceError} onChange={setFace} />
           </div>
           {custom && !faceError ? (
             <div className="answer-card" aria-live="polite" style={{ padding: 20 }}>
               <p style={{ margin: 0, fontSize: '1.05rem' }}>
-                价格大约变化 <b className="num">{signedPct(custom.pctChange)}</b>，按 {money(face, 'USD')} 面值约{' '}
+                全价变动 <b className="num">{signedPct(custom.pctChange)}</b>，按 {money(face, 'USD')} 面值约{' '}
                 <b className="num">{custom.pctChange >= 0 ? '+' : ''}{money(mv * custom.pctChange, 'USD')}</b>。
               </p>
               <p className="small muted" style={{ margin: '6px 0 0' }}>
@@ -223,16 +234,16 @@ export function BondDetailPage() {
             <div><dt>赎回条款</dt><dd>{bond.callTerms}</dd></div>
             <div><dt>适用法律</dt><dd>{bond.governingLaw}</dd></div>
             {a.supported && (
-              <div><dt>比同期美债多出的收益（近似）</dt><dd><span className="num">{num((a.ytm - bond.benchmark.yield) * 10000, 0)} bp</span> <span className="small muted">基准为示例值</span></dd></div>
+              <div><dt>相对美债利差（近似 G-spread）</dt><dd><span className="num">{num((a.ytm - bond.benchmark.yield) * 10000, 0)} bp</span> <span className="small muted">基准为示例值</span></dd></div>
             )}
           </dl>
           <div className="grid-2 calm-block">
             <div>
-              <h3>这只债券要留意什么</h3>
+              <h3>本券要点</h3>
               <ul>{bond.keyPoints.map((pt) => <li key={pt}>{pt}</li>)}</ul>
             </div>
             <div>
-              <h3>{isSov ? '看主权债' : '看企业／金融债'}，一般关注这几点</h3>
+              <h3>{isSov ? '主权债' : '企业／金融债'}分析框架</h3>
               <ul>{(isSov ? SOVEREIGN_FOCUS : CORPORATE_FOCUS).map((pt) => <li key={pt}>{pt}</li>)}</ul>
             </div>
           </div>
@@ -277,9 +288,9 @@ export function BondDetailPage() {
       )}
 
       <div className="next-steps">
-        <Link className="btn" to={`/analysis?topic=coupon-yield&bond=${bond.id}`}>票息等于收益吗？</Link>
-        <Link className="btn secondary" to={`/analysis?topic=rate-impact&bond=${bond.id}`}>利率变化会怎样？</Link>
-        <Link className="btn ghost" to="/experts?domain=usd-bond">请专家逐条复核</Link>
+        <Link className="btn" to={`/analysis?topic=coupon-yield&bond=${bond.id}`}>生成收益分析</Link>
+        <Link className="btn secondary" to={`/analysis?topic=rate-impact&bond=${bond.id}`}>生成利率影响分析</Link>
+        <Link className="btn ghost" to="/experts?domain=usd-bond">请专家复核</Link>
       </div>
     </>
   );

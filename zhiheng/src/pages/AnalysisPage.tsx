@@ -62,8 +62,8 @@ export function AnalysisPage() {
       )}
       {topic !== 'unknown' && (
         <p className="small muted" style={{ marginBottom: 16 }}>
-          {question ? <>按关键词理解为“{TOPIC_LABEL[topic]}”（AI 解读未接入，问题没有发送出去）。</> : null}
-          想问的是别的？
+          {question ? <>已按规则归类为“{TOPIC_LABEL[topic]}”（AI 解读未接入，问题未外发）。</> : null}
+          切换分析模板：
           {TOPICS.filter((t) => t !== topic).map((t) => (
             <button
               key={t}
@@ -85,7 +85,7 @@ export function AnalysisPage() {
 
       {(topic === 'coupon-yield' || topic === 'rate-impact') && (
         <div className="field" style={{ maxWidth: 460 }}>
-          <label htmlFor={selectId}>看哪只债券（虚构示例）</label>
+          <label htmlFor={selectId}>分析对象（虚构示例债券）</label>
           <select
             id={selectId}
             value={bond?.id ?? ''}

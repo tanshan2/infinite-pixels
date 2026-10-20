@@ -21,8 +21,9 @@
   --warn: #7a5410;
   --focus: #1f716b;
 
-  --font-sans: 'PingFang SC', 'Hiragino Sans GB', 'Noto Sans SC', 'Microsoft YaHei', system-ui, sans-serif;
-  --font-serif: 'Songti SC', 'Noto Serif SC', 'Source Han Serif SC', 'STSong', Georgia, serif;
+  --font-sans: 'Inter', -apple-system, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Noto Sans SC', 'Microsoft YaHei', system-ui, sans-serif;
+  /* 标题与正文统一用无衬线体 */
+  --font-serif: var(--font-sans);
   --font-mono: 'IBM Plex Mono', 'SF Mono', ui-monospace, Menlo, Consolas, monospace;
 
   --radius: 6px;
@@ -602,7 +603,7 @@ details.pro > div { padding: 12px 14px; }
 /* =====================================================================
    减压版式：每页一个焦点，次要信息默认收起
    ===================================================================== */
-:root { --radius-lg: 14px; --shadow-soft: 0 1px 2px rgba(23, 59, 51, 0.06), 0 6px 24px rgba(23, 59, 51, 0.06); }
+:root { --radius-lg: 4px; --shadow-soft: none; }
 body { line-height: 1.75; }
 main { padding: 40px 0 80px; }
 .page-head { margin-bottom: 32px; }
@@ -756,3 +757,146 @@ main { padding: 40px 0 80px; }
 .chart details.pro[open] > summary { border-bottom: 0; }
 .chart details.pro > div { padding: 4px 0 0; }
 .answer .num { font-family: var(--font-sans); }
+
+/* =====================================================================
+   专业版式：机构研究报告的版面语言（细线、直角、数据口径），保留信息分层
+   ===================================================================== */
+:root { --radius: 3px; --line: #d9d3c7; --line-soft: #e9e4da; --label: #5f6b64; }
+body { font-feature-settings: 'tnum' 1, 'cv11' 1; letter-spacing: 0.005em; }
+h1, h2, h3, h4 { letter-spacing: 0; font-weight: 600; }
+h1 { font-size: clamp(1.5rem, 2.6vw, 1.95rem); }
+
+.site-header { border-bottom: 1px solid #0f2a24; }
+.brand { font-family: var(--font-sans); letter-spacing: 0.18em; font-size: 1.2rem; }
+.main-nav a { font-size: 0.9rem; }
+
+/* 页面标题与数据口径 */
+.page-title { padding-bottom: 18px; margin-bottom: 28px; border-bottom: 1px solid var(--line); }
+.page-title .section { font-size: 0.78rem; color: var(--label); letter-spacing: 0.08em; margin-bottom: 6px; }
+.page-title h1 { margin-bottom: 6px; }
+.page-title .desc { color: var(--text-2); max-width: 70ch; margin: 0 0 10px; }
+.meta-line { display: flex; flex-wrap: wrap; gap: 4px 0; font-size: 0.78rem; color: var(--label); margin: 0; padding: 0; list-style: none; }
+.meta-line li + li::before { content: '·'; margin: 0 10px; color: var(--stone-3); }
+.meta-line .tag { display: inline-block; padding: 0 6px; border: 1px solid #c8a85a; color: var(--warn); background: var(--warn-bg); border-radius: 2px; font-weight: 500; }
+
+/* 按钮与输入：直角、克制 */
+.btn { border-radius: var(--radius); min-height: 38px; font-size: 0.9rem; padding: 6px 16px; font-weight: 500; }
+input[type='text'], input[type='number'], input[type='email'], select, textarea { border-radius: var(--radius); border-color: #bdb6a8; min-height: 38px; }
+.badge { border-radius: 2px; padding: 3px 7px; }
+.notice { border-radius: 0; font-size: 0.88rem; }
+
+/* 结论块 */
+.answer-card { border-radius: 0; box-shadow: none; background: var(--paper-2); border: 1px solid var(--line); border-top: 3px solid var(--ink); padding: 22px 24px; }
+.answer-card .label-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; font-size: 0.78rem; color: var(--label); letter-spacing: 0.06em; }
+.answer-card .label-row b { color: var(--ink); font-weight: 600; letter-spacing: 0.1em; }
+.answer-card .answer { font-family: var(--font-sans); font-size: clamp(1.08rem, 2vw, 1.3rem); line-height: 1.65; font-weight: 500; color: var(--text); max-width: 46em; }
+.answer-card .answer .num { color: var(--ink); font-weight: 700; }
+.answer-card .q { font-size: 0.85rem; }
+
+/* 关键指标条 */
+.highlights { gap: 0; margin-top: 20px; padding-top: 0; border-top: 1px solid var(--line); grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+.hl { padding: 14px 16px 4px 0; }
+.hl + .hl { padding-left: 16px; border-left: 1px solid var(--line-soft); }
+.hl .label { font-size: 0.78rem; color: var(--label); letter-spacing: 0.02em; }
+.hl .value { font-size: clamp(1.35rem, 2.4vw, 1.7rem); font-weight: 600; letter-spacing: -0.01em; }
+.hl .note { font-size: 0.76rem; }
+.hl.emph .value { color: var(--ink); }
+.hl.emph .label::after { content: ''; display: inline-block; width: 6px; height: 6px; background: var(--gold); margin-left: 6px; vertical-align: 2px; }
+
+/* 报告分节：编号表示阅读顺序 */
+.acc-group { counter-reset: sec; border-top: 2px solid var(--ink); }
+.acc { border-bottom: 1px solid var(--line); }
+.acc > summary { padding: 13px 4px; font-size: 0.95rem; font-weight: 600; counter-increment: sec; }
+.acc > summary::before { content: counter(sec, decimal-leading-zero); font-size: 0.75rem; color: var(--gold); font-weight: 600; min-width: 22px; }
+.acc > summary .acc-sub { font-weight: 400; }
+.acc.plain > summary::before { content: none; }
+.acc-group.plain { border-top: 1px solid var(--line); }
+.acc-group.plain .acc > summary::before { content: none; }
+
+/* 指标卡与表格 */
+.kpis { border-radius: 0; border-color: var(--line); }
+.kpi .label { font-size: 0.78rem; color: var(--label); }
+.kpi .value { font-size: 1.25rem; }
+.yield-cards { border-radius: 0; border-color: var(--line); }
+.yield-cards .small { font-size: 0.78rem; color: var(--label); }
+.table-wrap { border-radius: 0; border-color: var(--line); }
+th { background: #efebe3; color: var(--label); font-size: 0.76rem; letter-spacing: 0.03em; font-weight: 600; }
+td { border-bottom-color: var(--line-soft); }
+tbody tr:hover td { background: #faf7f1; }
+
+/* 数据表（债券列表） */
+.data-table { width: 100%; }
+.data-table th button { all: unset; cursor: pointer; display: inline-flex; gap: 4px; align-items: center; }
+.data-table th button:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.data-table th[aria-sort] button::after { content: '↕'; color: var(--stone-3); font-size: 0.8em; }
+.data-table th[aria-sort='ascending'] button::after { content: '↑'; color: var(--ink); }
+.data-table th[aria-sort='descending'] button::after { content: '↓'; color: var(--ink); }
+.data-table td a { font-weight: 600; text-decoration: none; color: var(--ink); }
+.data-table td a:hover { text-decoration: underline; }
+.data-table .sub { display: block; font-size: 0.76rem; color: var(--text-3); font-weight: 400; }
+.data-table .em { font-weight: 600; color: var(--ink); }
+
+/* 报价栏 */
+.quote-head { border: 1px solid var(--line); border-top: 3px solid var(--ink); background: var(--paper-2); }
+.quote-head .qh-top { padding: 16px 20px 12px; }
+.quote-head h1 { font-size: clamp(1.25rem, 2.2vw, 1.6rem); margin: 6px 0 4px; }
+.quote-head .ids { font-size: 0.8rem; color: var(--label); display: flex; flex-wrap: wrap; gap: 4px 14px; }
+.quote-strip { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); border-top: 1px solid var(--line); }
+.quote-strip > div { padding: 10px 14px; border-left: 1px solid var(--line-soft); }
+.quote-strip > div:first-child { border-left: 0; }
+.quote-strip dt { font-size: 0.74rem; color: var(--label); }
+.quote-strip dd { margin: 2px 0 0; font-size: 1.12rem; font-weight: 600; color: var(--ink); }
+.quote-strip dd small { font-size: 0.72rem; font-weight: 400; color: var(--text-3); margin-left: 4px; }
+.quote-summary { padding: 12px 20px; border-top: 1px solid var(--line-soft); font-size: 0.92rem; color: var(--text-2); margin: 0; }
+.tabs button { font-size: 0.9rem; }
+
+/* 首页工作台 */
+.ws-ask { border: 1px solid var(--line); border-top: 3px solid var(--ink); background: var(--paper-2); padding: 20px 22px; }
+.ws-ask h1 { font-size: clamp(1.3rem, 2.4vw, 1.65rem); margin-bottom: 4px; }
+.ws-ask textarea { min-height: 76px; margin-top: 12px; }
+.ws-ask .chips button { border-radius: 2px; font-size: 0.82rem; padding: 4px 10px; background: #fff; }
+.ws-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: 24px; margin-top: 28px; }
+.ws-panel { border: 1px solid var(--line); background: var(--paper-2); }
+.ws-panel > header { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 10px 16px; border-bottom: 1px solid var(--line); }
+.ws-panel > header h2 { font-size: 0.95rem; margin: 0; }
+.ws-panel > header a, .ws-panel > header span { font-size: 0.8rem; }
+.ws-panel .ws-body { padding: 14px 16px; }
+.ws-panel table { font-size: 0.86rem; }
+.ws-panel .table-wrap { border: 0; }
+.ws-news { list-style: none; margin: 0; padding: 0; }
+.ws-news li { padding: 10px 16px; border-top: 1px solid var(--line-soft); font-size: 0.88rem; }
+.ws-news li:first-child { border-top: 0; }
+.ws-news time { display: block; font-size: 0.74rem; color: var(--text-3); }
+.mini-kpis { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.mini-kpis > div + div { border-left: 1px solid var(--line-soft); padding-left: 12px; }
+.mini-kpis .l { font-size: 0.74rem; color: var(--label); }
+.mini-kpis .v { font-size: 1.1rem; font-weight: 600; color: var(--ink); }
+.ws-side { display: grid; gap: 24px; align-content: start; }
+
+.chart-foot { font-size: 0.74rem; color: var(--text-3); margin: 4px 0 0; }
+.chart-title { font-size: 0.9rem; }
+
+@media (max-width: 960px) {
+  .ws-grid { grid-template-columns: minmax(0, 1fr); }
+  .quote-strip { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .quote-strip > div:nth-child(4) { border-left: 0; }
+  .quote-strip > div:nth-child(n + 4) { border-top: 1px solid var(--line-soft); }
+}
+@media (max-width: 760px) {
+  .hl + .hl { padding-left: 0; border-left: 0; border-top: 1px solid var(--line-soft); }
+  .highlights { grid-template-columns: minmax(0, 1fr); }
+  .data-table .hide-sm { display: none; }
+  .mini-kpis { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  .mini-kpis > div + div { border-left: 0; padding-left: 0; }
+}
+@media (max-width: 760px) { .table-wrap table.data-table { min-width: 0; } }
+
+main { padding-top: 28px; }
+.risk-flag { display: block; font-size: 0.72rem; font-weight: 500; color: var(--neg); white-space: nowrap; }
+.risk-flag::before { content: '▲ '; font-size: 0.65rem; }
+.form-acc > summary b { white-space: nowrap; }
+.form-acc > summary span { text-align: right; }
+@media (max-width: 960px) {
+  .quote-strip dd small { display: block; margin-left: 0; }
+  .quote-strip > div { padding: 8px 10px; }
+}

@@ -17,13 +17,13 @@ export function ReserveResult({ plan, isSample, question, onEdit }: { plan: Plan
 
   const answer = surplus ? (
     <>
-      按现在的假设，未来 {plan.horizonMonths} 个月一共要准备约 <span className="num">{money(r.totalNeedHKD)}</span>。
-      你现有的钱够用，还多出约 <span className="num">{money(r.unallocatedHKD)}</span>，这部分先不指定用途。
+      按当前假设，未来 {plan.horizonMonths} 个月资金需求约 <span className="num">{money(r.totalNeedHKD)}</span>（含 {plan.reserveMonths} 个月备用金）。
+      现有资金折合 <span className="num">{money(r.holdingsHKD)}</span>，可以覆盖，另有 <span className="num">{money(r.unallocatedHKD)}</span> 未分配。
     </>
   ) : (
     <>
-      按现在的假设，未来 {plan.horizonMonths} 个月一共要准备约 <span className="num">{money(r.totalNeedHKD)}</span>，
-      现有资金还差约 <span className="num">{money(-r.unallocatedHKD)}</span>。可以先调整支出、备用期限或到港时间。
+      按当前假设，未来 {plan.horizonMonths} 个月资金需求约 <span className="num">{money(r.totalNeedHKD)}</span>，
+      现有资金折合 <span className="num">{money(r.holdingsHKD)}</span>，缺口约 <span className="num">{money(-r.unallocatedHKD)}</span>。建议先调整支出、备用期限或到港时间。
     </>
   );
   const overQuota = r.cnyConvertedUSD > ANNUAL_FX_QUOTA_USD;
@@ -35,11 +35,11 @@ export function ReserveResult({ plan, isSample, question, onEdit }: { plan: Plan
       answer={answer}
       answerKind="calc"
       highlights={[
-        { label: '一共需要准备', value: money(r.totalNeedHKD), note: `未来 ${plan.horizonMonths} 个月` },
-        { label: '其中备用金', value: money(r.reserveHKD), note: `${plan.reserveMonths} 个月的家庭开支` },
+        { label: '规划期资金需求', value: money(r.totalNeedHKD), note: `${plan.horizonMonths} 个月 · 含汇率缓冲` },
+        { label: '备用金', value: money(r.reserveHKD), note: `${plan.reserveMonths} 个月 × 月支出 ${money(E)}` },
         surplus
-          ? { label: '还多出', value: money(r.unallocatedHKD), note: '暂不指定用途，不等于可投资', tone: 'emph' }
-          : { label: '还差', value: money(-r.unallocatedHKD), note: '现有资金不够', tone: 'warn' },
+          ? { label: '未分配资金', value: money(r.unallocatedHKD), note: '尚未指定用途，不等于可投资金额', tone: 'emph' }
+          : { label: '资金缺口', value: money(-r.unallocatedHKD), note: '现有资金不足以覆盖需求', tone: 'warn' },
       ]}
       chart={
         <>
@@ -47,8 +47,8 @@ export function ReserveResult({ plan, isSample, question, onEdit }: { plan: Plan
             available={r.holdingsHKD}
             segments={[
               { label: '一次性落地成本', value: r.oneOffHKD, color: SERIES.blue },
-              { label: `没有收入的头 ${r.noIncomeMonths} 个月`, value: r.noIncomeCostHKD, color: SERIES.gold },
-              { label: `有收入后仍不够的部分`, value: r.ongoingGapHKD, color: SERIES.clay },
+              { label: `无收入过渡期（${r.noIncomeMonths} 个月）`, value: r.noIncomeCostHKD, color: SERIES.gold },
+              { label: '收入到位后的持续缺口', value: r.ongoingGapHKD, color: SERIES.clay },
               { label: '备用金', value: r.reserveHKD, color: SERIES.green },
               { label: '汇率缓冲', value: r.fxBufferHKD, color: SERIES.neutral, hatched: true },
             ]}
@@ -159,11 +159,11 @@ export function ReserveResult({ plan, isSample, question, onEdit }: { plan: Plan
       actions={
         <>
           {onEdit ? (
-            <button type="button" className="btn" onClick={onEdit}>改一改我的数字</button>
+            <button type="button" className="btn" onClick={onEdit}>修改参数</button>
           ) : (
-            <Link className="btn" to="/plan">换成我的数字</Link>
+            <Link className="btn" to="/plan">修改参数并重新计算</Link>
           )}
-          <Link className="btn secondary" to="/experts?domain=hk-family">请专家帮我复核</Link>
+          <Link className="btn secondary" to="/experts?domain=hk-family">请专家复核</Link>
           {!EMBED && <button type="button" className="btn ghost" onClick={() => window.print()}>打印</button>}
         </>
       }

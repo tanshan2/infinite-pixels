@@ -39,6 +39,7 @@ function ChartFrame({ title, meta, legend, children, table }: { title: string; m
       </div>
       {legend}
       {children}
+      <p className="chart-foot">来源：知衡确定性计算；输入为示例数据。</p>
       <details className="pro">
         <summary>查看数据表</summary>
         <div>{table}</div>

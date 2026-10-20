@@ -1,3 +1,4 @@
+import { PageTitle, SAMPLE_TAG } from '../components/PageTitle';
 import { useMemo, useRef, useState, type FormEvent } from 'react';
 import { NumberField } from '../components/NumberField';
 import { ReserveResult } from '../components/results/ReserveResult';
@@ -65,18 +66,17 @@ export function PlanPage() {
 
   return (
     <>
-      <header className="page-head">
-        <h1>赴港第一年，要准备多少钱</h1>
-        <p>
-          先看示例家庭的结果，再换成你自己的数字。{planIsSample ? '现在显示的是示例家庭。' : '现在显示的是你输入的数字。'}
-          数字只在这个页面里计算，刷新就清除。
-        </p>
-      </header>
+      <PageTitle
+        section="家庭财务规划"
+        title="香港落地资金规划"
+        desc="计算规划期内的收支缺口、备用金、各币种资金需求与换汇安排。剩余资金标为“未分配”，不等同于可投资金额。"
+        meta={[planIsSample ? SAMPLE_TAG : '用户输入', '记账币种 HKD', '汇率为假设值（2026-10）', '输入仅保存在本页内存']}
+      />
 
       <div className="split plan-split">
         <form ref={formRef} id="plan-form" onSubmit={submit} noValidate className="plan-form" aria-label="我的数字">
-          <h2 style={{ fontSize: '1.1rem' }}>我的数字</h2>
-          <p className="small muted" style={{ marginTop: -4 }}>点开任意一项修改，改完点“重新计算”。</p>
+          <h2 style={{ fontSize: '1rem' }}>参数</h2>
+          <p className="small muted" style={{ marginTop: -4 }}>展开任意一项修改，完成后点击“重新计算”。</p>
           {showErrors && issues.length > 0 && (
             <div ref={summaryRef} tabIndex={-1} className="notice error" role="alert" style={{ marginBottom: 16 }}>
               <p><b>请修改以下输入：</b></p>
@@ -85,7 +85,7 @@ export function PlanPage() {
           )}
 
           <details className="form-acc" open={groupHasError('holdings') || undefined}>
-            <summary><b>手上的钱</b><span>{groupSummary.holdings}</span></summary>
+            <summary><b>可用资金</b><span>{groupSummary.holdings}</span></summary>
             <div className="form-acc-body">
           {CURRENCIES.map((c) => (
             <NumberField
@@ -120,7 +120,7 @@ export function PlanPage() {
             </div>
           </details>
           <details className="form-acc" open={groupHasError('expense') || undefined}>
-            <summary><b>每月开支（港元）</b><span>{groupSummary.expense}</span></summary>
+            <summary><b>月度支出（HKD）</b><span>{groupSummary.expense}</span></summary>
             <div className="form-acc-body">
           {draft.expenses.map((e, i) => (
             <div className="line-item two" key={e.id}>
@@ -147,7 +147,7 @@ export function PlanPage() {
             </div>
           </details>
           <details className="form-acc" open={groupHasError('oneoff') || undefined}>
-            <summary><b>一次性搬家与落地成本</b><span>{groupSummary.oneoff}</span></summary>
+            <summary><b>一次性落地成本</b><span>{groupSummary.oneoff}</span></summary>
             <div className="form-acc-body">
           {draft.oneOffCosts.map((c, i) => (
             <div className="line-item" key={c.id}>
@@ -184,7 +184,7 @@ export function PlanPage() {
             </div>
           </details>
           <details className="form-acc" open={groupHasError('fx') || undefined}>
-            <summary><b>期限与汇率</b><span>{groupSummary.fx}</span></summary>
+            <summary><b>期限与汇率假设</b><span>{groupSummary.fx}</span></summary>
             <div className="form-acc-body">
           <div className="grid-2" style={{ gap: 12 }}>
             <NumberField label="规划期" suffix="个月" value={draft.horizonMonths} min={1} max={60} error={err('horizonMonths')} onChange={(v) => update({ horizonMonths: v })} />
