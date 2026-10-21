@@ -7,6 +7,13 @@ import { analyzeRecord } from '../lib/bondView';
 import { num, pct } from '../lib/format';
 import { DATA_AS_OF, PageTitle, SAMPLE_TAG } from '../components/PageTitle';
 
+import { PublicBondPanel } from '../components/PublicBondPanel';
+
+export function BondsPage(){
+ const [mode,setMode]=useState<'public'|'sample'>('public');
+ return <><div className="tabs" role="tablist" aria-label="资料类型"><button role="tab" aria-selected={mode==='public'} onClick={()=>setMode('public')}>真实公开资料</button><button role="tab" aria-selected={mode==='sample'} onClick={()=>setMode('sample')}>虚构教学示例</button></div>{mode==='public'?<PublicBondPanel/>:<SampleBondsPage/>}</>;
+}
+
 type Filter = 'all' | IssuerType;
 type SortKey = 'name' | 'coupon' | 'maturity' | 'price' | 'ytm' | 'ytw' | 'duration';
 
@@ -39,7 +46,7 @@ function sortValue(r: Row, k: SortKey): number | string {
   }
 }
 
-export function BondsPage() {
+function SampleBondsPage() {
   const [env, setEnv] = useState<DataEnvelope<BondRecord[]> | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<Filter>('all');

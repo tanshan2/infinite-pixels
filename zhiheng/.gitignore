@@ -4,3 +4,7 @@ dist-single/
 *.tsbuildinfo
 .env*
 !.env.example
+!.env.server.example
+
+dist-server/
+server-data/
