@@ -20,8 +20,8 @@ export function InsufficientResult({ question, reason, missing }: { question?: s
           </ul>
         </div>
       }
-      factors={[{ kind: 'fact', text: 'AI 解读服务尚未接入，问题分流采用关键词规则；规则无法确定时直接说明，而不是勉强给出答案。' }]}
-      sources={[{ label: '问题分流规则', status: 'unconnected', statusLabel: 'AI 解读未接入', note: '你的问题没有发送到任何外部服务' }]}
+      factors={[{ kind: 'fact', text: '问题分流采用关键词规则；未匹配计算模板时不生成计算结果。可选 AI 解读状态见上方。' }]}
+      sources={[{ label: '问题分流规则', status: 'unconnected', statusLabel: '未匹配计算模板', note: '规则分类在本地完成；外部 AI 解读需用户单独确认。' }]}
       formulas={[]}
       assumptions={['无']}
       missing={missing ?? ['问题涉及的具体资产、金额、时间或家庭情况。', '与问题相关的可信数据来源。']}

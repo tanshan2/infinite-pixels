@@ -35,7 +35,7 @@ export function NewsPage() {
         section="信息与新闻"
         title="信息中心"
         desc="按香港政策、利率与宏观、发行人公告、信用事件分类。事实摘要与平台解读分开呈现；单条新闻很少是价格变动的唯一原因。"
-        meta={[<span className="tag" key="t">演示状态</span>, '新闻接口未接入', '演示条目仅涉及虚构发行人', '新闻不等于可成交报价']}
+        meta={[<StatusBadge key="t" status={env?.status ?? 'unconnected'} />, env?.source ?? '正在读取来源', env?.note ?? '', '新闻不等于可成交报价']}
       />
 
       <div className="tabs" role="tablist" aria-label="信息分类">
@@ -58,7 +58,7 @@ export function NewsPage() {
         return (
           <>
             {items.length === 0 ? (
-              <p className="muted">这一类暂时没有条目。新闻接口未接入，我们不会编造新闻，请先看下面的官方来源。</p>
+              <p className="muted">这一类暂时没有条目，请查阅下面的官方来源。</p>
             ) : (
               items.map((n) => <NewsArticle key={n.id} item={n} />)
             )}

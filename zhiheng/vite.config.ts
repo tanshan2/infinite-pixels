@@ -1,4 +1,3 @@
-/// <reference types="vitest" />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
@@ -11,8 +10,5 @@ export default defineConfig({
     proxy: process.env.ZHIHENG_API_TARGET
       ? { '/api': { target: process.env.ZHIHENG_API_TARGET, changeOrigin: true } }
       : undefined,
-  },
-  test: {
-    include: ['src/**/*.test.ts'],
   },
 });

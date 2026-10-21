@@ -21,7 +21,10 @@ export async function apiRequest<T>(path: string, init?: RequestInit & { timeout
       credentials: 'same-origin',
       headers: { 'Content-Type': 'application/json', ...(init?.headers ?? {}) },
     });
-    if (!res.ok) throw new Error(`服务返回错误（HTTP ${res.status}）`);
+    if (!res.ok) {
+      const payload = await res.json().catch(() => null) as { error?: unknown } | null;
+      throw new Error(typeof payload?.error === 'string' ? payload.error : `服务返回错误（HTTP ${res.status}）`);
+    }
     return (await res.json()) as T;
   } catch (e) {
     if (e instanceof DOMException && e.name === 'AbortError') throw new Error('请求超时，请稍后重试');

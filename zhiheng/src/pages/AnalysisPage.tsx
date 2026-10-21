@@ -2,6 +2,7 @@ import { useEffect, useId, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { classifyQuestion, TOPIC_LABEL, type Topic } from '../lib/intent';
 import { requestAiInterpretation } from '../api/services';
+import { API_ENABLED } from '../api/client';
 import type { DataEnvelope } from '../api/types';
 import { ReserveResult } from '../components/results/ReserveResult';
 import { CouponYieldResult, RateImpactResult } from '../components/results/BondResults';
@@ -22,34 +23,14 @@ export function AnalysisPage() {
   const selectId = useId();
 
   const [ai, setAi] = useState<DataEnvelope<{ summary: string }> | null>(null);
-  const [loading, setLoading] = useState(Boolean(question));
-
-  useEffect(() => {
-    if (!question) {
-      setLoading(false);
-      return;
-    }
-    let alive = true;
+  const [loading, setLoading] = useState(false);
+  useEffect(() => { setAi(null); }, [question]);
+  const askAi = async () => {
+    if (!question || loading) return;
     setLoading(true);
-    // 财务参数不随问题发送；只有用户主动授权的接口才会附带上下文
-    requestAiInterpretation({ question }).then((r) => {
-      if (alive) {
-        setAi(r);
-        setLoading(false);
-      }
-    });
-    return () => {
-      alive = false;
-    };
-  }, [question]);
-
-  if (loading) {
-    return (
-      <div className="panel" role="status" aria-live="polite" style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-        <span className="spinner" aria-hidden="true" /> 正在理解问题并调用计算…
-      </div>
-    );
-  }
+    try { setAi(await requestAiInterpretation({ question })); }
+    finally { setLoading(false); }
+  };
 
   return (
     <>
@@ -57,12 +38,19 @@ export function AnalysisPage() {
         <Link to="/">工作台</Link> / 分析结果
       </nav>
 
+      {question && API_ENABLED && (
+        <div className="panel" style={{ marginBottom: 16 }}>
+          <p>可选 AI 概念解读：点击后仅将这段问题发送给外部 AI 服务（Anthropic），不发送规划参数。请勿在问题中填写证件、账户或联系方式。关键数字仍由本地计算。</p>
+          <button className="btn" onClick={askAi} disabled={loading}>{loading ? '正在生成解读…' : '同意发送问题并获取 AI 解读'}</button>
+          {ai && ai.status !== 'live' && <p role="status">{ai.note}</p>}
+        </div>
+      )}
       {ai?.status === 'live' && ai.data && (
         <p className="notice info"><b>AI 解读（观点，供参考）：</b>{ai.data.summary}</p>
       )}
       {topic !== 'unknown' && (
         <p className="small muted" style={{ marginBottom: 16 }}>
-          {question ? <>已按规则归类为“{TOPIC_LABEL[topic]}”（AI 解读未接入，问题未外发）。</> : null}
+          {question ? <>已按规则归类为“{TOPIC_LABEL[topic]}”（规则分流；外部 AI 解读需单独确认）。</> : null}
           切换分析模板：
           {TOPICS.filter((t) => t !== topic).map((t) => (
             <button
