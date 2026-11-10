@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>PAW &amp; THREAD · Infinite Pixels</title>
+<meta name="description" content="PAW & THREAD：面向美国与加拿大市场的宠物定制品牌与双语 Shopify 网站项目案例。">
+<style>html{color-scheme:dark}body{margin:0;background:#06080A}[hidden]{display:none!important}</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@300;400;500&family=Noto+Serif+SC:wght@600;700&family=Syncopate:wght@400;700&display=swap" media="print" onload="this.media='all'">
+<style>
+/* The site's own dark frame and type; inside it, the project in the brand's warm white, dark ink, wood and ceramic. */
+:root{
+  --void:#06080A; --ivory:#EDE6D3; --mute:#9AA29B; --ember:#F2A65A; --cyan:#62BDDD; --line:rgba(237,230,211,.16);
+  --paper:#F4EFE6; --paper2:#EAE3D6; --ink:#1E1B17; --ink2:#5E574D; --wood:#8A6545; --wood2:#B48A63; --clay:#D9D1C4; --rule:rgba(30,27,23,.14);
+  --f-display:'Syncopate','Noto Sans SC',sans-serif; --f-serif:'Noto Serif SC','Songti SC',serif; --f-body:'Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif; --f-mono:'JetBrains Mono',ui-monospace,Consolas,monospace;
+  --gut:max(16px,4vw); --max:1160px; --ease:cubic-bezier(.2,.8,.2,1);
+}
+*{box-sizing:border-box}
+body{color:var(--ivory);font-family:var(--f-body);font-size:15px;line-height:1.85;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{color:inherit}
+img,video{display:block;max-width:100%}
+.wrap{width:min(var(--max),100% - var(--gut) * 2);margin:0 auto}
+.eyebrow{display:block;font-family:var(--f-display);font-size:10px;letter-spacing:.34em;text-transform:uppercase;color:var(--mute)}
+.mono{font-family:var(--f-mono);letter-spacing:.08em}
+
+/* top bar: the way back to the globe, and the language */
+.top{position:sticky;top:0;z-index:20;background:rgba(6,8,10,.82);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-bottom:1px solid rgba(98,189,221,.14)}
+.top .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;height:60px}
+.brand{display:inline-flex;align-items:center;gap:12px;font-family:var(--f-display);font-size:10px;letter-spacing:.42em;text-decoration:none;color:var(--ivory);white-space:nowrap}
+.brand i{width:9px;height:9px;background:var(--ember)}
+.top nav{display:flex;align-items:center;gap:6px}
+.back{font-size:12px;letter-spacing:.14em;color:var(--mute);text-decoration:none;padding:8px 10px;transition:color .25s}.back:hover{color:var(--ivory)}
+.seg{display:flex;gap:2px;padding:3px;border:1px solid rgba(98,189,221,.22)}
+.seg button{border:0;background:none;color:var(--mute);font-family:var(--f-mono);font-size:11px;letter-spacing:.06em;padding:4px 8px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--ivory);color:var(--void)}
+button:focus-visible,a:focus-visible{outline:2px solid var(--ember);outline-offset:3px}
+
+/* hero, still in the site's dark */
+.hero{padding:clamp(56px,9vw,120px) 0 clamp(40px,6vw,72px)}
+.hero h1{margin:18px 0 0;font-family:var(--f-serif);font-weight:700;font-size:clamp(40px,7vw,88px);line-height:1.02;letter-spacing:.02em}
+.hero h1 span{color:var(--ember)}
+.hero .lede{max-width:40em;margin:24px 0 0;font-size:clamp(15px,1.4vw,17px);font-weight:300;color:#CFC8B6;text-wrap:pretty}
+.facts{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin:40px 0 0;border-top:1px solid var(--line)}
+.facts div{padding:16px 18px 0 0}.facts dt{font-size:11px;letter-spacing:.2em;color:var(--mute)}.facts dd{margin:6px 0 0;font-size:14px}
+.status{display:inline-flex;align-items:center;gap:8px}.status i{width:7px;height:7px;border-radius:50%;background:var(--ember);box-shadow:0 0 8px var(--ember)}
+.ctas{display:flex;flex-wrap:wrap;gap:12px;margin-top:36px}
+.btn{display:inline-flex;align-items:center;gap:10px;min-height:46px;padding:0 20px;border:1px solid var(--line);font-size:13px;letter-spacing:.14em;text-decoration:none;transition:background .25s,color .25s,border-color .25s,transform .25s var(--ease)}
+.btn:hover{transform:translateY(-1px)}
+.btn.primary{background:var(--ember);border-color:var(--ember);color:var(--void)}.btn.primary:hover{background:#FFC183;border-color:#FFC183}
+.btn.ghost:hover{border-color:var(--ivory)}
+.btn.dark{border-color:var(--ink);color:var(--ink)}.btn.dark:hover{background:var(--ink);color:var(--paper)}
+.btn.solid{background:var(--ink);border-color:var(--ink);color:var(--paper)}.btn.solid:hover{background:var(--wood)}
+.hero-media{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:clamp(40px,6vw,64px)}
+.hero-media .zoom{aspect-ratio:4/5}
+
+/* the brand's own paper */
+.paper{background:var(--paper);color:var(--ink);background-image:radial-gradient(ellipse at 80% 0%,rgba(180,138,99,.12),transparent 55%)}
+.paper .eyebrow{color:var(--wood)}
+section.s{padding:clamp(64px,9vw,112px) 0}
+section.s+section.s{border-top:1px solid var(--rule)}
+.s-head{display:grid;grid-template-columns:minmax(0,300px) 1fr;gap:clamp(24px,5vw,72px);align-items:start}
+.s-head h2{margin:12px 0 0;font-family:var(--f-serif);font-weight:700;font-size:clamp(26px,3.2vw,38px);line-height:1.25;letter-spacing:.02em;text-wrap:balance}
+.s-body>p{margin:0 0 1em;max-width:42em;color:var(--ink2);text-wrap:pretty}
+.s-body>p:first-child{color:var(--ink);font-size:16.5px}
+.num{font-family:var(--f-mono);font-size:11px;letter-spacing:.16em;color:var(--wood)}
+.note{margin-top:22px!important;padding:12px 16px;border-left:2px solid var(--wood2);background:rgba(180,138,99,.08);font-size:13px;color:var(--ink2)!important}
+
+/* the two halves of the range */
+.mods{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:clamp(32px,5vw,56px)}
+.mod{display:flex;flex-direction:column;border:1px solid var(--rule);background:#FBF8F2}
+.mod.mem{background:linear-gradient(#F1ECE4,#E9E2D6)}
+.mod-h{padding:26px 26px 0}
+.mod-h h3{margin:6px 0 0;font-family:var(--f-serif);font-size:24px;letter-spacing:.04em}
+.mod-h h3 small{display:block;margin-top:2px;font-family:var(--f-body);font-weight:400;font-size:12px;letter-spacing:.16em;color:var(--ink2)}
+.mod p{margin:14px 26px 0;font-size:14px;color:var(--ink2)}
+.mod ul{list-style:none;margin:18px 26px 0;padding:0;border-top:1px solid var(--rule)}
+.mod li{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--rule);font-size:14px}
+.mod li span{font-family:var(--f-mono);font-size:11px;color:var(--wood);letter-spacing:.08em;white-space:nowrap}
+.mod .pics{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:22px 26px 26px}
+.mod .pics .zoom{aspect-ratio:4/5}
+.mod .grain{margin:22px 26px 26px;min-height:150px;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.mod .grain div{position:relative;display:flex;align-items:flex-end;padding:12px;font-size:12px;letter-spacing:.12em;color:rgba(30,27,23,.7)}
+.grain .w{background:repeating-linear-gradient(100deg,#9C7552 0 6px,#8A6545 6px 9px,#A27C58 9px 15px,#82603F 15px 17px);color:#F4EFE6!important}
+.grain .c{background:radial-gradient(circle at 30% 25%,#F7F3EC,#DCD4C7 70%);box-shadow:inset 0 0 0 1px rgba(30,27,23,.08)}
+
+/* concept to site: the work that was done, in order */
+.steps{list-style:none;margin:clamp(28px,4vw,44px) 0 0;padding:0;display:grid;grid-template-columns:repeat(3,1fr);gap:0;border-top:1px solid var(--rule)}
+.steps li{padding:20px 22px 22px 0;border-bottom:1px solid var(--rule)}
+.steps li:not(:nth-child(3n)){border-right:1px solid var(--rule)}
+.steps li:not(:nth-child(3n+1)){padding-left:22px}
+.steps b{display:block;margin:6px 0 6px;font-family:var(--f-serif);font-size:17px;letter-spacing:.04em}
+.steps p{margin:0;font-size:13.5px;color:var(--ink2)}
+
+/* the site's experience */
+.feats{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:clamp(28px,4vw,44px)}
+.feat{padding:20px 22px;border:1px solid var(--rule);background:#FBF8F2;transition:border-color .3s,transform .3s var(--ease)}
+.feat:hover{border-color:var(--wood2);transform:translateY(-2px)}
+.feat h4{margin:4px 0 6px;font-size:15.5px;font-weight:500;letter-spacing:.06em}
+.feat p{margin:0;font-size:13.5px;color:var(--ink2)}
+.feat.key{grid-column:1/-1;background:#1E1B17;color:var(--paper);border-color:#1E1B17}.feat.key p{color:#CFC6B6}.feat.key .num{color:var(--wood2)}
+
+/* films */
+.films{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:clamp(28px,4vw,44px)}
+.film figure{margin:0}
+.film .frame{position:relative;aspect-ratio:4/5;background:#1E1B17;overflow:hidden}
+.film video{width:100%;height:100%;object-fit:cover}
+.film figcaption{display:flex;justify-content:space-between;gap:12px;padding:12px 2px 0;font-size:13.5px}
+.film figcaption span{font-family:var(--f-mono);font-size:11px;color:var(--wood);letter-spacing:.08em}
+
+/* progress */
+.prog{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:clamp(28px,4vw,44px)}
+.prog>div{padding:24px 26px;border:1px solid var(--rule)}
+.prog>div.done{background:#FBF8F2}.prog>div.next{background:repeating-linear-gradient(135deg,transparent 0 12px,rgba(180,138,99,.06) 12px 24px)}
+.prog h3{margin:0 0 12px;display:flex;align-items:center;gap:10px;font-size:15px;font-weight:500;letter-spacing:.12em}
+.prog h3 i{width:8px;height:8px;border-radius:50%;background:#3C7A55}.prog .next h3 i{background:transparent;box-shadow:inset 0 0 0 1.5px var(--wood)}
+.prog ul{margin:0;padding:0 0 0 1.1em;font-size:14px;color:var(--ink2)}.prog li{margin:4px 0}
+
+.end{padding:clamp(56px,8vw,96px) 0;text-align:center}
+.end h2{margin:0;font-family:var(--f-serif);font-size:clamp(24px,3vw,34px);letter-spacing:.04em}
+.end p{margin:12px auto 0;max-width:34em;color:var(--ink2);font-size:14px}
+.end .ctas{justify-content:center}
+.disc{margin:0;padding:22px 0 36px;border-top:1px solid var(--rule);font-size:12px;line-height:1.9;color:var(--ink2)}
+footer{padding:28px 0 calc(28px + env(safe-area-inset-bottom,0px));font-family:var(--f-mono);font-size:10px;letter-spacing:.2em;color:var(--mute)}
+footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+
+/* pictures that open larger */
+.zoom{position:relative;display:block;width:100%;padding:0;border:0;background:#1E1B17;overflow:hidden;cursor:zoom-in}
+.zoom img{width:100%;height:100%;object-fit:cover;transition:transform .7s var(--ease)}
+.zoom:hover img{transform:scale(1.035)}
+.zoom .tag{position:absolute;left:10px;top:10px;padding:3px 8px;background:rgba(30,27,23,.72);color:#F4EFE6;font-family:var(--f-mono);font-size:10px;letter-spacing:.12em}
+.lb{position:fixed;inset:0;z-index:50;display:grid;place-items:center;padding:clamp(16px,4vw,56px);background:rgba(6,8,10,.92);opacity:0;visibility:hidden;transition:opacity .3s,visibility 0s .3s;cursor:zoom-out}
+.lb.on{opacity:1;visibility:visible;transition:opacity .3s}
+.lb img{max-width:100%;max-height:calc(100vh - 120px);object-fit:contain;transform:scale(.96);transition:transform .4s var(--ease)}
+.lb.on img{transform:none}
+.lb p{margin:14px 0 0;font-size:12px;letter-spacing:.1em;color:var(--mute);text-align:center}
+.lb button{position:absolute;top:16px;right:16px;border:1px solid var(--line);background:none;color:var(--ivory);font-family:var(--f-mono);font-size:11px;letter-spacing:.14em;padding:8px 12px;cursor:pointer}
+
+/* things come up as they scroll into view */
+.js .rv{opacity:0;transform:translateY(16px);transition:opacity .8s var(--ease),transform .8s var(--ease)}
+.js .rv.in{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){.rv{opacity:1;transform:none;transition:none}.zoom img,.btn,.feat{transition:none}}
+
+@media (max-width:860px){
+  .facts{grid-template-columns:1fr 1fr}.facts div{padding-bottom:12px}
+  .s-head{grid-template-columns:1fr}
+  .mods,.feats,.prog{grid-template-columns:1fr}
+  .steps{grid-template-columns:1fr}.steps li,.steps li:not(:nth-child(3n+1)){padding:18px 0;border-right:0!important}
+}
+@media (max-width:560px){
+  .top .back span{display:none}
+  .hero-media{gap:8px}.films{grid-template-columns:1fr}
+  .mod-h,.mod p,.mod ul,.mod .pics,.mod .grain{margin-left:18px;margin-right:18px}.mod-h{padding:20px 18px 0;margin:0}
+  .btn{flex:1 1 auto;justify-content:center}
+}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <a class="brand" href="index.html" data-home><i></i>INFINITE PIXELS</a>
+  <nav><a class="back" href="index.html" data-home>← <span data-zh="回到个人网站" data-en="Back to the site">回到个人网站</span></a>
+    <div class="seg" role="group" aria-label="语言 / Language"><button type="button" data-lang="zh" aria-pressed="true">中</button><button type="button" data-lang="en" aria-pressed="false">EN</button></div></nav>
+</div></header>
+
+<main>
+<section class="hero"><div class="wrap">
+  <span class="eyebrow rv">Case study · <span data-zh="精选项目" data-en="Selected work">精选项目</span></span>
+  <h1 class="rv">PAW <span>&amp;</span> THREAD</h1>
+  <p class="lede rv" data-zh="面向美国与加拿大市场的宠物定制品牌，围绕肖像服装、随身纪念品与善终纪念用品，探索从产品概念、AI 视觉制作到 Shopify 网站搭建的完整流程。" data-en="A personalised pet brand for the US and Canada, exploring portrait apparel, everyday keepsakes and memorial objects through AI-assisted product visuals and a bilingual Shopify storefront.">面向美国与加拿大市场的宠物定制品牌，围绕肖像服装、随身纪念品与善终纪念用品，探索从产品概念、AI 视觉制作到 Shopify 网站搭建的完整流程。</p>
+  <dl class="facts rv">
+    <div><dt data-zh="类型" data-en="Type">类型</dt><dd data-zh="宠物定制品牌 · Shopify 电商" data-en="Pet personalisation brand · Shopify">宠物定制品牌 · Shopify 电商</dd></div>
+    <div><dt data-zh="目标市场" data-en="Markets">目标市场</dt><dd data-zh="美国、加拿大" data-en="United States, Canada">美国、加拿大</dd></div>
+    <div><dt data-zh="语言" data-en="Languages">语言</dt><dd data-zh="英文、简体中文" data-en="English, Simplified Chinese">英文、简体中文</dd></div>
+    <div><dt data-zh="阶段" data-en="Stage">阶段</dt><dd class="status"><i></i><span data-zh="开发中，尚未开售" data-en="In development, not yet on sale">开发中，尚未开售</span></dd></div>
+  </dl>
+  <div class="ctas rv">
+    <a class="btn primary" data-store href="https://pawthreadstudio.com/zh-hans" target="_blank" rel="noopener noreferrer"><span data-zh="访问网站" data-en="Visit the site">访问网站</span> <span aria-hidden="true">↗</span></a>
+    <a class="btn ghost" href="#films"><span data-zh="观看产品视频" data-en="Watch the product films">观看产品视频</span> <span aria-hidden="true">↓</span></a>
+  </div>
+  <div class="hero-media rv">
+    <button class="zoom" type="button" data-full="assets/paw-thread/keychain-poster.jpg" data-cap-zh="金属肖像钥匙扣 · AI 设计参考" data-cap-en="Metal portrait keychain · AI design reference"><img src="assets/paw-thread/keychain-poster.jpg" alt="" loading="eager" width="832" height="1040"><span class="tag">AI REF</span></button>
+    <button class="zoom" type="button" data-full="assets/paw-thread/leather-poster.jpg" data-cap-zh="皮革肖像包挂 · AI 设计参考" data-cap-en="Leather portrait bag charm · AI design reference"><img src="assets/paw-thread/leather-poster.jpg" alt="" loading="eager" width="832" height="1040"><span class="tag">AI REF</span></button>
+  </div>
+</div></section>
+
+<div class="paper">
+<section class="s" id="overview"><div class="wrap s-head">
+  <div class="rv"><span class="num">01</span><span class="eyebrow" data-zh="项目概览" data-en="Overview">项目概览</span><h2 data-zh="一个品牌，两类纪念" data-en="One brand, two kinds of keepsake">一个品牌，两类纪念</h2></div>
+  <div class="s-body rv">
+    <p data-zh="PAW & THREAD 把宠物的肖像和名字做进日常会用、会带在身边的东西里，也为告别的时刻准备纪念用品。品牌面向美国和加拿大的养宠家庭，网站提供英文和简体中文两个版本。" data-en="PAW & THREAD puts a pet's portrait and name into things people use and carry every day, and prepares memorial objects for the time of saying goodbye. It is aimed at pet owners in the United States and Canada, and the site comes in English and Simplified Chinese.">PAW & THREAD 把宠物的肖像和名字做进日常会用、会带在身边的东西里，也为告别的时刻准备纪念用品。品牌面向美国和加拿大的养宠家庭，网站提供英文和简体中文两个版本。</p>
+    <p data-zh="这是我实际在推进的项目，目前处在网站展示与产品开发阶段，还没有正式开售。商品浏览和定制体验都在现有的商店网站里进行；这里介绍的是项目本身。" data-en="It is a project I am actually working on. It is at the stage of showing the site and developing the products, and it is not yet on sale. Browsing and personalising happen in the store itself; this page is about the project.">这是我实际在推进的项目，目前处在网站展示与产品开发阶段，还没有正式开售。商品浏览和定制体验都在现有的商店网站里进行；这里介绍的是项目本身。</p>
+    <div class="ctas" style="margin-top:20px">
+      <a class="btn dark" href="https://pawthreadstudio.com/en" target="_blank" rel="noopener noreferrer"><span data-zh="英文网站" data-en="English site">英文网站</span> ↗</a>
+      <a class="btn dark" href="https://pawthreadstudio.com/zh-hans" target="_blank" rel="noopener noreferrer"><span data-zh="简体中文网站" data-en="Chinese site">简体中文网站</span> ↗</a>
+      <a class="btn dark" data-mat href="https://pawthreadstudio.com/zh-hans/pages/materials-and-craft" target="_blank" rel="noopener noreferrer"><span data-zh="材质与工艺" data-en="Materials & craft">材质与工艺</span> ↗</a>
+    </div>
+  </div>
+</div></section>
+
+<section class="s" id="range"><div class="wrap">
+  <div class="s-head"><div class="rv"><span class="num">02</span><span class="eyebrow" data-zh="产品结构" data-en="The range">产品结构</span><h2 data-zh="日常纪念品与善终纪念用品" data-en="Everyday keepsakes and pet memorials">日常纪念品与善终纪念用品</h2></div>
+    <div class="s-body rv"><p data-zh="品牌分成两个独立的模块，入口、语气和设计方向都分开处理：一边轻松、可以每天带着；一边安静、郑重。" data-en="The brand is split into two separate parts, each with its own way in, tone and design direction: one light, to carry every day; the other quiet and careful.">品牌分成两个独立的模块，入口、语气和设计方向都分开处理：一边轻松、可以每天带着；一边安静、郑重。</p></div></div>
+  <div class="mods">
+    <article class="mod rv">
+      <div class="mod-h"><span class="num">A</span><h3 data-zh="日常纪念品" data-en="Everyday keepsakes">日常纪念品<small>Everyday keepsakes</small></h3></div>
+      <p data-zh="把宠物肖像和名字放在日常的物件上。" data-en="A pet's portrait and name on everyday things.">把宠物肖像和名字放在日常的物件上。</p>
+      <ul>
+        <li><b data-zh="宠物肖像卫衣" data-en="Pet portrait sweatshirt">宠物肖像卫衣</b><span data-zh="服装" data-en="APPAREL">服装</span></li>
+        <li><b data-zh="金属肖像钥匙扣" data-en="Metal portrait keychain">金属肖像钥匙扣</b><span data-zh="随身" data-en="CARRY">随身</span></li>
+        <li><b data-zh="皮革肖像包挂" data-en="Leather portrait bag charm">皮革肖像包挂</b><span data-zh="随身" data-en="CARRY">随身</span></li>
+        <li><b data-zh="刺绣肖像拉链扣" data-en="Embroidered portrait zip pull">刺绣肖像拉链扣</b><span data-zh="随身" data-en="CARRY">随身</span></li>
+        <li><b data-zh="宠物肖像画" data-en="Pet portrait print">宠物肖像画</b><span data-zh="家居" data-en="HOME">家居</span></li>
+      </ul>
+      <div class="pics">
+        <button class="zoom" type="button" data-full="assets/paw-thread/keychain-detail.jpg" data-cap-zh="钥匙扣上的线描肖像与名字 · AI 设计参考" data-cap-en="Line portrait and name on the keychain · AI design reference"><img src="assets/paw-thread/keychain-detail.jpg" alt="" loading="lazy" width="832" height="1040"><span class="tag">AI REF</span></button>
+        <button class="zoom" type="button" data-full="assets/paw-thread/leather-detail.jpg" data-cap-zh="皮革包挂上的肖像与名字 · AI 设计参考" data-cap-en="Portrait and name on the leather charm · AI design reference"><img src="assets/paw-thread/leather-detail.jpg" alt="" loading="lazy" width="560" height="700"><span class="tag">AI REF</span></button>
+      </div>
+    </article>
+    <article class="mod mem rv">
+      <div class="mod-h"><span class="num">B</span><h3 data-zh="善终纪念用品" data-en="Pet memorials">善终纪念用品<small>Pet memorials</small></h3></div>
+      <p data-zh="木质和陶瓷骨灰盒，共六款设计概念，支持名字、画像和纪念文字的设计探索。品牌只做纪念用品，不提供宠物火化、遗体处理等线下服务。" data-en="Wooden and ceramic urns in six design concepts, with room to explore a name, a portrait and words of remembrance. The brand makes memorial objects only; it does not offer cremation or any in-person aftercare.">木质和陶瓷骨灰盒，共六款设计概念，支持名字、画像和纪念文字的设计探索。品牌只做纪念用品，不提供宠物火化、遗体处理等线下服务。</p>
+      <ul>
+        <li><b data-zh="基础肖像刻字" data-en="Portrait and lettering">基础肖像刻字</b><span data-zh="方向" data-en="DIRECTION">方向</span></li>
+        <li><b data-zh="镶嵌" data-en="Inlay">镶嵌</b><span data-zh="方向" data-en="DIRECTION">方向</span></li>
+        <li><b data-zh="浮雕" data-en="Relief">浮雕</b><span data-zh="方向" data-en="DIRECTION">方向</span></li>
+        <li><b data-zh="木雕" data-en="Wood carving">木雕</b><span data-zh="方向" data-en="DIRECTION">方向</span></li>
+        <li><b data-zh="定制造型" data-en="Custom forms">定制造型</b><span data-zh="方向" data-en="DIRECTION">方向</span></li>
+      </ul>
+      <div class="grain" aria-hidden="true"><div class="w" data-zh="木质" data-en="WOOD">木质</div><div class="c" data-zh="陶瓷" data-en="CERAMIC">陶瓷</div></div>
+    </article>
+  </div>
+  <p class="note rv" data-zh="材质是拟用方向，具体规格要等实物打样后确认。" data-en="The materials are the intended direction; the exact specifications will be settled once physical samples are made.">材质是拟用方向，具体规格要等实物打样后确认。</p>
+</div></section>
+
+<section class="s" id="process"><div class="wrap">
+  <div class="s-head"><div class="rv"><span class="num">03</span><span class="eyebrow" data-zh="从概念到网站" data-en="From concept to site">从概念到网站</span><h2 data-zh="我做了哪些事" data-en="What the work was">我做了哪些事</h2></div>
+    <div class="s-body rv"><p data-zh="项目从方向到上线的网站都由我推进，下面是实际做过的部分。" data-en="I carried the project from its direction to a working site. These are the parts that were actually done.">项目从方向到上线的网站都由我推进，下面是实际做过的部分。</p></div></div>
+  <ol class="steps">
+    <li class="rv"><span class="num">01</span><b data-zh="品牌与产品方向" data-en="Brand and product direction">品牌与产品方向</b><p data-zh="确定品牌名、目标市场，以及日常纪念品和善终纪念用品两条产品线。" data-en="Settled the name, the markets, and the two lines: everyday keepsakes and memorials.">确定品牌名、目标市场，以及日常纪念品和善终纪念用品两条产品线。</p></li>
+    <li class="rv"><span class="num">02</span><b data-zh="AI 探索产品外观" data-en="AI to explore the look">AI 探索产品外观</b><p data-zh="用 AI 探索每件产品的样子和展示素材，作为设计参考。" data-en="Used AI to explore how each product could look and how to show it, as design reference.">用 AI 探索每件产品的样子和展示素材，作为设计参考。</p></li>
+    <li class="rv"><span class="num">03</span><b data-zh="Muse 产品视频" data-en="Product films in Muse">Muse 产品视频</b><p data-zh="用 Muse 制作产品展示视频，例如下面的钥匙扣和皮革包挂。" data-en="Made the product films in Muse, such as the keychain and leather charm below.">用 Muse 制作产品展示视频，例如下面的钥匙扣和皮革包挂。</p></li>
+    <li class="rv"><span class="num">04</span><b data-zh="Shopify 与自有域名" data-en="Shopify and own domain">Shopify 与自有域名</b><p data-zh="搭建 Shopify 网站，并连接自有域名 pawthreadstudio.com。" data-en="Built the Shopify store and connected it to its own domain, pawthreadstudio.com.">搭建 Shopify 网站，并连接自有域名 pawthreadstudio.com。</p></li>
+    <li class="rv"><span class="num">05</span><b data-zh="英文与简体中文" data-en="English and Chinese">英文与简体中文</b><p data-zh="建立英文和简体中文两个版本。" data-en="Set up the English and Simplified Chinese versions.">建立英文和简体中文两个版本。</p></li>
+    <li class="rv"><span class="num">06</span><b data-zh="商品页与定制预览" data-en="Product pages and previews">商品页与定制预览</b><p data-zh="制作商品详情、材质说明页和定制预览。" data-en="Made the product pages, the materials page and the personalisation previews.">制作商品详情、材质说明页和定制预览。</p></li>
+  </ol>
+</div></section>
+
+<section class="s" id="experience"><div class="wrap">
+  <div class="s-head"><div class="rv"><span class="num">04</span><span class="eyebrow" data-zh="网站体验" data-en="On the site">网站体验</span><h2 data-zh="在商店里能做什么" data-en="What the store lets you do">在商店里能做什么</h2></div>
+    <div class="s-body rv"><p data-zh="商店网站本身承担浏览和定制，主要包括这些部分。" data-en="The store itself handles browsing and personalising. These are its main parts.">商店网站本身承担浏览和定制，主要包括这些部分。</p></div></div>
+  <div class="feats">
+    <div class="feat rv"><span class="num">A / B</span><h4 data-zh="两个独立入口" data-en="Two separate ways in">两个独立入口</h4><p data-zh="日常纪念品和善终纪念用品各有自己的入口，不混在一起。" data-en="Everyday keepsakes and memorials each have their own entrance, kept apart.">日常纪念品和善终纪念用品各有自己的入口，不混在一起。</p></div>
+    <div class="feat rv"><span class="num">Aa</span><h4 data-zh="名字与纪念文字预览" data-en="Name and inscription preview">名字与纪念文字预览</h4><p data-zh="输入宠物的名字或纪念文字，在商品上先看大致效果。" data-en="Type a pet's name or an inscription and see roughly how it sits on the product.">输入宠物的名字或纪念文字，在商品上先看大致效果。</p></div>
+    <div class="feat key rv"><span class="num">PHOTO</span><h4 data-zh="照片参考预览" data-en="Photo reference preview">照片参考预览</h4><p data-zh="可以上传宠物照片，在浏览器里预览参考效果。照片用于提供参考、供后续设计审核，网站不会自动生成可以直接用于刺绣或雕刻生产的图案。" data-en="You can upload a photo of your pet and preview it as a reference in the browser. The photo is a reference for the design review that follows; the site does not automatically produce artwork ready for embroidery or engraving.">可以上传宠物照片，在浏览器里预览参考效果。照片用于提供参考、供后续设计审核，网站不会自动生成可以直接用于刺绣或雕刻生产的图案。</p></div>
+    <div class="feat rv"><span class="num">中 / EN</span><h4 data-zh="中英文切换" data-en="English and Chinese">中英文切换</h4><p data-zh="英文和简体中文两个版本，可以随时切换。" data-en="English and Simplified Chinese versions, switchable at any time.">英文和简体中文两个版本，可以随时切换。</p></div>
+    <div class="feat rv"><span class="num">MOBILE</span><h4 data-zh="手机端布局" data-en="Phone layout">手机端布局</h4><p data-zh="页面针对手机屏幕重新排布。" data-en="The pages are laid out again for phone screens.">页面针对手机屏幕重新排布。</p></div>
+    <div class="feat rv" style="grid-column:1/-1"><span class="num">MATERIALS</span><h4 data-zh="材质与工艺说明" data-en="Materials and craft">材质与工艺说明</h4><p data-zh="单独的一页说明每类产品拟用的材质和工艺。" data-en="A page of its own explains the materials and craft intended for each kind of product.">单独的一页说明每类产品拟用的材质和工艺。</p></div>
+  </div>
+</div></section>
+
+<section class="s" id="films"><div class="wrap">
+  <div class="s-head"><div class="rv"><span class="num">05</span><span class="eyebrow" data-zh="产品视频" data-en="Product films">产品视频</span><h2 data-zh="用 Muse 做的两支产品视频" data-en="Two product films made in Muse">用 Muse 做的两支产品视频</h2></div>
+    <div class="s-body rv"><p data-zh="两支都是 4:5、10 秒，用来在商品页上展示产品。画面是 AI 生成的设计参考，不是实物拍摄。" data-en="Both are 4:5 and 10 seconds long, made to show the products on their pages. The images are AI-made design references, not photographs of real products.">两支都是 4:5、10 秒，用来在商品页上展示产品。画面是 AI 生成的设计参考，不是实物拍摄。</p></div></div>
+  <div class="films">
+    <figure class="film rv"><div class="frame"><video controls playsinline preload="none" poster="assets/paw-thread/keychain-poster.jpg" width="832" height="1040"><source src="https://cdn.shopify.com/videos/c/o/v/0fe2b48bdfe243649dc028301591af91.mp4" type="video/mp4"></video></div>
+      <figcaption><b data-zh="金属肖像钥匙扣" data-en="Metal portrait keychain">金属肖像钥匙扣</b><span>4:5 · 0:10 · MUSE</span></figcaption></figure>
+    <figure class="film rv"><div class="frame"><video controls playsinline preload="none" poster="assets/paw-thread/leather-poster.jpg" width="832" height="1040"><source src="https://cdn.shopify.com/videos/c/o/v/c8f0136eeb30462c9c1908049f2820d6.mp4" type="video/mp4"></video></div>
+      <figcaption><b data-zh="皮革肖像包挂" data-en="Leather portrait bag charm">皮革肖像包挂</b><span>4:5 · 0:10 · MUSE</span></figcaption></figure>
+  </div>
+</div></section>
+
+<section class="s" id="progress"><div class="wrap">
+  <div class="s-head"><div class="rv"><span class="num">06</span><span class="eyebrow" data-zh="当前进展" data-en="Where it stands">当前进展</span><h2 data-zh="做完了什么，还差什么" data-en="What is done, and what is next">做完了什么，还差什么</h2></div>
+    <div class="s-body rv"><p data-zh="网站已经可以展示品牌和产品，但产品还没有进入生产。" data-en="The site can show the brand and the products, but the products have not gone into production.">网站已经可以展示品牌和产品，但产品还没有进入生产。</p></div></div>
+  <div class="prog">
+    <div class="done rv"><h3><i></i><span data-zh="已完成" data-en="Done">已完成</span></h3><ul>
+      <li data-zh="品牌与产品概念展示" data-en="Brand and product concepts shown">品牌与产品概念展示</li><li data-zh="Shopify 网站建设与自有域名" data-en="Shopify site built, on its own domain">Shopify 网站建设与自有域名</li><li data-zh="英文与简体中文双语体验" data-en="English and Chinese versions">英文与简体中文双语体验</li></ul></div>
+    <div class="next rv"><h3><i></i><span data-zh="待确认" data-en="Still to settle">待确认</span></h3><ul>
+      <li data-zh="实物打样" data-en="Physical samples">实物打样</li><li data-zh="供应商" data-en="Suppliers">供应商</li><li data-zh="最终材料" data-en="Final materials">最终材料</li><li data-zh="定价" data-en="Pricing">定价</li><li data-zh="履约" data-en="Fulfilment">履约</li></ul></div>
+  </div>
+</div></section>
+
+<section class="end"><div class="wrap">
+  <h2 class="rv" data-zh="去商店看看" data-en="See the store">去商店看看</h2>
+  <p class="rv" data-zh="商品浏览和定制预览都在商店网站里，会在新标签页打开。商店目前设有访问保护，开放前可能需要密码。" data-en="Browsing and the personalisation previews are in the store, which opens in a new tab. It is password-protected for now and may ask for a password before it opens.">商品浏览和定制预览都在商店网站里，会在新标签页打开。商店目前设有访问保护，开放前可能需要密码。</p>
+  <div class="ctas rv">
+    <a class="btn solid" data-store href="https://pawthreadstudio.com/zh-hans" target="_blank" rel="noopener noreferrer"><span data-zh="访问网站" data-en="Visit the site">访问网站</span> ↗</a>
+    <a class="btn dark" href="index.html" data-home><span data-zh="回到个人网站" data-en="Back to the site">回到个人网站</span></a>
+  </div>
+</div></section>
+
+<div class="wrap"><p class="disc" data-zh="说明：本页的产品图片和视频是 AI 生成的设计参考，不是实物拍摄；材质是拟用方向，具体规格待实物打样确认。PAW & THREAD 目前处在开发阶段，尚未正式开售。" data-en="Note: the product images and films on this page are AI-made design references, not photographs of real products. The materials are the intended direction; exact specifications await physical samples. PAW & THREAD is in development and not yet on sale.">说明：本页的产品图片和视频是 AI 生成的设计参考，不是实物拍摄；材质是拟用方向，具体规格待实物打样确认。PAW & THREAD 目前处在开发阶段，尚未正式开售。</p></div>
+</div>
+</main>
+<footer><div class="wrap"><span>SHANGCHONG (DAVE) TAN · INFINITE PIXELS</span><span>PAW &amp; THREAD · CASE STUDY</span></div></footer>
+
+<div class="lb" id="lb" role="dialog" aria-modal="true" aria-label="图片 / Image"><figure style="margin:0"><img id="lbImg" alt=""><p id="lbCap"></p></figure><button type="button" id="lbX">ESC ✕</button></div>
+
+<script>
+(() => {
+  document.documentElement.classList.add('js');
+  // the language follows the personal site: ?lang=en from it, otherwise Chinese; the switch keeps it in the links back
+  let lang = /[?&]lang=en\b/.test(location.search) ? 'en' : 'zh';
+  const store = { zh: 'https://pawthreadstudio.com/zh-hans', en: 'https://pawthreadstudio.com/en' };
+  function apply() {
+    document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en';
+    document.querySelectorAll('[data-zh]').forEach((el) => { const v = el.getAttribute('data-' + lang); if (v === null) return; const sm = el.querySelector('small'); el.textContent = v; if (sm && lang === 'zh') el.appendChild(sm); });
+    document.querySelectorAll('[data-lang]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.lang === lang)));
+    document.querySelectorAll('[data-store]').forEach((a) => { a.href = store[lang]; });
+    document.querySelectorAll('[data-mat]').forEach((a) => { a.href = store[lang] + '/pages/materials-and-craft'; });
+    document.querySelectorAll('[data-home]').forEach((a) => { a.href = 'index.html' + (lang === 'en' ? '?lang=en' : ''); });
+    document.title = 'PAW & THREAD · ' + (lang === 'zh' ? '项目案例' : 'Case study') + ' · Infinite Pixels';
+    const u = new URL(location.href); if (lang === 'en') u.searchParams.set('lang', 'en'); else u.searchParams.delete('lang'); history.replaceState(null, '', u);
+  }
+  document.querySelectorAll('[data-lang]').forEach((b) => b.addEventListener('click', () => { lang = b.dataset.lang; apply(); }));
+  apply();
+
+  // only one film plays at a time
+  const vids = [...document.querySelectorAll('video')];
+  vids.forEach((v) => v.addEventListener('play', () => vids.forEach((o) => { if (o !== v) o.pause(); })));
+
+  // a picture opens larger; a click, Esc or the button puts it away
+  const lb = document.getElementById('lb'), lbImg = document.getElementById('lbImg'), lbCap = document.getElementById('lbCap'); let back = null;
+  const close = () => { lb.classList.remove('on'); if (back) back.focus(); };
+  document.querySelectorAll('.zoom').forEach((b) => b.addEventListener('click', () => { back = b; lbImg.src = b.dataset.full; lbCap.textContent = b.getAttribute('data-cap-' + lang) || ''; lb.classList.add('on'); document.getElementById('lbX').focus(); }));
+  lb.addEventListener('click', close); addEventListener('keydown', (e) => { if (e.key === 'Escape' && lb.classList.contains('on')) close(); });
+
+  // things come up as they scroll into view; anything above the bottom of the window is shown, so nothing can stay hidden once passed
+  const rvs = [...document.querySelectorAll('.rv')]; rvs.forEach((el, i) => { el.style.transitionDelay = (i % 4) * 0.06 + 's'; });
+  let tick = 0; const reveal = () => { tick = 0; const h = scrollY + innerHeight >= document.documentElement.scrollHeight - 8 ? 1e9 : innerHeight * 0.94; for (const el of rvs) if (!el.classList.contains('in') && el.getBoundingClientRect().top < h) el.classList.add('in'); };
+  addEventListener('scroll', () => { if (!tick) tick = requestAnimationFrame(reveal); }, { passive: true }); addEventListener('resize', reveal); reveal();
+})();
+</script>
+</body>
+</html>
